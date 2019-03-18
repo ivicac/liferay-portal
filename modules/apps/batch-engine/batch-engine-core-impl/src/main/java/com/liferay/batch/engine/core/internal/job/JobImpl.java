@@ -164,8 +164,8 @@ public class JobImpl implements Job {
 	}
 
 	private void _finishBatchJob(BatchJob batchJob, BatchStatus batchStatus) {
-		batchJob.setStatus(batchStatus.toString());
 		batchJob.setEndTime(new Date());
+		batchJob.setStatus(batchStatus.toString());
 
 		_batchJobLocalService.updateBatchJob(batchJob);
 	}
@@ -173,8 +173,8 @@ public class JobImpl implements Job {
 	private void _startBatchJob(JobExecution jobExecution) {
 		BatchJob batchJob = jobExecution.getBatchJob();
 
-		batchJob.setStatus(BatchStatus.STARTED.toString());
 		batchJob.setStartTime(new Date());
+		batchJob.setStatus(BatchStatus.STARTED.toString());
 
 		_batchJobLocalService.updateBatchJob(batchJob);
 	}
