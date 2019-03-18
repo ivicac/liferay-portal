@@ -1,1 +1,0 @@
-create unique index IX_31DACD58 on CommerceBatchJob (key_[$COLUMN_LENGTH:75$]);

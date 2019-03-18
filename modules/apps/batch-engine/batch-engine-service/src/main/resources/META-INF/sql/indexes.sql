@@ -1,0 +1,1 @@
+create unique index IX_9DB7D45D on BatchJob (key_[$COLUMN_LENGTH:75$]);

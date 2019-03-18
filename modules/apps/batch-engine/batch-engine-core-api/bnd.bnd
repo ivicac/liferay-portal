@@ -1,0 +1,8 @@
+Bundle-Name: Liferay Batch Engine Core API
+Bundle-SymbolicName: com.liferay.batch.engine.core.api
+Bundle-Version: 1.0.0
+Export-Package:\
+	com.liferay.batch.engine.core.batch,\
+	com.liferay.batch.engine.core.exception,\
+	com.liferay.batch.engine.core.item,\
+	com.liferay.batch.engine.core.job
