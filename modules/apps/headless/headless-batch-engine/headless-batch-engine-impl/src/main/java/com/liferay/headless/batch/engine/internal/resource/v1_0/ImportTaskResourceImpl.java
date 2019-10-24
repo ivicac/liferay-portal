@@ -179,8 +179,9 @@ public class ImportTaskResourceImpl extends BaseImportTaskResourceImpl {
 				callbackURL, className, content,
 				StringUtil.upperCase(extension),
 				BatchEngineTaskExecuteStatus.INITIAL.name(),
-				_toMap(fieldNameMappingString), batchEngineTaskOperation.name(),
-				Collections.emptyMap(), version);
+				Collections.emptyList(), _toMap(fieldNameMappingString),
+				batchEngineTaskOperation.name(), Collections.emptyMap(),
+				version);
 
 		executorService.submit(
 			() -> _batchEngineTaskExecutor.execute(batchEngineTask));
