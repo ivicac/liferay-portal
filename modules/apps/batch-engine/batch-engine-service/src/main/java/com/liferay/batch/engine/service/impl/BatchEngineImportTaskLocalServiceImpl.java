@@ -18,7 +18,6 @@ import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.batch.engine.model.BatchEngineImportTaskContentBlobModel;
 import com.liferay.batch.engine.service.base.BatchEngineImportTaskLocalServiceBaseImpl;
 import com.liferay.petra.io.AutoDeleteFileInputStream;
-import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
@@ -45,7 +44,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "model.class.name=com.liferay.batch.engine.model.BatchEngineImportTask",
-	service = AopService.class
+	service = BatchEngineImportTaskLocalService.class
 )
 public class BatchEngineImportTaskLocalServiceImpl
 	extends BatchEngineImportTaskLocalServiceBaseImpl {
