@@ -16,6 +16,7 @@ package com.liferay.batch.engine.service.impl;
 
 import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.batch.engine.model.BatchEngineImportTaskContentBlobModel;
+import com.liferay.batch.engine.service.BatchEngineImportTaskLocalService;
 import com.liferay.batch.engine.service.base.BatchEngineImportTaskLocalServiceBaseImpl;
 import com.liferay.petra.io.AutoDeleteFileInputStream;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -25,7 +26,8 @@ import com.liferay.portal.kernel.dao.jdbc.OutputBlob;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.transaction.Transactional;
-import com.liferay.portal.kernel.util.File;
+import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.bean.BeanReference;
 
 import java.io.InputStream;
 import java.io.Serializable;
@@ -35,17 +37,9 @@ import java.sql.Blob;
 import java.util.List;
 import java.util.Map;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Shuyang Zhou
  */
-@Component(
-	property = "model.class.name=com.liferay.batch.engine.model.BatchEngineImportTask",
-	service = BatchEngineImportTaskLocalService.class
-)
 public class BatchEngineImportTaskLocalServiceImpl
 	extends BatchEngineImportTaskLocalServiceBaseImpl {
 
@@ -110,7 +104,7 @@ public class BatchEngineImportTaskLocalServiceImpl
 
 			if (_useTempFile) {
 				inputStream = new AutoDeleteFileInputStream(
-					_file.createTempFile(inputStream));
+					FileUtil.createTempFile(inputStream));
 			}
 
 			return inputStream;
@@ -120,8 +114,10 @@ public class BatchEngineImportTaskLocalServiceImpl
 		}
 	}
 
-	@Activate
-	protected void activate() {
+	@Override
+	public void afterPropertiesSet() {
+		super.afterPropertiesSet();
+
 		DB db = DBManagerUtil.getDB();
 
 		if ((db.getDBType() != DBType.DB2) &&
@@ -132,9 +128,6 @@ public class BatchEngineImportTaskLocalServiceImpl
 			_useTempFile = true;
 		}
 	}
-
-	@Reference
-	private File _file;
 
 	private boolean _useTempFile;
 

@@ -15,6 +15,8 @@
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
 
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.batch.engine.BatchEngineTaskMethod;
+import com.liferay.batch.engine.BatchEngineTaskOperation;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.model.CPDefinition;
@@ -201,6 +203,10 @@ public class ProductResourceImpl
 				cpDefinition.getCPDefinitionId()));
 	}
 
+	@BatchEngineTaskMethod(
+		batchEngineTaskOperation = BatchEngineTaskOperation.READ,
+		itemClass = Product.class
+	)
 	@Override
 	public Page<Product> getProductsPage(
 			Filter filter, Pagination pagination, Sort[] sorts)

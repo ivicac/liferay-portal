@@ -16,16 +16,18 @@ package com.liferay.batch.engine.service.impl;
 
 import com.liferay.batch.engine.model.BatchEngineExportTask;
 import com.liferay.batch.engine.model.BatchEngineExportTaskContentBlobModel;
+import com.liferay.batch.engine.service.BatchEngineExportTaskLocalService;
 import com.liferay.batch.engine.service.base.BatchEngineExportTaskLocalServiceBaseImpl;
 import com.liferay.petra.io.AutoDeleteFileInputStream;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.jdbc.OutputBlob;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.transaction.Transactional;
-import com.liferay.portal.kernel.util.File;
+import com.liferay.portal.kernel.util.FileUtil;
 
 import java.io.InputStream;
 import java.io.Serializable;
@@ -35,17 +37,9 @@ import java.sql.Blob;
 import java.util.List;
 import java.util.Map;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Ivica Cardic
  */
-@Component(
-	property = "model.class.name=com.liferay.batch.engine.model.BatchEngineExportTask",
-	service = BatchEngineExportTaskLocalService.class
-)
 public class BatchEngineExportTaskLocalServiceImpl
 	extends BatchEngineExportTaskLocalServiceBaseImpl {
 
@@ -97,7 +91,7 @@ public class BatchEngineExportTaskLocalServiceImpl
 
 			if (_useTempFile) {
 				inputStream = new AutoDeleteFileInputStream(
-					_file.createTempFile(inputStream));
+					FileUtil.createTempFile(inputStream));
 			}
 
 			return inputStream;
@@ -107,8 +101,10 @@ public class BatchEngineExportTaskLocalServiceImpl
 		}
 	}
 
-	@Activate
-	protected void activate() {
+	@Override
+	public void afterPropertiesSet() {
+		super.afterPropertiesSet();
+
 		DB db = DBManagerUtil.getDB();
 
 		if ((db.getDBType() != DBType.DB2) &&
@@ -119,9 +115,6 @@ public class BatchEngineExportTaskLocalServiceImpl
 			_useTempFile = true;
 		}
 	}
-
-	@Reference
-	private File _file;
 
 	private boolean _useTempFile;
 
