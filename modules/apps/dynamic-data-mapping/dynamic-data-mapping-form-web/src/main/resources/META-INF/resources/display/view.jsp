@@ -120,7 +120,7 @@ boolean limitToOneSubmissionPerUser = DDMFormInstanceSubmissionLimitStatusUtil.i
 						).put(
 							"showPartialResultsToRespondents", ddmFormDisplayContext.isShowPartialResultsToRespondents()
 						).put(
-							"showSubmitAgainButton", !expired && !limitToOneSubmissionPerUser
+							"showSubmitAgainButton", !expired && !limitToOneSubmissionPerUser && (request.getParameter("uuid") == null)
 						).build()
 					%>'
 				/>
