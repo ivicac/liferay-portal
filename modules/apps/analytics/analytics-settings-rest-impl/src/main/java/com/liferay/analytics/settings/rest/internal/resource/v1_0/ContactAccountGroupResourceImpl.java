@@ -13,9 +13,11 @@ import com.liferay.analytics.settings.rest.dto.v1_0.ContactAccountGroup;
 import com.liferay.analytics.settings.rest.internal.dto.v1_0.converter.ContactAccountGroupDTOConverterContext;
 import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.analytics.settings.rest.resource.v1_0.ContactAccountGroupResource;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -48,6 +50,10 @@ public class ContactAccountGroupResourceImpl
 		}
 
 		Sort sort = sorts[0];
+
+		if (Validator.isNotNull(keywords)) {
+			keywords = StringPool.QUOTE + keywords + StringPool.QUOTE;
+		}
 
 		BaseModelSearchResult<AccountGroup> accountGroupBaseModelSearchResult =
 			_accountGroupLocalService.searchAccountGroups(

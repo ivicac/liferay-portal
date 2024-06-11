@@ -10,10 +10,12 @@ import com.liferay.analytics.settings.rest.dto.v1_0.ContactUserGroup;
 import com.liferay.analytics.settings.rest.internal.dto.v1_0.converter.ContactUserGroupDTOConverterContext;
 import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.analytics.settings.rest.resource.v1_0.ContactUserGroupResource;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -46,6 +48,10 @@ public class ContactUserGroupResourceImpl
 		}
 
 		Sort sort = sorts[0];
+
+		if (Validator.isNotNull(keywords)) {
+			keywords = StringPool.QUOTE + keywords + StringPool.QUOTE;
+		}
 
 		BaseModelSearchResult<UserGroup> userGroupBaseModelSearchResult =
 			_userGroupLocalService.searchUserGroups(
