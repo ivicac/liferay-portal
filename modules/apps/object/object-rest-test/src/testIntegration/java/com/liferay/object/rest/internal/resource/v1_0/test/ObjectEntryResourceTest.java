@@ -170,8 +170,6 @@ import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Feature;
 
-import org.hamcrest.CoreMatchers;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -5538,6 +5536,38 @@ public class ObjectEntryResourceTest {
 	}
 
 	@Test
+	public void testGetObjectEntryFilteredByStatus() throws Exception {
+		_objectDefinition1.setEnableObjectEntryDraft(true);
+
+		_objectDefinition1 =
+			_objectDefinitionLocalService.updateObjectDefinition(
+				_objectDefinition1);
+
+		HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				_OBJECT_FIELD_NAME_1, RandomTestUtil.randomString()
+			).toString(),
+			_objectDefinition1.getRESTContextPath(), Http.Method.POST);
+		HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				_OBJECT_FIELD_NAME_1, RandomTestUtil.randomString()
+			).toString(),
+			_objectDefinition1.getRESTContextPath(), Http.Method.POST);
+		HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				_OBJECT_FIELD_NAME_1, RandomTestUtil.randomString()
+			).put(
+				"status", JSONUtil.put("code", WorkflowConstants.STATUS_DRAFT)
+			).toString(),
+			_objectDefinition1.getRESTContextPath(), Http.Method.POST);
+
+		_assertFilteredObjectEntries(2, "status eq 0");
+		_assertFilteredObjectEntries(1, "status eq 2");
+		_assertFilteredObjectEntries(2, "status/any(k:k eq 0)");
+		_assertFilteredObjectEntries(1, "status/any(k:k eq 2)");
+	}
+
+	@Test
 	public void testGetObjectEntryFilteredByTaxonomyCategories()
 		throws Exception {
 
@@ -5878,7 +5908,7 @@ public class ObjectEntryResourceTest {
 		}
 	}
 
-	@FeatureFlags({"LPD-29347", "LPS-174455"})
+	@FeatureFlags("LPD-29347")
 	@Test
 	public void testGetObjectEntryWithAttachmentObjectField() throws Exception {
 		String content = RandomTestUtil.randomString();
@@ -7065,7 +7095,7 @@ public class ObjectEntryResourceTest {
 		Assert.assertNull(objectEntryJSONObject.get("permissions"));
 	}
 
-	@FeatureFlags({"LPD-29347", "LPS-174455"})
+	@FeatureFlags("LPD-29347")
 	@Test
 	public void testPatchPutCustomObjectEntryByExternalReferenceCodeWithAttachmentObjectField()
 		throws Exception {
@@ -7098,7 +7128,7 @@ public class ObjectEntryResourceTest {
 			Http.Method.PUT, jsonObject.getLong("id"));
 	}
 
-	@FeatureFlags({"LPD-29347", "LPS-174455"})
+	@FeatureFlags("LPD-29347")
 	@Test
 	public void testPatchPutCustomObjectEntryWithAttachmentObjectField()
 		throws Exception {
@@ -7148,7 +7178,7 @@ public class ObjectEntryResourceTest {
 			jsonObject.getString(_OBJECT_FIELD_NAME_1), newObjectFieldValue);
 	}
 
-	@FeatureFlags({"LPD-29347", "LPS-174455"})
+	@FeatureFlags("LPD-29347")
 	@Test
 	public void testPostCustomObjectEntryWithAttachmentObjectField()
 		throws Exception {
@@ -7723,10 +7753,6 @@ public class ObjectEntryResourceTest {
 		JSONAssert.assertEquals(
 			JSONUtil.put(
 				"status", "NOT_FOUND"
-			).put(
-				"title",
-				"No ObjectEntry exists with the primary key " +
-					randomObjectEntryId
 			).toString(),
 			HTTPTestUtil.invokeToJSONObject(
 				objectEntryJSONObject.toString(),
@@ -7752,9 +7778,6 @@ public class ObjectEntryResourceTest {
 		JSONAssert.assertEquals(
 			JSONUtil.put(
 				"status", "NOT_FOUND"
-			).put(
-				"title",
-				"No User exists with the primary key " + randomObjectEntryId
 			).toString(),
 			HTTPTestUtil.invokeToJSONObject(
 				objectEntryJSONObject.toString(),
@@ -8145,9 +8168,7 @@ public class ObjectEntryResourceTest {
 				RandomTestUtil.randomString()),
 			Http.Method.PUT);
 
-		Assert.assertThat(
-			jsonObject.getString("title"),
-			CoreMatchers.containsString("No ObjectEntry exists with the key"));
+		Assert.assertNull(jsonObject.get("title"));
 	}
 
 	@Test
@@ -8452,6 +8473,87 @@ public class ObjectEntryResourceTest {
 				Http.Method.GET
 			).toString(),
 			JSONCompareMode.LENIENT);
+	}
+
+	@Test
+	public void testPutCustomObjectEntryPermissionsPage() throws Exception {
+
+		// Invalid permissions
+
+		JSONObject objectEntryJSONObject =
+			_postCustomObjectEntryWithPermissions(true, null);
+
+		JSONObject invalidPermissionJSONObject =
+			_putCustomObjectEntryPermissionsPage(
+				objectEntryJSONObject.getLong("id"),
+				JSONUtil.putAll(
+					_getPermissionsJSONObject(
+						new String[] {ActionKeys.DELETE},
+						RandomTestUtil.randomString())));
+
+		Assert.assertEquals(
+			"NOT_FOUND", invalidPermissionJSONObject.getString("status"));
+
+		// Permissions with different roles
+
+		Role role1 = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		_resourcePermissionLocalService.addResourcePermission(
+			TestPropsValues.getCompanyId(), _objectDefinition1.getClassName(),
+			ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(TestPropsValues.getCompanyId()), role1.getRoleId(),
+			ActionKeys.DELETE);
+
+		Role role2 = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		objectEntryJSONObject = _postCustomObjectEntryWithPermissions(
+			true,
+			JSONUtil.putAll(
+				_getPermissionsJSONObject(
+					new String[] {ActionKeys.PERMISSIONS}, role1.getName()),
+				_getPermissionsJSONObject(
+					new String[] {ActionKeys.UPDATE, ActionKeys.VIEW},
+					role2.getName())));
+
+		Role role3 = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		_assertCustomObjectEntryWithPermissions(
+			JSONUtil.putAll(
+				_getPermissionsJSONObject(
+					new String[] {ActionKeys.DELETE, ActionKeys.UPDATE},
+					role1.getName()),
+				_getPermissionsJSONObject(
+					new String[] {ActionKeys.DELETE}, role3.getName())),
+			_putCustomObjectEntryPermissionsPage(
+				objectEntryJSONObject.getLong("id"),
+				JSONUtil.putAll(
+					_getPermissionsJSONObject(
+						new String[] {ActionKeys.UPDATE}, role1.getName()),
+					_getPermissionsJSONObject(
+						new String[] {ActionKeys.DELETE}, role3.getName()))));
+		_assertCustomObjectEntryWithPermissions(
+			JSONUtil.putAll(
+				_getPermissionsJSONObject(
+					new String[] {ActionKeys.DELETE}, role1.getName()),
+				_getPermissionsJSONObject(
+					new String[] {ActionKeys.VIEW}, role3.getName())),
+			_putCustomObjectEntryPermissionsPage(
+				objectEntryJSONObject.getLong("id"),
+				JSONUtil.putAll(
+					_getPermissionsJSONObject(
+						new String[] {ActionKeys.VIEW}, role3.getName()))));
+
+		// Permissions with empty list
+
+		JSONArray companyPermissionsJSONArray = JSONUtil.putAll(
+			_getPermissionsJSONObject(
+				new String[] {ActionKeys.DELETE}, role1.getName()));
+
+		_assertCustomObjectEntryWithPermissions(
+			companyPermissionsJSONArray,
+			_putCustomObjectEntryPermissionsPage(
+				objectEntryJSONObject.getLong("id"),
+				_jsonFactory.createJSONArray()));
 	}
 
 	@Test
@@ -11766,13 +11868,19 @@ public class ObjectEntryResourceTest {
 	}
 
 	private void _assertCustomObjectEntryWithPermissions(
-			JSONArray expectedPermissionsJSONArray,
-			JSONObject objectEntryJSONObject)
+			JSONArray expectedPermissionsJSONArray, JSONObject jsonObject)
 		throws Exception {
+
+		JSONArray actualPermissionsJSONArray = jsonObject.getJSONArray(
+			"permissions");
+
+		if (actualPermissionsJSONArray == null) {
+			actualPermissionsJSONArray = jsonObject.getJSONArray("items");
+		}
 
 		JSONAssert.assertEquals(
 			String.valueOf(expectedPermissionsJSONArray),
-			String.valueOf(objectEntryJSONObject.getJSONArray("permissions")),
+			String.valueOf(actualPermissionsJSONArray),
 			JSONCompareMode.LENIENT);
 	}
 
@@ -11978,6 +12086,7 @@ public class ObjectEntryResourceTest {
 
 	private void _assertNotFound(JSONObject jsonObject) {
 		Assert.assertEquals("NOT_FOUND", jsonObject.getString("status"));
+		Assert.assertNull(jsonObject.get("title"));
 	}
 
 	private void _assertObjectEntryField(
@@ -12455,6 +12564,18 @@ public class ObjectEntryResourceTest {
 			_objectDefinition1.getRESTContextPath(), Http.Method.POST);
 	}
 
+	private JSONObject _putCustomObjectEntryPermissionsPage(
+			long id, JSONArray permissionsJSONArray)
+		throws Exception {
+
+		return HTTPTestUtil.invokeToJSONObject(
+			permissionsJSONArray.toString(),
+			StringBundler.concat(
+				_getEndpoint(TestPropsValues.getGroupId(), _objectDefinition1),
+				StringPool.SLASH, id, "/permissions"),
+			Http.Method.PUT);
+	}
+
 	private void _registerUnsafeSupplierInvocations(
 		Map<String, Long> invocations,
 		com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry,
@@ -12723,15 +12844,7 @@ public class ObjectEntryResourceTest {
 		String randomExternalReferenceCode = RandomTestUtil.randomString();
 
 		_testPatchPutCustomObjectEntryWithAttachmentField(
-			fileEntry -> JSONUtil.put(
-				"status", "NOT_FOUND"
-			).put(
-				"title",
-				StringBundler.concat(
-					"No DLFolder exists with the key {externalReferenceCode=",
-					randomExternalReferenceCode, ", groupId=",
-					TestPropsValues.getGroupId(), "}")
-			),
+			fileEntry -> JSONUtil.put("status", "NOT_FOUND"),
 			_toFileEntry(
 				Base64::encode, RandomTestUtil.randomString(),
 				RandomTestUtil.randomString() + ".txt",
@@ -13224,15 +13337,7 @@ public class ObjectEntryResourceTest {
 		String randomExternalReferenceCode = RandomTestUtil.randomString();
 
 		_testPostCustomObjectEntryWithAttachmentField(
-			fileEntry -> JSONUtil.put(
-				"status", "NOT_FOUND"
-			).put(
-				"title",
-				StringBundler.concat(
-					"No DLFolder exists with the key {externalReferenceCode=",
-					randomExternalReferenceCode, ", groupId=",
-					TestPropsValues.getGroupId(), "}")
-			),
+			fileEntry -> JSONUtil.put("status", "NOT_FOUND"),
 			_toFileEntry(
 				Base64::encode, RandomTestUtil.randomString(),
 				RandomTestUtil.randomString() + ".txt",

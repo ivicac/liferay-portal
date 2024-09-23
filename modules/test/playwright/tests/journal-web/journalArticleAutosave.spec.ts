@@ -10,6 +10,7 @@ import {applicationsMenuPageTest} from '../../fixtures/applicationsMenuPageTest'
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../fixtures/loginTest';
+import {pagesAdminPagesTest} from '../../fixtures/pagesAdminPagesTest';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import fillAndClickOutside from '../../utils/fillAndClickOutside';
 import getRandomString from '../../utils/getRandomString';
@@ -35,7 +36,40 @@ const autoSaveTest = mergeTests(
 	}),
 	isolatedSiteTest,
 	journalPagesTest,
-	loginTest()
+	loginTest(),
+	pagesAdminPagesTest
+);
+
+autoSaveTest(
+	'UndoRedo Should not appear when editing default values',
+	{
+		tag: '@LPD-36442',
+	},
+	async ({
+		apiHelpers,
+		journalEditArticlePage,
+		journalEditStructureDefaultValuesPage,
+		site,
+	}) => {
+		const fieldName = 'Text1';
+		const structureName = 'Structure1';
+
+		const dataDefinition = getDataStructureDefinition({
+			defaultLanguageId: 'en_US',
+			fields: [{name: fieldName, repeatable: true}],
+			name: structureName,
+		});
+
+		await apiHelpers.dataEngine.createStructure(site.id, dataDefinition);
+
+		await journalEditStructureDefaultValuesPage.goto({
+			siteUrl: site.friendlyUrlPath,
+			structureName,
+		});
+
+		expect(journalEditArticlePage.undoButton).not.toBeVisible();
+		expect(journalEditArticlePage.redoButton).not.toBeVisible();
+	}
 );
 
 autoSaveTest(
@@ -509,5 +543,56 @@ autoSaveTest(
 		await expect(
 			journalEditArticlePage.changesSavedIndicator
 		).toBeVisible();
+	}
+);
+
+autoSaveTest(
+	'Empty option restores in Select from List when using undo/redo',
+	{
+		tag: '@LPD-35631',
+	},
+	async ({apiHelpers, journalEditArticlePage, page, site}) => {
+		const fieldName = 'SelectFromList';
+		const structureName = 'Structure 1';
+
+		const dataDefinition = getDataStructureDefinition({
+			defaultLanguageId: 'en_US',
+			fields: [
+				{
+					fieldType: 'select',
+					name: fieldName,
+					options: {
+						en_US: [
+							{
+								label: 'option1',
+								reference: 'option1',
+								value: 'option1',
+							},
+							{
+								label: 'option2',
+								reference: 'option2',
+								value: 'option2',
+							},
+						],
+					},
+				},
+			],
+			name: structureName,
+		});
+
+		await apiHelpers.dataEngine.createStructure(site.id, dataDefinition);
+
+		await journalEditArticlePage.goto({
+			siteUrl: site.friendlyUrlPath,
+			structureName,
+		});
+
+		await page.getByLabel(fieldName).click();
+
+		await page.getByRole('option', {name: 'option1'}).click();
+
+		await journalEditArticlePage.undoButton.click();
+
+		await expect(page.getByLabel(fieldName)).toHaveText('Choose an Option');
 	}
 );

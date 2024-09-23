@@ -122,6 +122,7 @@ export type TestrayBuild = {
 	dueStatus: PickList;
 	gitHash: string;
 	id: number;
+	importStatus: PickList;
 	name: string;
 	productVersion?: TestrayProductVersion;
 	project?: TestrayProject;
@@ -141,6 +142,7 @@ export type TestrayBuild = {
 export type TestrayBuildCustomAPI = {
 	testrayBuildArchived: boolean;
 	testrayBuildId: number;
+	testrayBuildImportStatus: string;
 	testrayBuildName: string;
 	testrayBuildPromoted: boolean;
 	testrayBuildTaskStatus: string;
@@ -200,6 +202,7 @@ export type TestrayCaseResult = {
 	dateCreated: string;
 	dateModified: string;
 	dueStatus: PickList;
+	duration: number;
 	error?: string;
 	errors: string;
 	id: number;

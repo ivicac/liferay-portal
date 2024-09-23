@@ -56,11 +56,15 @@ export class PageEditorPage {
 		this.undoHistory = page.locator('.page-editor__undo-history');
 	}
 
-	async goto(layout: Layout, siteUrl?: Site['friendlyUrlPath']) {
+	async goto(
+		layout: Layout,
+		siteUrl?: Site['friendlyUrlPath'],
+		doAsUserId?: string
+	) {
 		await this.page.goto('/');
 
 		await this.page.goto(
-			`/web${siteUrl || '/guest'}${layout.friendlyUrlPath}?p_l_mode=edit`
+			`/web${siteUrl || '/guest'}${layout.friendlyUrlPath || layout.friendlyURL}?p_l_mode=edit${doAsUserId ? '&doAsUserId=' + doAsUserId : ''}`
 		);
 	}
 
@@ -365,6 +369,8 @@ export class PageEditorPage {
 
 		await nameInput.waitFor();
 
+		await expect(nameInput).toHaveAttribute('required');
+
 		await fillAndClickOutside(this.page, nameInput, name);
 
 		await this.page.locator('.modal-footer').getByText('Save').click();
@@ -426,7 +432,7 @@ export class PageEditorPage {
 	async duplicateFragment(fragmentId: string) {
 		await this.selectFragment(fragmentId);
 
-		await this.page.keyboard.press('Control+D');
+		await this.page.keyboard.press('Alt+Control+D');
 
 		await this.waitForChangesSaved();
 	}
@@ -1074,7 +1080,7 @@ export class PageEditorPage {
 	}
 
 	async waitForChangesSaved() {
-		await this.page.getByLabel('Saved').waitFor();
+		await this.page.getByLabel('Saved', {exact: true}).waitFor();
 
 		await this.page
 			.getByText(

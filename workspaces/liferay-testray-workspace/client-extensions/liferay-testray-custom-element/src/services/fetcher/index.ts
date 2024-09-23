@@ -21,6 +21,7 @@ const testrayRestAPIs = [
 	'testray-build',
 	'testray-build-autofill',
 	'testray-case-result',
+	'testray-routine-duration-report',
 	'testray-run-comparisons',
 	'testray-status-metrics',
 	'testray-testflow',

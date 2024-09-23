@@ -103,7 +103,7 @@ function Select({
 
 	useEffect(() => {
 		const selectedOption = options.find(
-			(option) => option.value === selectedItem?.[0]
+			(option) => option.value === selectedItem
 		);
 
 		if (selectedOption) {
@@ -153,9 +153,7 @@ function Select({
 						}
 					}}
 					placeholder={placeholder}
-					selectedKey={
-						selectedItem === null ? 'chooseAnOption' : selectedItem
-					}
+					selectedKey={selectedItem ?? 'chooseAnOption'}
 				>
 					{(group) => (
 						<DropDown.Group
@@ -164,6 +162,7 @@ function Select({
 						>
 							{(item) => (
 								<Option
+									data-option-reference={item.reference}
 									disabled={item.disabled}
 									key={item.value}
 								>

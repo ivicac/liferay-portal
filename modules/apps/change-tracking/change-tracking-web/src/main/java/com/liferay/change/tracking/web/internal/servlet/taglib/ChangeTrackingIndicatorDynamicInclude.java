@@ -24,9 +24,11 @@ import com.liferay.change.tracking.web.internal.security.permission.resource.CTP
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -46,7 +48,6 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
-import com.liferay.portal.kernel.servlet.PortalSessionThreadLocal;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -145,8 +146,11 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 									_servletContext.getContextPath(),
 									"/publications/css",
 									"/ChangeTrackingIndicator.css")));
+						writer.write(StringPool.QUOTE);
 						writer.write(
-							"\" rel=\"stylesheet\" type=\"text/css\" />");
+							ContentSecurityPolicyNonceProviderUtil.getNonce(
+								httpServletRequest));
+						writer.write(" rel=\"stylesheet\" type=\"text/css\"/>");
 					}
 					catch (IOException ioException) {
 						ReflectionUtil.throwException(ioException);
@@ -697,7 +701,7 @@ public class ChangeTrackingIndicatorDynamicInclude extends BaseDynamicInclude {
 			return false;
 		}
 
-		HttpSession httpSession = PortalSessionThreadLocal.getHttpSession();
+		HttpSession httpSession = httpServletRequest.getSession();
 
 		long ctLastGroupId = GetterUtil.getLong(
 			httpSession.getAttribute(CTWebKeys.CT_LAST_GROUP_ID));

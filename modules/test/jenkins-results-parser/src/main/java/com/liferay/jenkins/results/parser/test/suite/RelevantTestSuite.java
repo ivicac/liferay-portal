@@ -12,6 +12,7 @@ import com.liferay.jenkins.results.parser.job.property.JobProperty;
 import com.liferay.jenkins.results.parser.test.batch.TestBatch;
 
 import java.io.File;
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +33,7 @@ public class RelevantTestSuite {
 			portalAcceptancePullRequestJob.getPortalGitWorkingDirectory();
 
 		_modifiedFiles = portalGitWorkingDirectory.getModifiedFilesList();
+		_portalGitWorkingDirectory = portalGitWorkingDirectory;
 
 		_relevantRuleEngine = RelevantRuleEngine.getInstance(
 			portalAcceptancePullRequestJob);
@@ -52,6 +54,15 @@ public class RelevantTestSuite {
 					baseTestPropertiesFile);
 		}
 
+		try {
+			RelevantRuleValidation.validate(
+				_portalGitWorkingDirectory.getGitRepositoryName(),
+				_portalGitWorkingDirectory.getUpstreamBranchName());
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
 		List<String> validTestBatchNames = Arrays.asList(
 			testBatchNamesPropertyValue.split(","));
 
@@ -59,8 +70,6 @@ public class RelevantTestSuite {
 
 		List<RelevantRule> relevantRules =
 			_relevantRuleEngine.getMatchingRelevantRules(_modifiedFiles);
-
-		RelevantRuleValidation.validate(relevantRules);
 
 		Collections.sort(relevantRules);
 
@@ -104,6 +113,7 @@ public class RelevantTestSuite {
 	}
 
 	private List<File> _modifiedFiles;
+	private final PortalGitWorkingDirectory _portalGitWorkingDirectory;
 	private final RelevantRuleEngine _relevantRuleEngine;
 	private final Set<JobProperty> _testBatchNamesJobProperties =
 		new HashSet<>();

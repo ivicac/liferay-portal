@@ -9,6 +9,51 @@ declare module '*.svg' {
 
 declare module 'warning';
 
+type AnalyticsProject = {
+	accountKey: string;
+	accountName: string;
+	corpProjectName: string;
+	corpProjectUuid: string;
+	faroSubscription: FaroSubscription;
+	faroSubscriptionDisplay: FaroSubscription;
+	friendlyURL: string;
+	groupId: number;
+	incidentReportEmailAddresses: string[];
+	name: string;
+	ownerEmailAddress: string;
+	recommendationsEnabled: boolean;
+	serverLocation: string;
+	state: string;
+	stateEndDate: null;
+	stateStartDate: null;
+	timeZone: TimeZone;
+	userId: number;
+};
+
+type TimeZone = {
+	country: string;
+	displayTimeZone: string;
+	timeZoneId: string;
+};
+
+type FaroSubscription = {
+	active: boolean;
+	addOns: any[];
+	endDate: null;
+	individualsCountSinceLastAnniversary: number;
+	individualsCounts: null;
+	individualsLimit: number;
+	individualsStatus: number;
+	lastAnniversaryDate: null;
+	name: string;
+	pageViewsCountSinceLastAnniversary: number;
+	pageViewsCounts: null;
+	pageViewsLimit: number;
+	pageViewsStatus: number;
+	startDate: number;
+	syncedIndividualsCount: number;
+};
+
 type AnalyticsViews = {
 	results: {
 		metrics: {
@@ -295,15 +340,16 @@ type Channel = {
 };
 
 type DefaultProperties = {
+	analyticsCloudURL: string;
 	cloudBaseURL: string;
-	contactSupportUrl: string;
+	contactSupportURL: string;
 	eulaBaseURL: string;
 	featureFlags: string[];
 	featurePreviews: ['use-product-id-for-specification'];
 	marketoFormId: string;
+	productId: string;
 	trialAccountCheck: 'false' | 'true';
 	trialEulaURL: string;
-	trialProductId: string;
 };
 
 interface CommerceAccount extends Omit<Account, 'description'> {
@@ -386,7 +432,14 @@ interface PlacedOrder {
 		label_i18n: string;
 	};
 	orderTypeExternalReferenceCode: string;
+	placedOrderBillingAddress: any;
+	placedOrderBillingAddressId: number;
 	placedOrderItems: PlacedOrderItems[];
+	workflowStatusInfo: {
+		code: number;
+		label: string;
+		label_i18n: string;
+	};
 }
 
 interface PlacedOrderItems {

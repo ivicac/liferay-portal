@@ -6,11 +6,28 @@
 import ClayButton from '@clayui/button';
 import ClayForm from '@clayui/form';
 import ClayModal from '@clayui/modal';
-import React from 'react';
+import React, {useState} from 'react';
 
+import InfoBoxModalDateInput from './info_box/modal/InfoBoxModalDateInput';
+import InfoBoxModalShippingMethodInput from './info_box/modal/InfoBoxModalShippingMethodInput';
 import InfoBoxModalTextInput from './info_box/modal/InfoBoxModalTextInput';
 
+const getInputRendered = (field, fieldValueType) => {
+	if (field === 'shippingMethod') {
+		return InfoBoxModalShippingMethodInput;
+	}
+
+	if (fieldValueType === 'date') {
+		return InfoBoxModalDateInput;
+	}
+
+	return InfoBoxModalTextInput;
+};
+
 const InfoBoxModal = ({
+	additionalProps,
+	field,
+	fieldValueType,
 	handleSubmit,
 	id,
 	inputValue,
@@ -18,9 +35,15 @@ const InfoBoxModal = ({
 	observer,
 	onOpenChange,
 	open,
+	orderId,
 	setInputValue,
+	setParseRequest,
+	setParseResponse,
 	spritemap,
 }) => {
+	const [isValid, setIsValid] = useState(true);
+	const InputRenderer = getInputRendered(field, fieldValueType);
+
 	return (
 		<>
 			{open && (
@@ -35,10 +58,16 @@ const InfoBoxModal = ({
 
 						<ClayModal.Body>
 							<ClayForm.Group>
-								<InfoBoxModalTextInput
+								<InputRenderer
+									additionalProps={additionalProps}
 									inputValue={inputValue}
 									label={label}
+									orderId={orderId}
 									setInputValue={setInputValue}
+									setIsValid={setIsValid}
+									setParseRequest={setParseRequest}
+									setParseResponse={setParseResponse}
+									spritemap={spritemap}
 								/>
 							</ClayForm.Group>
 						</ClayModal.Body>
@@ -53,7 +82,10 @@ const InfoBoxModal = ({
 										{Liferay.Language.get('cancel')}
 									</ClayButton>
 
-									<ClayButton type="submit">
+									<ClayButton
+										disabled={!isValid}
+										type="submit"
+									>
 										{Liferay.Language.get('save')}
 									</ClayButton>
 								</ClayButton.Group>

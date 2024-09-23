@@ -275,31 +275,50 @@ baseTest(
 
 		await page.getByLabel(`${childFolder.name}`).check();
 
-		await page.getByRole('button', {name: 'Move'}).click();
-
-		await page.getByRole('button', {name: 'Select'}).click();
-
-		await page
-			.frameLocator('iframe[title="Select Folder"]')
-			.getByRole('button')
-			.click();
-
-		await page
-			.frameLocator('iframe[title="Select Folder"]')
-			.getByText(`${parentFolder.name}`)
-			.click();
-
-		await page.getByRole('button', {name: 'Move'}).click();
-
-		await expect(
-			page.getByText('Success:Your request completed successfully.')
-		).toBeVisible();
+		await journalPage.moveToFolder(parentFolder.name);
 
 		await expect(page.getByText(`${childFolder.name}`)).toBeHidden();
 
 		await page.getByRole('link', {name: `${parentFolder.name}`}).click();
 
 		await expect(page.getByText(`${childFolder.name}`)).toBeVisible();
+	}
+);
+
+baseTest(
+	'Move web content to another folder via management toolbar',
+	{
+		tag: '@LPD-36955',
+	},
+	async ({apiHelpers, journalPage, page, site}) => {
+		const folder = await apiHelpers.jsonWebServicesJournal.addFolder({
+			groupId: site.id,
+		});
+
+		const basicWebContentStructureId =
+			await getBasicWebContentStructureId(apiHelpers);
+
+		const title = getRandomString();
+
+		await apiHelpers.jsonWebServicesJournal.addWebContent({
+			ddmStructureId: basicWebContentStructureId,
+			groupId: site.id,
+			titleMap: {en_US: title},
+		});
+
+		await journalPage.goto(site.friendlyUrlPath);
+
+		await expect(page.getByText(`${title}`)).toBeVisible();
+
+		await page.getByLabel(`${title}`).check();
+
+		await journalPage.moveToFolder(folder.name);
+
+		await expect(page.getByText(`${title}`)).toBeHidden();
+
+		await page.getByRole('link', {name: `${folder.name}`}).click();
+
+		await expect(page.getByText(`${title}`)).toBeVisible();
 	}
 );
 

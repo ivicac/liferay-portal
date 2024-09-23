@@ -165,11 +165,12 @@ public class CommercePaymentEntryLocalServiceImpl
 
 		if (commercePaymentEntry != null) {
 			return commercePaymentEntryLocalService.updateCommercePaymentEntry(
-				externalReferenceCode, commerceChannelId,
-				commercePaymentEntry.getCommercePaymentEntryId(), amount,
-				callbackURL, cancelURL, currencyCode, errorMessages, languageId,
-				note, payload, paymentIntegrationKey, paymentIntegrationType,
-				paymentStatus, reasonKey, redirectURL, transactionCode, type);
+				externalReferenceCode,
+				commercePaymentEntry.getCommercePaymentEntryId(),
+				commerceChannelId, amount, callbackURL, cancelURL, currencyCode,
+				errorMessages, languageId, note, payload, paymentIntegrationKey,
+				paymentIntegrationType, paymentStatus, reasonKey, redirectURL,
+				transactionCode, type);
 		}
 
 		commercePaymentEntry =

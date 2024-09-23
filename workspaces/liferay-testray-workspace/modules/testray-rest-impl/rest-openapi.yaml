@@ -80,6 +80,8 @@ components:
                 testrayBuildId:
                     format: int64
                     type: integer
+                testrayBuildImportStatus:
+                    type: string
                 testrayBuildName:
                     type: string
                 testrayBuildProductVersion:
@@ -95,6 +97,9 @@ components:
             properties:
                 comment:
                     type: string
+                duration:
+                    format: int64
+                    type: integer
                 error:
                     type: string
                 executionDate:
@@ -195,6 +200,37 @@ components:
                     type: string
                 testrayStatusMetric:
                     $ref: "#/components/schemas/TestrayStatusMetric"
+            type: object
+        TestrayRoutineDurationReport:
+            properties:
+                testrayCaseFlaky:
+                    type: boolean
+                testrayCaseId:
+                    format: int64
+                    type: integer
+                testrayCaseName:
+                    type: string
+                testrayCasePriority:
+                    format: int32
+                    type: integer
+                testrayCaseResultAvgDuration:
+                    format: int64
+                    type: integer
+                testrayCaseResultDurations:
+                    items:
+                        format: int64
+                        type: integer
+                    type: array
+                testrayCaseResultStatus:
+                    items:
+                        type: string
+                    type: array
+                testrayCaseTypeName:
+                    type: string
+                testrayComponentName:
+                    type: string
+                testrayTeamName:
+                    type: string
             type: object
         TestrayRoutineMetric:
             properties:
@@ -583,6 +619,62 @@ paths:
                                 format: binary
                                 type: string
             tags: ["TestrayCaseResult"]
+    "/testray-routine-duration-report/{testrayRoutineId}":
+        get:
+            operationId: getTestrayRoutineDurationReportsTestrayRoutinePage
+            parameters:
+                - in: path
+                  name: testrayRoutineId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: flaky
+                  schema:
+                      type: boolean
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: priority
+                  schema:
+                      type: string
+                - in: query
+                  name: testrayCaseName
+                  schema:
+                      type: string
+                - in: query
+                  name: testrayCaseTypeIds
+                  schema:
+                      type: string
+                - in: query
+                  name: testrayComponentIds
+                  schema:
+                      type: string
+                - in: query
+                  name: testrayTeamIds
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/TestrayRoutineDurationReport"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/TestrayRoutineDurationReport"
+                                type: array
+            tags: ["TestrayRoutineDurationReport"]
     "/testray-run-comparisons/by-testray-routineId/{testrayRoutineId}":
         get:
             operationId: getTestrayRunComparisonByTestrayRoutineIdTestrayRoutine
@@ -1130,6 +1222,35 @@ paths:
                   name: userId
                   schema:
                       type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/TestraySubtask"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/TestraySubtask"
+                                type: array
+            tags: ["TestrayTestFlow"]
+    "/testray-testflow/testray-subtask/merge":
+        put:
+            operationId: putTestrayTestFlowTestraySubtaskMergePage
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            items:
+                                $ref: "#/components/schemas/TestraySubtask"
+                            type: array
+                    application/xml:
+                        schema:
+                            items:
+                                $ref: "#/components/schemas/TestraySubtask"
+                            type: array
             responses:
                 200:
                     content:

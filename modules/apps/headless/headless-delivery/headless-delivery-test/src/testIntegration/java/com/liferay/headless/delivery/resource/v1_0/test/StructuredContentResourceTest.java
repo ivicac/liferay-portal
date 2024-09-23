@@ -17,6 +17,7 @@ import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
 import com.liferay.data.engine.rest.test.util.DataDefinitionTestUtil;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFolder;
+import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
 import com.liferay.document.library.test.util.DLTestUtil;
 import com.liferay.dynamic.data.mapping.constants.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
@@ -219,12 +220,7 @@ public class StructuredContentResourceTest
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertEquals(
-				StringBundler.concat(
-					"No JournalArticle exists with the key {groupId=",
-					testDepotEntry.getGroupId(), ", externalReferenceCode=",
-					externalReferenceCode, "}"),
-				problem.getTitle());
+			Assert.assertNull(problem.getTitle());
 		}
 	}
 
@@ -302,9 +298,7 @@ public class StructuredContentResourceTest
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertEquals(
-				"Unable to get a valid asset library with ID " + assetLibraryId,
-				problem.getTitle());
+			Assert.assertNull(problem.getTitle());
 		}
 
 		// Nonexistent external reference code
@@ -324,12 +318,7 @@ public class StructuredContentResourceTest
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertEquals(
-				StringBundler.concat(
-					"No JournalArticle exists with the key {groupId=",
-					testDepotEntry.getGroupId(), ", externalReferenceCode=",
-					externalReferenceCode, "}"),
-				problem.getTitle());
+			Assert.assertNull(problem.getTitle());
 		}
 	}
 
@@ -445,6 +434,7 @@ public class StructuredContentResourceTest
 		_testGetStructuredContentWithDifferentFolder();
 		_testGetStructuredContentWithDifferentLocale();
 		_testGetStructuredContentWithDifferentTimeZone();
+		_testGetStructuredContentWithInvalidImage();
 		_testGetStructuredContentWithRadioField();
 		_testGetStructuredContentWithRoleAdministrator();
 		_testGetStructuredContentWithRoleOwner();
@@ -1082,7 +1072,7 @@ public class StructuredContentResourceTest
 	}
 
 	private StructuredContent _randomCompleteStructuredContent(
-			boolean localizable)
+			long dlFileEntryId, boolean localizable)
 		throws Exception {
 
 		DDMStructureTestHelper ddmStructureTestHelper =
@@ -1106,7 +1096,7 @@ public class StructuredContentResourceTest
 		StructuredContent structuredContent = super.randomStructuredContent();
 
 		structuredContent.setContentFields(
-			_randomContentFields(journalArticle, localizable));
+			_randomContentFields(dlFileEntryId, journalArticle, localizable));
 		structuredContent.setContentStructureId(
 			complexDDMStructure.getStructureId());
 		structuredContent.setRelatedContents(
@@ -1125,7 +1115,8 @@ public class StructuredContentResourceTest
 	}
 
 	private ContentField[] _randomContentFields(
-		JournalArticle journalArticle, boolean localizable) {
+		long dlFileEntryId, JournalArticle journalArticle,
+		boolean localizable) {
 
 		return new ContentField[] {
 			new ContentField() {
@@ -1246,7 +1237,7 @@ public class StructuredContentResourceTest
 						{
 							image = new ContentDocument() {
 								{
-									id = _dlFileEntry.getPrimaryKey();
+									id = dlFileEntryId;
 								}
 							};
 						}
@@ -1270,7 +1261,7 @@ public class StructuredContentResourceTest
 						{
 							document = new ContentDocument() {
 								{
-									id = _dlFileEntry.getPrimaryKey();
+									id = _dlFileEntry.getFileEntryId();
 								}
 							};
 						}
@@ -1779,7 +1770,8 @@ public class StructuredContentResourceTest
 		StructuredContent postStructuredContent =
 			structuredContentResource.postSiteStructuredContent(
 				testGroup.getGroupId(),
-				_randomCompleteStructuredContent(localizable));
+				_randomCompleteStructuredContent(
+					_dlFileEntry.getFileEntryId(), localizable));
 
 		StructuredContent getStructuredContent =
 			structuredContentResource.getStructuredContent(
@@ -1801,7 +1793,8 @@ public class StructuredContentResourceTest
 			acceptAllLanguagesStructuredContentResource.
 				postSiteStructuredContent(
 					testGroup.getGroupId(),
-					_randomCompleteStructuredContent(localizable));
+					_randomCompleteStructuredContent(
+						_dlFileEntry.getFileEntryId(), localizable));
 
 		StructuredContent getStructuredContent =
 			acceptAllLanguagesStructuredContentResource.getStructuredContent(
@@ -1906,7 +1899,8 @@ public class StructuredContentResourceTest
 			structuredContentResource.
 				postStructuredContentFolderStructuredContent(
 					_journalFolder.getFolderId(),
-					_randomCompleteStructuredContent(true));
+					_randomCompleteStructuredContent(
+						_dlFileEntry.getFileEntryId(), true));
 
 		StructuredContent getStructuredContent =
 			structuredContentResource.getStructuredContent(
@@ -2000,6 +1994,28 @@ public class StructuredContentResourceTest
 		finally {
 			_userLocalService.deleteUser(user);
 		}
+	}
+
+	private void _testGetStructuredContentWithInvalidImage() throws Exception {
+		DLFolder dlFolder = DLTestUtil.addDLFolder(testGroup.getGroupId());
+
+		DLFileEntry dlFileEntry = DLTestUtil.addDLFileEntry(
+			dlFolder.getFolderId());
+
+		StructuredContent postStructuredContent =
+			structuredContentResource.
+				postStructuredContentFolderStructuredContent(
+					_journalFolder.getFolderId(),
+					_randomCompleteStructuredContent(
+						dlFileEntry.getFileEntryId(), true));
+
+		DLFileEntryLocalServiceUtil.deleteFileEntry(dlFileEntry);
+
+		StructuredContent getStructuredContent =
+			structuredContentResource.getStructuredContent(
+				postStructuredContent.getId());
+
+		assertValid(getStructuredContent);
 	}
 
 	private void _testGetStructuredContentWithRadioField() throws Exception {

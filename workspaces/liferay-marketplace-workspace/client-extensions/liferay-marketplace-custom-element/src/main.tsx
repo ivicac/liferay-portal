@@ -20,9 +20,11 @@ class WebComponent extends HTMLElement {
 				<Routes
 					path={this.getAttribute('path') as RouteType}
 					properties={{
+						analyticsCloudURL:
+							this.getAttribute('analyticsCloudURL') || '',
 						cloudBaseURL: this.getAttribute('cloudBaseURL') || '',
-						contactSupportUrl:
-							this.getAttribute('contactSupportUrl') || '',
+						contactSupportURL:
+							this.getAttribute('contactSupportURL') || '',
 						eulaBaseURL: this.getAttribute('eulaBaseURL') || '',
 						featureFlags: (this.getAttribute('featureFlags') ?? '')
 							.split(',')
@@ -35,12 +37,11 @@ class WebComponent extends HTMLElement {
 								featurePreview.trim()
 							) as any,
 						marketoFormId: this.getAttribute('marketoFormId') || '',
+						productId: this.getAttribute('productId') || '',
 						trialAccountCheck:
 							(this.getAttribute('trialAccountCheck') as any) ||
 							'true',
 						trialEulaURL: this.getAttribute('trialEulaURL') || '',
-						trialProductId:
-							this.getAttribute('trialProductId') || '',
 					}}
 				/>
 			);

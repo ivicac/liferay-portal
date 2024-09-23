@@ -869,7 +869,7 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 				CaptchaUtil.check(contextHttpServletRequest);
 			}
 
-			user = _userService.addUser(
+			user = _userService.addUserWithWorkflow(
 				contextCompany.getCompanyId(), autoPassword, password, password,
 				false, userAccount.getAlternateName(),
 				userAccount.getEmailAddress(), _getLocale(userAccount),
@@ -899,7 +899,7 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 				_getWebsites(null, userAccount));
 		}
 		else {
-			user = _userService.addUser(
+			user = _userService.addUserWithWorkflow(
 				contextCompany.getCompanyId(), autoPassword, password, password,
 				false, userAccount.getAlternateName(),
 				userAccount.getEmailAddress(), _getLocale(userAccount),
@@ -1081,6 +1081,12 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 			_getServiceBuilderEmailAddresses(null, userAccount),
 			_getServiceBuilderPhones(null, userAccount),
 			_getWebsites(null, userAccount), false, serviceContext);
+
+		byte[] portraitBytes = _getPortraitBytes(true, user, userAccount);
+
+		if (ArrayUtil.isNotEmpty(portraitBytes)) {
+			user = _userService.updatePortrait(user.getUserId(), portraitBytes);
+		}
 
 		user = _updateStatus(serviceContext, user, userAccount);
 
@@ -1401,13 +1407,23 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 			boolean useUserDefault, User user, UserAccount userAccount)
 		throws Exception {
 
-		Long imageId = userAccount.getImageId();
+		long imageId = GetterUtil.getLong(userAccount.getImageId());
 
-		if ((user != null) && (imageId == null) && useUserDefault) {
-			imageId = user.getPortraitId();
+		if (imageId == 0) {
+			FileEntry fileEntry =
+				_dlAppLocalService.fetchFileEntryByExternalReferenceCode(
+					contextCompany.getGroupId(),
+					userAccount.getImageExternalReferenceCode());
+
+			if (fileEntry != null) {
+				imageId = fileEntry.getFileEntryId();
+			}
+			else if ((user != null) && useUserDefault) {
+				imageId = user.getPortraitId();
+			}
 		}
 
-		if ((imageId != null) && (imageId != 0) &&
+		if ((imageId > 0) &&
 			((user == null) || (user.getPortraitId() != imageId))) {
 
 			FileEntry fileEntry = _dlAppLocalService.getFileEntry(imageId);
@@ -1581,14 +1597,26 @@ public class UserAccountResourceImpl extends BaseUserAccountResourceImpl {
 			Objects::nonNull);
 	}
 
-	private boolean _hasPortrait(User user, UserAccount userAccount) {
-		Long imageId = userAccount.getImageId();
+	private boolean _hasPortrait(User user, UserAccount userAccount)
+		throws Exception {
 
-		if ((user != null) && (imageId == null)) {
-			imageId = user.getPortraitId();
+		long imageId = GetterUtil.getLong(userAccount.getImageId());
+
+		if (imageId == 0) {
+			FileEntry fileEntry =
+				_dlAppLocalService.fetchFileEntryByExternalReferenceCode(
+					contextCompany.getGroupId(),
+					userAccount.getImageExternalReferenceCode());
+
+			if (fileEntry != null) {
+				imageId = fileEntry.getFileEntryId();
+			}
+			else if (user != null) {
+				imageId = user.getPortraitId();
+			}
 		}
 
-		if ((imageId == null) || (imageId == 0)) {
+		if (imageId == 0) {
 			return false;
 		}
 

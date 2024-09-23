@@ -49,6 +49,7 @@ const DEFAULT_PAGINATION_PAGE_NUMBER = 1;
 const FrontendDataSet = ({
 	actionParameterName,
 	activeViewSettings,
+	additionalAPIURLParameters,
 	apiURL,
 	appURL,
 	bulkActions,
@@ -219,9 +220,11 @@ const FrontendDataSet = ({
 			searchParam,
 			paginationDelta,
 			pageNumber,
-			activeSorts
+			activeSorts,
+			additionalAPIURLParameters
 		);
 	}, [
+		additionalAPIURLParameters,
 		apiURL,
 		currentURL,
 		paginationDelta,

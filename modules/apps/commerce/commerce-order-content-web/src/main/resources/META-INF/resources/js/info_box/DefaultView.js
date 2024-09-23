@@ -11,11 +11,35 @@ import React, {useState} from 'react';
 
 import InfoBoxModal from '../InfoBoxModal';
 
+const formatValue = (value, type) => {
+	if (type === 'date' && value) {
+		return new Intl.DateTimeFormat(
+			Liferay.ThemeDisplay.getBCP47LanguageId(),
+			{dateStyle: 'short'}
+		).format(new Date(value));
+	}
+
+	return value;
+};
+
+const isEditable = (field, isOpen) => {
+	if (
+		['requestedDeliveryDate', 'shippingMethod'].indexOf(field) >= 0 &&
+		!isOpen
+	) {
+		return false;
+	}
+
+	return true;
+};
+
 const DefaultView = ({
+	additionalProps,
 	buttonDisplayType,
 	elementId,
 	field,
 	fieldValue,
+	fieldValueType,
 	hasPermission,
 	isOpen,
 	label,
@@ -25,7 +49,25 @@ const DefaultView = ({
 	spritemap,
 }) => {
 	const {observer, onOpenChange, open} = useModal();
-	const [inputValue, setInputValue] = useState(fieldValue);
+	const [inputValue, setInputValue] = useState(
+		additionalProps?.value ? additionalProps?.value : fieldValue
+	);
+	const [parseRequest, setParseRequest] = useState(
+		() => (field, inputValue) => {
+			return {
+				[field]: inputValue,
+			};
+		}
+	);
+	const [parseResponse, setParseResponse] = useState(
+		() => (field, response) => {
+			if (response) {
+				return response[field];
+			}
+
+			return null;
+		}
+	);
 	const [value, setValue] = useState(fieldValue);
 
 	const handleSubmit = async (event) => {
@@ -36,11 +78,9 @@ const DefaultView = ({
 			: CommerceServiceProvider.DeliveryOrderAPI('v1')
 					.updatePlacedOrderById;
 
-		updateOrder(orderId, {
-			[field]: inputValue,
-		})
+		updateOrder(orderId, parseRequest(field, inputValue))
 			.then((response) => {
-				setValue(response[field]);
+				setValue(parseResponse(field, response));
 
 				onOpenChange(false);
 			})
@@ -60,7 +100,7 @@ const DefaultView = ({
 				<div className="align-items-center d-flex">
 					<div className="h5 info-box-label m-0">{label}</div>
 
-					{hasPermission && !readOnly ? (
+					{hasPermission && !readOnly && isEditable(field, isOpen) ? (
 						<ClayButton
 							aria-controls={`${namespace}infoBoxModal`}
 							aria-label={
@@ -83,10 +123,15 @@ const DefaultView = ({
 			) : null}
 
 			<div>
-				<p className="info-box-value">{value}</p>
+				<p className="info-box-value">
+					{formatValue(value, fieldValueType)}
+				</p>
 			</div>
 
 			<InfoBoxModal
+				additionalProps={additionalProps}
+				field={field}
+				fieldValueType={fieldValueType}
 				handleSubmit={handleSubmit}
 				id={`${namespace}infoBoxModal`}
 				inputValue={inputValue}
@@ -94,7 +139,10 @@ const DefaultView = ({
 				observer={observer}
 				onOpenChange={onOpenChange}
 				open={open}
+				orderId={orderId}
 				setInputValue={setInputValue}
+				setParseRequest={setParseRequest}
+				setParseResponse={setParseResponse}
 				spritemap={spritemap}
 			/>
 		</div>

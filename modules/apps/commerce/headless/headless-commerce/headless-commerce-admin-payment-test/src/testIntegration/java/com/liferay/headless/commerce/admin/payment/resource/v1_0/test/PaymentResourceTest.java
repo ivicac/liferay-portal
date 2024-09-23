@@ -210,6 +210,13 @@ public class PaymentResourceTest extends BasePaymentResourceTestCase {
 		return _addPayment(payment);
 	}
 
+	@Override
+	protected Payment testPutPaymentByExternalReferenceCode_addPayment()
+		throws Exception {
+
+		return _addPayment(randomPayment());
+	}
+
 	private Payment _addPayment(Payment payment) throws Exception {
 		CommercePaymentEntry commercePaymentEntry = _getCommercePaymentEntry(
 			payment);

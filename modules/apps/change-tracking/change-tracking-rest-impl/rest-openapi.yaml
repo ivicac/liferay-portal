@@ -70,6 +70,19 @@ components:
                     format: int64
                     readOnly: true
                     type: integer
+                ctCollectionName:
+                    readOnly: true
+                    type: string
+                ctCollectionStatus:
+                    $ref: "#/components/schemas/Status"
+                    readOnly: true
+                ctCollectionStatusDate:
+                    format: date-time
+                    readOnly: true
+                    type: string
+                ctCollectionStatusUserName:
+                    readOnly: true
+                    type: string
                 dateCreated:
                     format: date-time
                     readOnly: true
@@ -216,7 +229,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.change.tracking.rest.client', and version '3.2.2'."
+        'com.liferay.change.tracking.rest.client', and version '3.3.0'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -663,6 +676,60 @@ paths:
                         application/json: {}
                         application/xml: {}
             tags: ["CTCollection"]
+    "/ct-entries/history":
+        get:
+            operationId: getCTEntriesHistoryPage
+            parameters:
+                - in: query
+                  name: classNameId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: classPK
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: siteId
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/CTEntry"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/CTEntry"
+                                type: array
+            tags: ["CTEntry"]
     "/ct-entries/{ctEntryId}":
         get:
             operationId: getCTEntry
