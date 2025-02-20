@@ -60,6 +60,7 @@ public class PaymentMethodResourceTest
 	public void setUp() throws Exception {
 		super.setUp();
 
+		_siteAdminUser = UserTestUtil.addGroupAdminUser(testGroup);
 		_user = UserTestUtil.addUser(testCompany);
 
 		_setUpPermissionThreadLocal();
@@ -75,7 +76,6 @@ public class PaymentMethodResourceTest
 			Arrays.asList(
 				"authorize-net", "mercanet", "money-order", "paypal",
 				"test-payment-method"));
-		_siteAdminUser = UserTestUtil.addGroupAdminUser(testGroup);
 
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
 			testCompany.getCompanyId(), testGroup.getGroupId(),
