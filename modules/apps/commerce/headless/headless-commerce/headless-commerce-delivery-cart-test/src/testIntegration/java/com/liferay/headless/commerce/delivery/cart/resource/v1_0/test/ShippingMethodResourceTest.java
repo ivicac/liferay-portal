@@ -61,6 +61,7 @@ public class ShippingMethodResourceTest
 	public void setUp() throws Exception {
 		super.setUp();
 
+		_siteAdminUser = UserTestUtil.addGroupAdminUser(testGroup);
 		_user = UserTestUtil.addUser(testCompany);
 
 		_setUpPermissionThreadLocal();
@@ -75,8 +76,6 @@ public class ShippingMethodResourceTest
 
 		_commerceChannel = CommerceTestUtil.addCommerceChannel(
 			testGroup.getGroupId(), _commerceCurrency.getCode());
-
-		_siteAdminUser = UserTestUtil.addGroupAdminUser(testGroup);
 	}
 
 	@After
