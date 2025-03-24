@@ -6809,6 +6809,18 @@ public class ServiceBuilder {
 			boolean finderUnique = GetterUtil.getBoolean(
 				finderElement.attributeValue("unique"));
 
+			if (isVersionGTE_7_4_0() &&
+				!Objects.equals(finderReturn, "Collection") && !finderUnique &&
+				ArrayUtil.contains(
+					_FORCE_UNIQUE_FINDER_PACKAGE_PATHS, _packagePath)) {
+
+				throw new IllegalArgumentException(
+					StringBundler.concat(
+						"Finder \"", finderName, "\" defined by entity \"",
+						entityName, "\" must set unique=\"true\" as its ",
+						"return type is the name of the entity"));
+			}
+
 			String finderWhere = finderElement.attributeValue("where");
 
 			String finderDBWhere = finderWhere;
@@ -8131,6 +8143,10 @@ public class ServiceBuilder {
 	}
 
 	private static final int _DEFAULT_COLUMN_MAX_LENGTH = 75;
+
+	private static final String[] _FORCE_UNIQUE_FINDER_PACKAGE_PATHS = {
+		"com.liferay.counter", "com.liferay.portal"
+	};
 
 	private static final String _HIBERNATE_3_HBM_NAMESPACE =
 		"\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\"";

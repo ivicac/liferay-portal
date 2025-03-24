@@ -42,7 +42,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.membershippolicy.RoleMembershipPolicyUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
-import com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion;
+import com.liferay.site.item.selector.SiteItemSelectorCriterion;
 import com.liferay.user.groups.admin.item.selector.UserGroupItemSelectorCriterion;
 
 import java.util.ArrayList;
@@ -129,8 +129,13 @@ public class UserDisplayContext {
 		SortedSet<Group> inheritedSiteGroupsSet = new TreeSet<>();
 
 		inheritedSiteGroupsSet.addAll(
-			GroupLocalServiceUtil.getUserGroupsRelatedGroups(getUserGroups()));
-		inheritedSiteGroupsSet.addAll(_getOrganizationRelatedGroups());
+			ListUtil.filter(
+				GroupLocalServiceUtil.getUserGroupsRelatedGroups(
+					getUserGroups()),
+				group -> !group.isDepot()));
+		inheritedSiteGroupsSet.addAll(
+			ListUtil.filter(
+				_getOrganizationRelatedGroups(), group -> !group.isDepot()));
 
 		return ListUtil.fromCollection(inheritedSiteGroupsSet);
 	}

@@ -13,20 +13,31 @@ export type ObjectField = {
 	indexedAsKeyword?: boolean;
 	indexedLanguageId?: Liferay.Language.Locale | '';
 	label: Liferay.Language.LocalizedValue<string>;
+	listTypeDefinitionId?: string;
 	localized: boolean;
 	name: string;
-	objectFieldSettings?: {name: string; value: string | number}[];
+	objectFieldSettings?: {name: string; value: boolean | string | number}[];
 	required: boolean;
+	system?: boolean;
 };
 
 export type ObjectDefinition = {
+	enableIndexSearch: boolean;
+	enableLocalization: boolean;
 	enableObjectEntryDraft: boolean;
 	externalReferenceCode: string;
 	id?: number;
 	label: Liferay.Language.LocalizedValue<string>;
 	name?: string;
+	objectDefinitionSettings?: {
+		name: 'acceptedGroupExternalReferenceCodes' | 'acceptAllGroups';
+		value: string;
+	}[];
 	objectFields?: ObjectField[];
 	objectFolderExternalReferenceCode?: string;
 	pluralLabel: Liferay.Language.LocalizedValue<string>;
-	scope: 'company' | 'site';
+	scope: 'company' | 'depot' | 'site';
+	status?: {
+		label: string;
+	};
 };

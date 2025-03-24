@@ -90,6 +90,8 @@ import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelperUtil;
 import com.liferay.portal.kernel.scheduler.StorageType;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.reindexer.ReindexerBridge;
 import com.liferay.portal.kernel.security.auth.HttpPrincipal;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -449,6 +451,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		if (className.equals(Group.class.getName())) {
 			if (!site && (liveGroupId == 0) &&
 				!(StringUtil.startsWith(groupKey, GroupConstants.APP) ||
+				  groupKey.equals(GroupConstants.CALENDAR) ||
 				  groupKey.equals(GroupConstants.CMS) ||
 				  groupKey.equals(GroupConstants.CONTROL_PANEL) ||
 				  groupKey.equals(GroupConstants.FORMS))) {
@@ -866,7 +869,12 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				boolean site = true;
 				UnicodeProperties typeSettingsUnicodeProperties = null;
 
-				if (groupKey.equals(GroupConstants.CMS)) {
+				if (groupKey.equals(GroupConstants.CALENDAR)) {
+					type = GroupConstants.TYPE_SITE_PRIVATE;
+					friendlyURL = GroupConstants.CALENDAR_FRIENDLY_URL;
+					site = false;
+				}
+				else if (groupKey.equals(GroupConstants.CMS)) {
 					type = GroupConstants.TYPE_SITE_PRIVATE;
 					friendlyURL = GroupConstants.CMS_FRIENDLY_URL;
 					site = false;
@@ -1217,6 +1225,8 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 						resourcePermission);
 				}
 
+				// Indexer
+
 				long companyId = group.getCompanyId();
 				long[] userIds = getUserPrimaryKeys(group.getGroupId());
 
@@ -1227,6 +1237,14 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 							return null;
 						});
+				}
+
+				List<UserGroup> groupUserGroups =
+					_userGroupLocalService.getGroupUserGroups(
+						group.getGroupId());
+
+				for (UserGroup groupUserGroup : groupUserGroups) {
+					reindexUserGroup(groupUserGroup.getUserGroupId());
 				}
 
 				groupPersistence.remove(group);
@@ -1549,10 +1567,10 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				return null;
 			}
 
-			if (groups.size() > 1) {
-				_log.error(
-					"Live group " + liveGroupId +
-						" has more than one staging group");
+			if ((groups.size() > 1) && _log.isWarnEnabled()) {
+				_log.warn(
+					"More than one staging group uses live group ID " +
+						liveGroupId);
 			}
 
 			return groups.get(groups.size() - 1);
@@ -4822,6 +4840,13 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		reindexerBridge.reindex(companyId, User.class.getName(), userIds);
 	}
 
+	protected void reindexUserGroup(long userGroupId) throws PortalException {
+		Indexer<UserGroup> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
+			UserGroup.class);
+
+		indexer.reindex(_userGroupLocalService.getUserGroup(userGroupId));
+	}
+
 	protected void reindexUsersInOrganization(long organizationId)
 		throws PortalException {
 
@@ -4857,6 +4882,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			TransactionCommitCallbackUtil.registerCallback(
 				() -> {
 					reindex(companyId, userIds);
+					reindexUserGroup(userGroupId);
 
 					return null;
 				});
@@ -5466,7 +5492,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 				if ((originalValue != null) && _log.isWarnEnabled()) {
 					_log.warn(
-						"Duplicated staging group for group with id " +
+						"More than one staging group uses live group ID " +
 							result[0]);
 				}
 			}

@@ -128,7 +128,9 @@ public class DBPartitionMigrationValidator {
 
 		try {
 			String exportFilePath = _write(
-				DatabaseUtil.exportLiferayDatabase(_connection),
+				DatabaseUtil.exportLiferayDatabase(
+					_connection,
+					Long.parseLong(commandLine.getOptionValue("company-id"))),
 				commandLine.getOptionValue("output-dir"));
 
 			System.out.println(
@@ -146,6 +148,8 @@ public class DBPartitionMigrationValidator {
 	private static Options _getExportOptions() {
 		Options options = new Options();
 
+		options.addRequiredOption(
+			null, "company-id", true, "Set the company ID.");
 		options.addOption(
 			null, "output-dir", true, "Set the output directory.");
 		options.addRequiredOption(null, "jdbc-url", true, "Set the JDBC URL.");

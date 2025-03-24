@@ -30,6 +30,10 @@ export class CommerceThemeMiniumCatalogPage {
 	readonly page: Page;
 	readonly popOverMessage: (popOverMessage: string) => Locator;
 	readonly productCard: (productName: string) => Locator;
+	readonly productCardPrice: (
+		productName: string,
+		productPrice: string
+	) => Locator;
 	readonly productCardAddToCartButton: (productName: string) => Locator;
 	readonly productLink: (productName: string) => Locator;
 
@@ -86,6 +90,10 @@ export class CommerceThemeMiniumCatalogPage {
 				.getByText(popOverMessage, {exact: true});
 		this.productCard = (productName: string) =>
 			this.page.locator('.product-card').filter({hasText: productName});
+		this.productCardPrice = (productName, productPrice) =>
+			this.productCard(productName).getByText(productPrice, {
+				exact: true,
+			});
 		this.productCardAddToCartButton = (productName: string) =>
 			this.productCard(productName).getByRole('button', {
 				exact: true,
@@ -160,7 +168,7 @@ export class CommerceThemeMiniumCatalogPage {
 	) {
 		const maxDifference = maxQuantity % multipleQuantity;
 
-		if (!maxDifference) {
+		if (!maxDifference || maxQuantity < multipleQuantity) {
 			return parseFloat(maxQuantity.toFixed(precision));
 		}
 

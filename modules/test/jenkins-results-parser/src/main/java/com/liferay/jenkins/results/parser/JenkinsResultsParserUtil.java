@@ -766,7 +766,7 @@ public class JenkinsResultsParserUtil {
 		try {
 			String url = null;
 
-			if (matcher.matches()) {
+			if (!isCINode() && matcher.matches()) {
 				int masterNumber = Integer.valueOf(matcher.group(1));
 
 				if (masterNumber > 40) {
@@ -2515,8 +2515,8 @@ public class JenkinsResultsParserUtil {
 		List<JenkinsMaster> jenkinsMasters = new ArrayList<>();
 
 		Pattern pattern = Pattern.compile(
-			"master\\.slaves\\((?<jenkinsMasterName>" + cohortName +
-				"-\\d+)\\)");
+			"master\\.property\\((?<jenkinsMasterName>" + cohortName +
+				"-\\d+)/executors.size\\)");
 
 		for (String buildPropertyName : buildProperties.stringPropertyNames()) {
 			Matcher matcher = pattern.matcher(buildPropertyName);
@@ -2909,6 +2909,25 @@ public class JenkinsResultsParserUtil {
 		String baseInvocationURL, String blacklist, int invokedBatchSize,
 		int minimumRAM, int maximumSlavesPerHost) {
 
+		return getMostAvailableMasterURL(
+			baseInvocationURL, blacklist, invokedBatchSize, null, minimumRAM,
+			maximumSlavesPerHost);
+	}
+
+	public static String getMostAvailableMasterURL(
+		String baseInvocationURL, String blacklist, int invokedBatchSize,
+		String jobName, int minimumRAM, int maximumSlavesPerHost) {
+
+		return getMostAvailableMasterURL(
+			baseInvocationURL, blacklist, invokedBatchSize, jobName, null,
+			minimumRAM, maximumSlavesPerHost);
+	}
+
+	public static String getMostAvailableMasterURL(
+		String baseInvocationURL, String blacklist, int invokedBatchSize,
+		String jobName, String labelExpression, int minimumRAM,
+		int maximumSlavesPerHost) {
+
 		StringBuilder sb = new StringBuilder();
 
 		sb.append(getJenkinsLoadBalancerURL());
@@ -2923,6 +2942,16 @@ public class JenkinsResultsParserUtil {
 		if (invokedBatchSize > 0) {
 			sb.append("&invokedJobBatchSize=");
 			sb.append(invokedBatchSize);
+		}
+
+		if (!isNullOrEmpty(jobName)) {
+			sb.append("&jobName=");
+			sb.append(fixURL(jobName));
+		}
+
+		if (!isNullOrEmpty(labelExpression)) {
+			sb.append("&labelExpression=");
+			sb.append(fixURL(labelExpression));
 		}
 
 		if (minimumRAM > 0) {
@@ -2951,8 +2980,8 @@ public class JenkinsResultsParserUtil {
 			List<JenkinsMaster> availableJenkinsMasters =
 				LoadBalancerUtil.getAvailableJenkinsMasters(
 					LoadBalancerUtil.getMasterPrefix(baseInvocationURL),
-					blacklist, minimumRAM, maximumSlavesPerHost,
-					buildProperties);
+					blacklist, false, jobName, minimumRAM, maximumSlavesPerHost,
+					buildProperties, true);
 
 			Random random = new Random(getCurrentTimeMillis());
 
@@ -3659,6 +3688,12 @@ public class JenkinsResultsParserUtil {
 			return _ciNode;
 		}
 
+		if (!isNullOrEmpty(System.getenv("JENKINS_HOME"))) {
+			_ciNode = true;
+
+			return _ciNode;
+		}
+
 		String hostName = getHostName("");
 
 		try {
@@ -3683,6 +3718,23 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return _ciNode;
+	}
+
+	public static boolean isCloudCINode() {
+		if (!isCINode()) {
+			return false;
+		}
+
+		String masterNetworkName = System.getenv("MASTER_NETWORK_NAME");
+
+		if (!isNullOrEmpty(masterNetworkName) &&
+			(masterNetworkName.equals("aws-network") ||
+			 masterNetworkName.equals("gcp-network"))) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	public static boolean isDouble(String string) {
@@ -3762,11 +3814,7 @@ public class JenkinsResultsParserUtil {
 		String directoryCanonicalPath = getCanonicalPath(directory) + "/";
 		String fileCanonicalPath = getCanonicalPath(file);
 
-		if (fileCanonicalPath.startsWith(directoryCanonicalPath)) {
-			return true;
-		}
-
-		return false;
+		return fileCanonicalPath.startsWith(directoryCanonicalPath);
 	}
 
 	public static boolean isInteger(String string) {
@@ -3799,11 +3847,7 @@ public class JenkinsResultsParserUtil {
 					"/master.network.name)");
 
 			if (!isNullOrEmpty(jenkinsMasterNetworkName)) {
-				if (jenkinsMasterNetworkName.equals(networkName)) {
-					return true;
-				}
-
-				return false;
+				return jenkinsMasterNetworkName.equals(networkName);
 			}
 		}
 		catch (IOException ioException) {
@@ -3905,11 +3949,7 @@ public class JenkinsResultsParserUtil {
 
 		String trimmedString = string.trim();
 
-		if (trimmedString.isEmpty()) {
-			return true;
-		}
-
-		return false;
+		return trimmedString.isEmpty();
 	}
 
 	public static boolean isOSX() {
@@ -3920,11 +3960,7 @@ public class JenkinsResultsParserUtil {
 		Matcher poshiFileNamePatternMatcher = _poshiFileNamePattern.matcher(
 			file.getName());
 
-		if (poshiFileNamePatternMatcher.matches()) {
-			return true;
-		}
-
-		return false;
+		return poshiFileNamePatternMatcher.matches();
 	}
 
 	public static boolean isReachable(String hostname) {
@@ -4144,11 +4180,7 @@ public class JenkinsResultsParserUtil {
 			public boolean accept(File dir, String name) {
 				Matcher matcher = pattern.matcher(name);
 
-				if (matcher.matches()) {
-					return true;
-				}
-
-				return false;
+				return matcher.matches();
 			}
 
 		};

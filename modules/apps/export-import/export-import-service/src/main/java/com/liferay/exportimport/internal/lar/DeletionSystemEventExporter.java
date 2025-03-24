@@ -212,6 +212,10 @@ public class DeletionSystemEventExporter {
 		Element deletionSystemEventElement =
 			deletionSystemEventsElement.addElement("deletion-system-event");
 
+		deletionSystemEventElement.addAttribute(
+			"class-external-reference-code",
+			systemEvent.getClassExternalReferenceCode());
+
 		String className = PortalUtil.getClassName(
 			systemEvent.getClassNameId());
 

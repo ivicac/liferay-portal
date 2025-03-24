@@ -59,6 +59,7 @@ import com.liferay.expando.kernel.service.ExpandoValueLocalService;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.fragment.importer.FragmentsImportStrategy;
 import com.liferay.fragment.importer.FragmentsImporter;
+import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.headless.admin.list.type.dto.v1_0.ListTypeDefinition;
 import com.liferay.headless.admin.list.type.dto.v1_0.ListTypeEntry;
 import com.liferay.headless.admin.list.type.resource.v1_0.ListTypeDefinitionResource;
@@ -166,7 +167,6 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
-import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -296,6 +296,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 		DocumentFolderResource.Factory documentFolderResourceFactory,
 		DocumentResource.Factory documentResourceFactory,
 		ExpandoValueLocalService expandoValueLocalService,
+		FragmentEntryLinkLocalService fragmentEntryLinkLocalService,
 		FragmentsImporter fragmentsImporter,
 		GroupLocalService groupLocalService,
 		JournalArticleLocalService journalArticleLocalService,
@@ -333,7 +334,6 @@ public class BundleSiteInitializer implements SiteInitializer {
 		OrganizationLocalService organizationLocalService,
 		OrganizationResource.Factory organizationResourceFactory,
 		PLOEntryLocalService ploEntryLocalService, Portal portal,
-		PortletPreferencesLocalService portletPreferencesLocalService,
 		ResourceActionLocalService resourceActionLocalService,
 		ResourcePermissionLocalService resourcePermissionLocalService,
 		RoleLocalService roleLocalService,
@@ -387,6 +387,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 		_documentFolderResourceFactory = documentFolderResourceFactory;
 		_documentResourceFactory = documentResourceFactory;
 		_expandoValueLocalService = expandoValueLocalService;
+		_fragmentEntryLinkLocalService = fragmentEntryLinkLocalService;
 		_fragmentsImporter = fragmentsImporter;
 		_groupLocalService = groupLocalService;
 		_journalArticleLocalService = journalArticleLocalService;
@@ -429,7 +430,6 @@ public class BundleSiteInitializer implements SiteInitializer {
 		_organizationResourceFactory = organizationResourceFactory;
 		_ploEntryLocalService = ploEntryLocalService;
 		_portal = portal;
-		_portletPreferencesLocalService = portletPreferencesLocalService;
 		_resourceActionLocalService = resourceActionLocalService;
 		_resourcePermissionLocalService = resourcePermissionLocalService;
 		_roleLocalService = roleLocalService;
@@ -913,7 +913,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 
 		_fragmentsImporter.importFragmentEntries(
 			serviceContext.getUserId(), groupId, 0, zipWriter.getFile(),
-			FragmentsImportStrategy.OVERWRITE);
+			FragmentsImportStrategy.OVERWRITE, false);
 	}
 
 	private void _addFragmentEntries(
@@ -2849,9 +2849,12 @@ public class BundleSiteInitializer implements SiteInitializer {
 							layoutPageTemplateStructure.
 								getLayoutPageTemplateStructureId(),
 							segmentsExperienceId, layoutStructure.toString());
-					_portletPreferencesLocalService.deletePortletPreferences(
-						0, PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
-						draftLayout.getPlid());
+
+					_fragmentEntryLinkLocalService.
+						deleteLayoutPageTemplateEntryFragmentEntryLinks(
+							draftLayout.getGroupId(),
+							new long[] {segmentsExperienceId},
+							draftLayout.getPlid());
 				}
 
 				for (int i = 0; i < jsonArray.length(); i++) {
@@ -6062,6 +6065,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 	private final DocumentFolderResource.Factory _documentFolderResourceFactory;
 	private final DocumentResource.Factory _documentResourceFactory;
 	private final ExpandoValueLocalService _expandoValueLocalService;
+	private final FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
 	private final FragmentsImporter _fragmentsImporter;
 	private final GroupLocalService _groupLocalService;
 	private final JournalArticleLocalService _journalArticleLocalService;
@@ -6109,8 +6113,6 @@ public class BundleSiteInitializer implements SiteInitializer {
 	private final OrganizationResource.Factory _organizationResourceFactory;
 	private final PLOEntryLocalService _ploEntryLocalService;
 	private final Portal _portal;
-	private final PortletPreferencesLocalService
-		_portletPreferencesLocalService;
 	private final Map<String, String> _releaseInfoStringUtilReplaceValues;
 	private final ResourceActionLocalService _resourceActionLocalService;
 	private final ResourcePermissionLocalService

@@ -5,8 +5,8 @@
 
 package com.liferay.style.book.web.internal.display.context;
 
+import com.liferay.fragment.collection.item.selector.FragmentCollectionItemSelectorCriterion;
 import com.liferay.fragment.collection.item.selector.FragmentCollectionItemSelectorReturnType;
-import com.liferay.fragment.collection.item.selector.criterion.FragmentCollectionItemSelectorCriterion;
 import com.liferay.fragment.contributor.FragmentCollectionContributor;
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
 import com.liferay.fragment.model.FragmentCollection;
@@ -66,7 +66,7 @@ import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 import com.liferay.style.book.constants.StyleBookPortletKeys;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
-import com.liferay.style.book.web.internal.util.StyleBookUtil;
+import com.liferay.style.book.util.StyleBookUtil;
 
 import java.util.Collections;
 import java.util.List;
@@ -583,7 +583,7 @@ public class EditStyleBookEntryDisplayContext {
 	private String _getThemeName() {
 		if (FeatureFlagManagerUtil.isEnabled("LPD-30204")) {
 			return StyleBookUtil.getThemeName(
-				_styleBookEntry.getCompanyId(), _httpServletRequest,
+				_styleBookEntry.getCompanyId(), _themeDisplay.getLocale(),
 				_styleBookEntry.getThemeId());
 		}
 

@@ -5,17 +5,18 @@
 
 package com.liferay.layout.content.page.editor.web.internal.display.context;
 
+import com.liferay.asset.categories.item.selector.AssetCategoryTreeNodeItemSelectorCriterion;
 import com.liferay.asset.categories.item.selector.AssetCategoryTreeNodeItemSelectorReturnType;
-import com.liferay.asset.categories.item.selector.criterion.AssetCategoryTreeNodeItemSelectorCriterion;
 import com.liferay.exportimport.kernel.staging.Staging;
+import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.model.FragmentComposition;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.DefaultFragmentRendererContext;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.frontend.token.definition.FrontendTokenDefinition;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
-import com.liferay.info.collection.provider.item.selector.criterion.InfoCollectionProviderItemSelectorCriterion;
-import com.liferay.info.field.item.selector.criterion.InfoFieldItemSelectorCriterion;
+import com.liferay.info.collection.provider.item.selector.InfoCollectionProviderItemSelectorCriterion;
+import com.liferay.info.field.item.selector.InfoFieldItemSelectorCriterion;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorReturnType;
 import com.liferay.info.search.InfoSearchClassMapperRegistry;
@@ -65,6 +66,7 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.editor.configuration.EditorConfiguration;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigurationFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -79,11 +81,13 @@ import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
+import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
@@ -119,12 +123,13 @@ import com.liferay.segments.model.SegmentsExperimentRel;
 import com.liferay.segments.service.SegmentsEntryService;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.SegmentsExperimentRelLocalService;
+import com.liferay.site.navigation.item.selector.SiteNavigationMenuItemSelectorCriterion;
 import com.liferay.site.navigation.item.selector.SiteNavigationMenuItemSelectorReturnType;
-import com.liferay.site.navigation.item.selector.criterion.SiteNavigationMenuItemSelectorCriterion;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
 import com.liferay.style.book.util.DefaultStyleBookEntryUtil;
+import com.liferay.style.book.util.StyleBookUtil;
 import com.liferay.style.book.util.comparator.StyleBookEntryNameComparator;
 
 import java.util.ArrayList;
@@ -305,31 +310,6 @@ public class ContentPageEditorDisplayContext {
 				segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
 					themeDisplay.getPlid())
 			).put(
-				"defaultStyleBookEntryImagePreviewURL",
-				() -> {
-					StyleBookEntry defaultStyleBookEntry =
-						_getDefaultMasterStyleBookEntry();
-
-					if (defaultStyleBookEntry != null) {
-						return defaultStyleBookEntry.getImagePreviewURL(
-							themeDisplay);
-					}
-
-					return StringPool.BLANK;
-				}
-			).put(
-				"defaultStyleBookEntryName",
-				() -> {
-					StyleBookEntry defaultStyleBookEntry =
-						_getDefaultMasterStyleBookEntry();
-
-					if (defaultStyleBookEntry != null) {
-						return defaultStyleBookEntry.getName();
-					}
-
-					return null;
-				}
-			).put(
 				"deleteFormStepURL",
 				getFragmentEntryActionURL(
 					"/layout_content_page_editor/delete_form_step")
@@ -376,16 +356,44 @@ public class ContentPageEditorDisplayContext {
 				() -> ModelHintsUtil.getMaxLength(
 					FragmentComposition.class.getName(), "name")
 			).put(
+				"fragmentPortletNamespace",
+				portal.getPortletNamespace(FragmentPortletKeys.FRAGMENT)
+			).put(
+				"fragmentsImportURL",
+				() -> ResourceURLBuilder.createResourceURL(
+					PortletURLFactoryUtil.create(
+						httpServletRequest, FragmentPortletKeys.FRAGMENT,
+						PortletRequest.RESOURCE_PHASE)
+				).setParameter(
+					"fragmentCollectionId",
+					ParamUtil.getString(
+						httpServletRequest, "fragmentCollectionId")
+				).setResourceID(
+					"/fragment/import"
+				).buildString()
+			).put(
 				"frontendTokens",
 				() -> {
-					Group group = themeDisplay.getScopeGroup();
+					FrontendTokenDefinition frontendTokenDefinition = null;
 
-					FrontendTokenDefinition frontendTokenDefinition =
-						_frontendTokenDefinitionRegistry.
-							getFrontendTokenDefinition(
-								_layoutSetLocalService.fetchLayoutSet(
-									themeDisplay.getSiteGroupId(),
-									group.isLayoutSetPrototype()));
+					if (FeatureFlagManagerUtil.isEnabled(
+							themeDisplay.getCompanyId(), "LPD-30204")) {
+
+						frontendTokenDefinition =
+							_frontendTokenDefinitionRegistry.
+								getFrontendTokenDefinition(
+									themeDisplay.getLayout());
+					}
+					else {
+						Group group = themeDisplay.getScopeGroup();
+
+						frontendTokenDefinition =
+							_frontendTokenDefinitionRegistry.
+								getFrontendTokenDefinition(
+									_layoutSetLocalService.fetchLayoutSet(
+										themeDisplay.getSiteGroupId(),
+										group.isLayoutSetPrototype()));
+					}
 
 					if (frontendTokenDefinition == null) {
 						return _jsonFactory.createJSONObject();
@@ -828,6 +836,14 @@ public class ContentPageEditorDisplayContext {
 							}
 
 							return false;
+						}
+					).put(
+						ContentPageEditorActionKeys.VIEW_MARKETPLACE,
+						() -> {
+							PermissionChecker permissionChecker =
+								themeDisplay.getPermissionChecker();
+
+							return permissionChecker.isOmniadmin();
 						}
 					).build();
 				}
@@ -1866,14 +1882,73 @@ public class ContentPageEditorDisplayContext {
 				itemSelectorCriterion));
 	}
 
-	private List<Map<String, Object>> _getStyleBooks() {
+	private List<Map<String, Object>> _getStyleBooks() throws Exception {
 		ArrayList<Map<String, Object>> styleBooks = new ArrayList<>();
 
-		List<StyleBookEntry> styleBookEntries =
-			_styleBookEntryLocalService.getStyleBookEntries(
+		List<StyleBookEntry> styleBookEntries = new ArrayList<>();
+
+		FrontendTokenDefinition frontendTokenDefinition = null;
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-30204")) {
+			frontendTokenDefinition =
+				_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
+					themeDisplay.getLayout());
+
+			if (frontendTokenDefinition != null) {
+				styleBookEntries =
+					_styleBookEntryLocalService.getStyleBookEntries(
+						_staging.getLiveGroupId(themeDisplay.getScopeGroupId()),
+						frontendTokenDefinition.getThemeId());
+			}
+		}
+		else {
+			frontendTokenDefinition =
+				_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
+					themeDisplay.getLayoutSet());
+
+			styleBookEntries = _styleBookEntryLocalService.getStyleBookEntries(
 				_staging.getLiveGroupId(themeDisplay.getScopeGroupId()),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 				StyleBookEntryNameComparator.getInstance(true));
+		}
+
+		if (frontendTokenDefinition != null) {
+			styleBooks.add(
+				HashMapBuilder.<String, Object>put(
+					"imagePreviewURL",
+					() -> {
+						StyleBookEntry defaultStyleBookEntry =
+							_getDefaultMasterStyleBookEntry();
+
+						if (defaultStyleBookEntry != null) {
+							return defaultStyleBookEntry.getImagePreviewURL(
+								themeDisplay);
+						}
+
+						return StringPool.BLANK;
+					}
+				).put(
+					"name",
+					DefaultStyleBookEntryUtil.getStyleBookEntryName(
+						themeDisplay.getLayout(), themeDisplay.getLocale(),
+						StyleBookUtil.getStyleFromThemeStyleBookEntry(
+							themeDisplay.getLayout(), themeDisplay.getLocale()))
+				).put(
+					"styleBookEntryId", "0"
+				).put(
+					"subtitle",
+					() -> {
+						StyleBookEntry defaultStyleBookEntry =
+							_getDefaultMasterStyleBookEntry();
+
+						if (defaultStyleBookEntry != null) {
+							return defaultStyleBookEntry.getName();
+						}
+
+						return null;
+					}
+				).build());
+		}
 
 		for (StyleBookEntry styleBookEntry : styleBookEntries) {
 			styleBooks.add(

@@ -3,49 +3,39 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayAlert from '@clayui/alert';
 import ClayBreadcrumb from '@clayui/breadcrumb';
 import {Option, Picker} from '@clayui/core';
-import ClayForm, {ClayRadio, ClayRadioGroup, ClayToggle} from '@clayui/form';
+import ClayForm, {ClayCheckbox, ClayRadio, ClayRadioGroup} from '@clayui/form';
 import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
 import ClayTabs from '@clayui/tabs';
-import {InputLocalized} from 'frontend-js-components-web';
-import React, {useMemo, useState} from 'react';
+import {InputLocalized, useId} from 'frontend-js-components-web';
+import React, {useEffect, useMemo, useState} from 'react';
 
-import {useSelector, useStateDispatch} from '../contexts/StateContext';
+import {Uuid, useSelector, useStateDispatch} from '../contexts/StateContext';
 import selectPublishedFields from '../selectors/selectPublishedFields';
-import selectStructureError from '../selectors/selectStructureError';
 import selectStructureField from '../selectors/selectStructureField';
 import selectStructureLocalizedLabel from '../selectors/selectStructureLocalizedLabel';
-import selectStructureStatus from '../selectors/selectStructureStatus';
-import {Field} from '../utils/field';
+import selectStructureUuid from '../selectors/selectStructureUuid';
+import {FIELD_TYPE_LABEL, Field} from '../utils/field';
+import focusInvalidInput from '../utils/focusInvalidInput';
+import getFieldComponents from '../utils/getFieldComponents';
 import {isFieldTextSearchable} from '../utils/isFieldTextSearchable';
 import ERCInput from './ERCInput';
-import TextInput from './TextInput';
+import Input from './Input';
 
-export default function StructureFieldSettings({
-	fieldName,
-}: {
-	fieldName: Field['name'];
-}) {
+export default function StructureFieldSettings({uuid}: {uuid: Uuid}) {
 	const dispatch = useStateDispatch();
-	const error = useSelector(selectStructureError);
-	const field = useSelector(selectStructureField(fieldName));
+	const field = useSelector(selectStructureField(uuid));
 	const structureLabel = useSelector(selectStructureLocalizedLabel);
+	const structureUuid = useSelector(selectStructureUuid);
+
+	useEffect(() => {
+		focusInvalidInput();
+	}, []);
 
 	return (
-		<ClayLayout.ContainerFluid size="md" view>
-			{error ? (
-				<ClayAlert
-					displayType="danger"
-					role={null}
-					title={Liferay.Language.get('error')}
-				>
-					{error}
-				</ClayAlert>
-			) : null}
-
+		<ClayLayout.ContainerFluid className="px-4" size="md" view>
 			<ClayBreadcrumb
 				className="mb-3"
 				items={[
@@ -53,12 +43,13 @@ export default function StructureFieldSettings({
 						label: structureLabel,
 						onClick: () => {
 							dispatch({
-								selection: [],
+								selection: [structureUuid],
 								type: 'set-selection',
 							});
 						},
 					},
 					{
+						active: true,
 						label: field!.label[
 							Liferay.ThemeDisplay.getDefaultLanguageId()
 						]!,
@@ -78,11 +69,11 @@ export default function StructureFieldSettings({
 				</ClayTabs.List>
 
 				<ClayTabs.Panels fade>
-					<ClayTabs.TabPane>
+					<ClayTabs.TabPane className="px-0">
 						<GeneralTab field={field!} />
 					</ClayTabs.TabPane>
 
-					<ClayTabs.TabPane>
+					<ClayTabs.TabPane className="px-0">
 						<SearchTab field={field!} />
 					</ClayTabs.TabPane>
 				</ClayTabs.Panels>
@@ -94,15 +85,19 @@ export default function StructureFieldSettings({
 function GeneralTab({field}: {field: Field}) {
 	const dispatch = useStateDispatch();
 
-	const status = useSelector(selectStructureStatus);
 	const publishedFields = useSelector(selectPublishedFields);
 
-	const isPublished =
-		status === 'published' && publishedFields.has(field.name);
+	const isPublished = publishedFields.has(field.uuid);
 
 	const [label, setLabel] = useState<Liferay.Language.LocalizedValue<string>>(
 		field.label
 	);
+
+	const {FirstSectionComponent, SecondSectionComponent} = getFieldComponents(
+		field.type
+	);
+
+	const labelInputId = useId();
 
 	return (
 		<>
@@ -111,31 +106,20 @@ function GeneralTab({field}: {field: Field}) {
 					{Liferay.Language.get('field-type')}
 				</p>
 
-				<ClayLabel displayType="info">{field.type}</ClayLabel>
+				<ClayLabel displayType="info">
+					{FIELD_TYPE_LABEL[field.type]}
+				</ClayLabel>
 			</div>
 
 			<div className="mt-4 pb-2">
-				<TextInput
-					disabled={isPublished}
-					label={Liferay.Language.get('field-name')}
-					onValueChange={(value) => {
-						dispatch({
-							name: field.name,
-							newName: value,
-							type: 'update-field',
-						});
-					}}
-					required
-					value={field.name}
-				/>
-
 				<InputLocalized
+					id={labelInputId}
 					label={Liferay.Language.get('label')}
 					onBlur={() => {
 						dispatch({
 							label,
-							name: field.name,
 							type: 'update-field',
+							uuid: field.uuid,
 						});
 					}}
 					onChange={(label) => setLabel(label)}
@@ -143,48 +127,68 @@ function GeneralTab({field}: {field: Field}) {
 					translations={
 						label as Liferay.Language.LocalizedValue<string>
 					}
+					validate
 				/>
+
+				<Input
+					disabled={isPublished}
+					label={Liferay.Language.get('field-name')}
+					onValueChange={(value) => {
+						dispatch({
+							name: value,
+							type: 'update-field',
+							uuid: field.uuid,
+						});
+					}}
+					required
+					value={field.name}
+				/>
+
+				<FirstSectionComponent field={field} />
 			</div>
 
-			<div className="mt-4 pb-2">
+			<div className="pb-2">
 				<ClayForm.Group className="mb-3">
-					<ClayToggle
+					<ClayCheckbox
+						checked={field.required}
 						disabled={isPublished}
 						label={Liferay.Language.get('mandatory')}
-						onToggle={(value) => {
+						onChange={(event) => {
 							dispatch({
-								name: field.name,
-								required: value,
+								required: event.target.checked,
 								type: 'update-field',
+								uuid: field.uuid,
 							});
 						}}
-						toggled={field.required}
 					/>
 				</ClayForm.Group>
 
-				<ClayForm.Group className="mb-0">
-					<ClayToggle
+				<ClayForm.Group className="mb-3">
+					<ClayCheckbox
+						checked={field.localized}
 						disabled={isPublished}
 						label={Liferay.Language.get('localizable')}
-						onToggle={(value) => {
+						onChange={(event) => {
 							dispatch({
-								localized: value,
-								name: field.name,
+								localized: event.target.checked,
 								type: 'update-field',
+								uuid: field.uuid,
 							});
 						}}
-						toggled={field.localized}
 					/>
 				</ClayForm.Group>
+
+				<SecondSectionComponent field={field} />
 			</div>
 
-			<div className="mt-4">
+			<div>
 				<ERCInput
+					disabled={isPublished}
 					onValueChange={(value) => {
 						dispatch({
 							erc: value,
-							name: field.name,
 							type: 'update-field',
+							uuid: field.uuid,
 						});
 					}}
 					value={field.erc}
@@ -208,21 +212,21 @@ function SearchTab({field}: {field: Field}) {
 	return (
 		<>
 			<ClayForm.Group>
-				<ClayToggle
+				<ClayCheckbox
+					checked={field.indexableConfig.indexed}
 					label={Liferay.Language.get('searchable')}
-					onToggle={(value) => {
+					onChange={(event) => {
 						dispatch({
 							indexableConfig: {
-								indexed: value,
+								indexed: event.target.checked,
 								indexedAsKeyword: false,
 								indexedLanguageId:
 									Liferay.ThemeDisplay.getDefaultLanguageId(),
 							},
-							name: field.name,
 							type: 'update-field',
+							uuid: field.uuid,
 						});
 					}}
-					toggled={field.indexableConfig.indexed}
 				/>
 			</ClayForm.Group>
 
@@ -251,8 +255,8 @@ function SearchTab({field}: {field: Field}) {
 												? undefined
 												: Liferay.ThemeDisplay.getDefaultLanguageId(),
 									},
-									name: field.name,
 									type: 'update-field',
+									uuid: field.uuid,
 								});
 							}}
 						>
@@ -270,6 +274,7 @@ function SearchTab({field}: {field: Field}) {
 
 					{!field.indexableConfig.indexedAsKeyword ? (
 						<Picker
+							aria-label={Liferay.Language.get('language')}
 							defaultSelectedKey={Liferay.ThemeDisplay.getDefaultLanguageId()}
 							items={languageLabels}
 							onSelectionChange={(
@@ -282,8 +287,8 @@ function SearchTab({field}: {field: Field}) {
 										indexedLanguageId:
 											indexedLanguageId as Liferay.Language.Locale,
 									},
-									name: field.name,
 									type: 'update-field',
+									uuid: field.uuid,
 								});
 							}}
 							selectedKey={

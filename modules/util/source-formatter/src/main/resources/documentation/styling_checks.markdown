@@ -83,7 +83,7 @@ JavaAssertEqualsCheck | .java | Validates `Assert.assertEquals` calls. |
 [JavaConstructorParametersCheck](check/java_constructor_parameters_check.markdown#javaconstructorparameterscheck) | .java | Checks that the order of variable assignments matches the order of the parameters in the constructor signature. |
 JavaConstructorSuperCallCheck | .java | Finds unnecessary call to no-argument constructor of the superclass. |
 JavaEmptyLinesCheck | .java | Finds missing and unnecessary empty lines. |
-JavaEntityModelToEntityFieldsMapCallCheck | .java | Sorts parameters in EntityModel.toEntityFieldsMap call. |
+JavaEntityFieldsMapOrderCheck | .java | Sorts entity fields when calling `EntityFieldsMapFactory.create` and `EntityModel.toEntityFieldsMap`. |
 JavaFeatureFlagsAndTestInfoAnnotationCheck | .java | Sorts the values in `@FeatureFlags` and `@TestInfo` annotation. |
 JavaFinalVariableCheck | .java | Finds cases of unneeded `final` modifiers for variables and parameters. |
 [JavaForLoopCheck](check/java_for_loop_check.markdown#javaforloopcheck) | .java | Checks if a Enhanced For Loop can be used instead of a Simple For Loop. |
@@ -173,6 +173,7 @@ TLDStylingCheck | .tld | Applies rules to enforce consistency in code style. |
 TXTEmptyLinesCheck | .txt | Finds missing and unnecessary empty lines. |
 TXTStylingCheck | .txt | Applies rules to enforce consistency in code style. |
 TernaryOperatorCheck | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds use of ternary operator in `java` files (use if statement instead). |
+TextBlockCheck | .java | Finds usage of text block. |
 UnnecessaryMethodCallCheck | .java | Finds unnecessary method calls. |
 [WhitespaceAfterCheck](https://checkstyle.sourceforge.io/checks/whitespace/whitespaceafter.html) | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Checks that a token is followed by whitespace, with the exception that it does not check for whitespace after the semicolon of an empty for iterator. |
 [WhitespaceAroundCheck](https://checkstyle.sourceforge.io/checks/whitespace/whitespacearound.html) | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Checks that a token is surrounded by whitespace. |

@@ -33,6 +33,7 @@ import com.liferay.object.constants.ObjectActionExecutorConstants;
 import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectFieldValidationConstants;
 import com.liferay.object.constants.ObjectFilterConstants;
@@ -70,6 +71,7 @@ import com.liferay.object.rest.dto.v1_0.Link;
 import com.liferay.object.rest.dto.v1_0.ListEntry;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.dto.v1_0.Status;
+import com.liferay.object.rest.dto.v1_0.Version;
 import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.rest.test.util.BaseObjectEntryManagerImplTestCase;
@@ -3933,11 +3935,68 @@ public class DefaultObjectEntryManagerImplTest
 			1, String.valueOf(parentObjectEntry2.getId()), page);
 	}
 
+	@FeatureFlags("LPD-17564")
+	@Test
+	public void testGetObjectEntryByVersion() throws Exception {
+		ObjectEntry objectEntry1 = new ObjectEntry() {
+			{
+				externalReferenceCode = RandomTestUtil.randomString();
+				keywords = new String[] {RandomTestUtil.randomString()};
+				properties = HashMapBuilder.<String, Object>put(
+					"textObjectFieldName", RandomTestUtil.randomString()
+				).build();
+				version = new Version() {
+					{
+						number = 1;
+					}
+				};
+			}
+		};
+
+		_defaultObjectEntryManager.addObjectEntry(
+			dtoConverterContext, _objectDefinition1, objectEntry1,
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		assertEquals(
+			_defaultObjectEntryManager.getObjectEntryByVersion(
+				dtoConverterContext, objectEntry1.getExternalReferenceCode(),
+				_objectDefinition1, 1),
+			objectEntry1);
+
+		ObjectEntry objectEntry2 = new ObjectEntry() {
+			{
+				externalReferenceCode = RandomTestUtil.randomString();
+				keywords = new String[] {RandomTestUtil.randomString()};
+				properties = HashMapBuilder.<String, Object>put(
+					"textObjectFieldName", RandomTestUtil.randomString()
+				).build();
+				version = new Version() {
+					{
+						number = 2;
+					}
+				};
+			}
+		};
+
+		_defaultObjectEntryManager.updateObjectEntry(
+			TestPropsValues.getCompanyId(), dtoConverterContext,
+			objectEntry1.getExternalReferenceCode(), _objectDefinition1,
+			objectEntry2, ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		assertEquals(
+			_defaultObjectEntryManager.getObjectEntryByVersion(
+				dtoConverterContext, objectEntry2.getExternalReferenceCode(),
+				_objectDefinition1, 2),
+			objectEntry2);
+	}
+
 	@Test
 	public void testGetObjectEntryDocument() throws Exception {
 		_objectEntryLocalService.addObjectEntry(
 			adminUser.getUserId(), 0,
-			_objectDefinition1.getObjectDefinitionId(), null,
+			_objectDefinition1.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"textObjectFieldName", StringUtil.randomId()
 			).put(
@@ -4233,6 +4292,56 @@ public class DefaultObjectEntryManagerImplTest
 		objectEntries = page.getItems();
 
 		Assert.assertEquals(objectEntries.toString(), 1, objectEntries.size());
+	}
+
+	@FeatureFlags("LPD-17564")
+	@Test
+	public void testGetVersionedObjectEntries() throws Exception {
+		ObjectEntry objectEntry1 = new ObjectEntry() {
+			{
+				externalReferenceCode = RandomTestUtil.randomString();
+				keywords = new String[] {RandomTestUtil.randomString()};
+				properties = HashMapBuilder.<String, Object>put(
+					"textObjectFieldName", RandomTestUtil.randomString()
+				).build();
+			}
+		};
+
+		_defaultObjectEntryManager.addObjectEntry(
+			dtoConverterContext, _objectDefinition1, objectEntry1,
+			ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		Page<ObjectEntry> page =
+			_defaultObjectEntryManager.getVersionedObjectEntries(
+				dtoConverterContext, objectEntry1.getExternalReferenceCode(),
+				_objectDefinition1, null);
+
+		assertEquals(
+			(List<ObjectEntry>)page.getItems(),
+			ListUtil.fromArray(objectEntry1));
+
+		ObjectEntry objectEntry2 = new ObjectEntry() {
+			{
+				externalReferenceCode = RandomTestUtil.randomString();
+				keywords = new String[] {RandomTestUtil.randomString()};
+				properties = HashMapBuilder.<String, Object>put(
+					"textObjectFieldName", RandomTestUtil.randomString()
+				).build();
+			}
+		};
+
+		_defaultObjectEntryManager.updateObjectEntry(
+			TestPropsValues.getCompanyId(), dtoConverterContext,
+			objectEntry1.getExternalReferenceCode(), _objectDefinition1,
+			objectEntry2, ObjectDefinitionConstants.SCOPE_COMPANY);
+
+		page = _defaultObjectEntryManager.getVersionedObjectEntries(
+			dtoConverterContext, objectEntry2.getExternalReferenceCode(),
+			_objectDefinition1, null);
+
+		assertEquals(
+			(List<ObjectEntry>)page.getItems(),
+			ListUtil.fromArray(objectEntry1, objectEntry2));
 	}
 
 	@Test
@@ -4710,7 +4819,9 @@ public class DefaultObjectEntryManagerImplTest
 
 		_objectEntryLocalService.addObjectEntry(
 			adminUser.getUserId(), 0,
-			_objectDefinition3.getObjectDefinitionId(), null,
+			_objectDefinition3.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"r_oneToManyRelationshipName1_accountEntryId",
 				accountEntry1.getAccountEntryId()
@@ -4725,7 +4836,9 @@ public class DefaultObjectEntryManagerImplTest
 
 		_objectEntryLocalService.addObjectEntry(
 			adminUser.getUserId(), 0,
-			_objectDefinition3.getObjectDefinitionId(), null,
+			_objectDefinition3.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"r_oneToManyRelationshipName1_accountEntryId",
 				accountEntry2.getAccountEntryId()

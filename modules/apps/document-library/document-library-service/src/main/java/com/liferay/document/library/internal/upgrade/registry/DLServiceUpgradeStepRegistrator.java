@@ -14,6 +14,7 @@ import com.liferay.document.library.internal.upgrade.v1_1_0.SchemaUpgradeProcess
 import com.liferay.document.library.internal.upgrade.v1_1_2.DLFileEntryTypeUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v2_0_0.UpgradeCompanyId;
 import com.liferay.document.library.internal.upgrade.v3_2_1.DDMStructureLinkUpgradeProcess;
+import com.liferay.document.library.internal.upgrade.v3_2_10.DLFolderAdvancedUpdateResourcePermissionUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v3_2_2.DLFileEntryUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v3_2_4.DLSizeLimitConfigurationUpgradeProcess;
 import com.liferay.document.library.internal.upgrade.v3_2_5.DLFileEntryTypesDDMStructureUpgradeProcess;
@@ -28,6 +29,7 @@ import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
@@ -173,6 +175,11 @@ public class DLServiceUpgradeStepRegistrator implements UpgradeStepRegistrator {
 			new com.liferay.document.library.internal.upgrade.v3_2_9.
 				DLSizeLimitConfigurationUpgradeProcess(
 					_dlConfigurationUpgradeHelper));
+
+		registry.register(
+			"3.2.9", "3.2.10",
+			new DLFolderAdvancedUpdateResourcePermissionUpgradeProcess(
+				_resourceActionLocalService));
 	}
 
 	@Reference
@@ -201,6 +208,9 @@ public class DLServiceUpgradeStepRegistrator implements UpgradeStepRegistrator {
 
 	@Reference
 	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
+	private RoleLocalService _roleLocalService;
 
 	@Reference(target = "(default=true)")
 	private Store _store;

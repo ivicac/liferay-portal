@@ -8,21 +8,23 @@ package com.liferay.site.cms.site.initializer.internal.display.context.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
-import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.object.service.ObjectFolderLocalService;
+import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
+import com.liferay.object.constants.ObjectFolderConstants;
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectFolder;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
-import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
-import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.Sync;
-import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -33,21 +35,22 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Mikel Lorza
  */
+@FeatureFlags("LPD-17564")
 @RunWith(Arquillian.class)
 @Sync
-public class ContentsSectionDisplayContextTest {
+public class ContentsSectionDisplayContextTest
+	extends BaseSectionDisplayContextTestCase {
 
 	@ClassRule
 	@Rule
@@ -55,11 +58,6 @@ public class ContentsSectionDisplayContextTest {
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
-
-	@Before
-	public void setUp() throws Exception {
-		_group = GroupTestUtil.addGroup();
-	}
 
 	@Test
 	public void testGetAPIURL() throws Exception {
@@ -69,13 +67,75 @@ public class ContentsSectionDisplayContextTest {
 
 		StringBundler sb = new StringBundler(3);
 
-		sb.append("filter=objectDefinitionFolder in ('");
+		sb.append("filter=objectFolderExternalReferenceCode in ('");
 		sb.append(
-			StringUtil.merge(
-				_getObjectDefinitionFolderExternalReferenceCodes(), "','"));
+			StringUtil.merge(_getObjectFolderExternalReferenceCodes(), "','"));
 		sb.append("')");
 
 		Assert.assertTrue(apiURL.contains(sb.toString()));
+	}
+
+	@Ignore
+	@Test
+	@TestInfo("LPD-50664")
+	public void testGetCreationMenu() throws Exception {
+		Map<String, String> expectedResultMap = LinkedHashMapBuilder.put(
+			"folder", StringPool.BLANK
+		).put(
+			"Basic Web Content",
+			getHref(
+				objectDefinitionLocalService.
+					fetchObjectDefinitionByExternalReferenceCode(
+						"L_BASIC_WEB_CONTENT", TestPropsValues.getCompanyId()))
+		).build();
+
+		testGetCreationMenu(
+			ReflectionTestUtil.invoke(
+				_getContentsSectionDisplayContext(getMockHttpServletRequest()),
+				"getCreationMenu", new Class<?>[0]),
+			expectedResultMap);
+
+		ObjectFolder objectFolder =
+			objectFolderLocalService.fetchObjectFolderByExternalReferenceCode(
+				ObjectFolderConstants.
+					EXTERNAL_REFERENCE_CODE_CONTENT_STRUCTURES,
+				TestPropsValues.getCompanyId());
+
+		ObjectDefinition objectDefinition = addCustomObjectDefinition(
+			objectFolder.getObjectFolderId(), true, true,
+			ObjectDefinitionConstants.SCOPE_SITE,
+			WorkflowConstants.STATUS_APPROVED);
+
+		expectedResultMap.put(
+			objectDefinition.getLabel(LocaleUtil.US),
+			getHref(objectDefinition));
+
+		addCustomObjectDefinition(
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			false, true, ObjectDefinitionConstants.SCOPE_SITE,
+			WorkflowConstants.STATUS_APPROVED);
+		addCustomObjectDefinition(
+			objectFolder.getObjectFolderId(), false, true,
+			ObjectDefinitionConstants.SCOPE_SITE,
+			WorkflowConstants.STATUS_APPROVED);
+		addCustomObjectDefinition(
+			objectFolder.getObjectFolderId(), true, false,
+			ObjectDefinitionConstants.SCOPE_SITE,
+			WorkflowConstants.STATUS_APPROVED);
+		addCustomObjectDefinition(
+			objectFolder.getObjectFolderId(), true, true,
+			ObjectDefinitionConstants.SCOPE_COMPANY,
+			WorkflowConstants.STATUS_APPROVED);
+		addCustomObjectDefinition(
+			objectFolder.getObjectFolderId(), true, true,
+			ObjectDefinitionConstants.SCOPE_SITE,
+			WorkflowConstants.STATUS_DRAFT);
+
+		testGetCreationMenu(
+			ReflectionTestUtil.invoke(
+				_getContentsSectionDisplayContext(getMockHttpServletRequest()),
+				"getCreationMenu", new Class<?>[0]),
+			expectedResultMap);
 	}
 
 	@Test
@@ -109,7 +169,7 @@ public class ContentsSectionDisplayContextTest {
 
 	private String _getAPIURL() throws Exception {
 		return ReflectionTestUtil.invoke(
-			_getContentsSectionDisplayContext(_getMockHttpServletRequest()),
+			_getContentsSectionDisplayContext(getMockHttpServletRequest()),
 			"getAPIURL", new Class<?>[0]);
 	}
 
@@ -133,61 +193,19 @@ public class ContentsSectionDisplayContextTest {
 		throws Exception {
 
 		return ReflectionTestUtil.invoke(
-			_getContentsSectionDisplayContext(_getMockHttpServletRequest()),
+			_getContentsSectionDisplayContext(getMockHttpServletRequest()),
 			"getFDSActionDropdownItems", new Class<?>[0]);
 	}
 
-	private HttpServletRequest _getMockHttpServletRequest() throws Exception {
-		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
-
-		httpServletRequest.setAttribute(
-			WebKeys.THEME_DISPLAY, _getThemeDisplay(httpServletRequest));
-
-		return httpServletRequest;
-	}
-
-	private String[] _getObjectDefinitionFolderExternalReferenceCodes()
-		throws Exception {
-
+	private String[] _getObjectFolderExternalReferenceCodes() throws Exception {
 		return ReflectionTestUtil.invoke(
-			_getContentsSectionDisplayContext(_getMockHttpServletRequest()),
-			"getObjectDefinitionFolderExternalReferenceCodes", new Class<?>[0]);
+			_getContentsSectionDisplayContext(getMockHttpServletRequest()),
+			"getObjectFolderExternalReferenceCodes", new Class<?>[0]);
 	}
-
-	private ThemeDisplay _getThemeDisplay(HttpServletRequest httpServletRequest)
-		throws Exception {
-
-		ThemeDisplay themeDisplay = new ThemeDisplay();
-
-		themeDisplay.setCompany(
-			_companyLocalService.getCompany(TestPropsValues.getCompanyId()));
-		themeDisplay.setPermissionChecker(
-			PermissionThreadLocal.getPermissionChecker());
-		themeDisplay.setRealUser(TestPropsValues.getUser());
-		themeDisplay.setRequest(httpServletRequest);
-		themeDisplay.setScopeGroupId(_group.getGroupId());
-		themeDisplay.setSiteGroupId(_group.getGroupId());
-		themeDisplay.setURLCurrent("http://localhost:8080/currentURL");
-		themeDisplay.setUser(TestPropsValues.getUser());
-
-		return themeDisplay;
-	}
-
-	@Inject
-	private CompanyLocalService _companyLocalService;
 
 	@Inject(
 		filter = "component.name=com.liferay.site.cms.site.initializer.internal.fragment.renderer.ContentsSectionFragmentRenderer"
 	)
 	private FragmentRenderer _fragmentRenderer;
-
-	@DeleteAfterTestRun
-	private Group _group;
-
-	@Inject
-	private ObjectDefinitionLocalService _objectDefinitionLocalService;
-
-	@Inject
-	private ObjectFolderLocalService _objectFolderLocalService;
 
 }

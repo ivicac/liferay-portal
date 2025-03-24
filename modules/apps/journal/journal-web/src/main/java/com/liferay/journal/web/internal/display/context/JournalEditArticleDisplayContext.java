@@ -6,7 +6,7 @@
 package com.liferay.journal.web.internal.display.context;
 
 import com.liferay.asset.display.page.constants.AssetDisplayPageConstants;
-import com.liferay.asset.display.page.item.selector.criterion.AssetDisplayPageSelectorCriterion;
+import com.liferay.asset.display.page.item.selector.AssetDisplayPageSelectorCriterion;
 import com.liferay.asset.display.page.model.AssetDisplayPageEntry;
 import com.liferay.asset.display.page.service.AssetDisplayPageEntryLocalServiceUtil;
 import com.liferay.depot.model.DepotEntryGroupRel;
@@ -93,7 +93,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion;
+import com.liferay.site.item.selector.SiteItemSelectorCriterion;
 import com.liferay.site.manager.RecentGroupManager;
 
 import java.text.Format;
@@ -407,8 +407,6 @@ public class JournalEditArticleDisplayContext {
 		).put(
 			"languages",
 			() -> {
-				List<Map<String, Object>> languages = new ArrayList<>();
-
 				Set<String> uniqueLanguageIds = new LinkedHashSet<>();
 
 				uniqueLanguageIds.add(getSelectedLanguageId());
@@ -418,18 +416,15 @@ public class JournalEditArticleDisplayContext {
 						LocaleUtil.toLanguageId(availableLocale));
 				}
 
-				for (String languageId : uniqueLanguageIds) {
-					languages.add(
-						HashMapBuilder.<String, Object>put(
-							"icon",
-							StringUtil.toLowerCase(
-								StringUtil.replace(languageId, '_', '-'))
-						).put(
-							"label", languageId
-						).build());
-				}
-
-				return languages;
+				return TransformUtil.transform(
+					uniqueLanguageIds,
+					languageId -> HashMapBuilder.<String, Object>put(
+						"icon",
+						StringUtil.toLowerCase(
+							StringUtil.replace(languageId, '_', '-'))
+					).put(
+						"label", languageId
+					).build());
 			}
 		).put(
 			"strings",

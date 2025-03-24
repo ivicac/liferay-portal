@@ -6,10 +6,17 @@
 package com.liferay.style.book.util;
 
 import com.liferay.exportimport.kernel.staging.StagingUtil;
+import com.liferay.frontend.token.definition.FrontendTokenDefinition;
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
+
+import java.util.Locale;
 
 /**
  * @author Víctor Galán
@@ -17,26 +24,25 @@ import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
 public class DefaultStyleBookEntryUtil {
 
 	public static StyleBookEntry getDefaultMasterStyleBookEntry(Layout layout) {
-		StyleBookEntry styleBookEntry = null;
+		StyleBookEntry styleBookEntry = _getMasterLayoutStyleBookEntry(layout);
 
-		if (layout.getMasterLayoutPlid() > 0) {
-			Layout masterLayout = LayoutLocalServiceUtil.fetchLayout(
-				layout.getMasterLayoutPlid());
-
-			if (masterLayout != null) {
-				styleBookEntry =
-					StyleBookEntryLocalServiceUtil.fetchStyleBookEntry(
-						masterLayout.getStyleBookEntryId());
-			}
+		if (styleBookEntry != null) {
+			return styleBookEntry;
 		}
 
-		if (styleBookEntry == null) {
-			styleBookEntry =
-				StyleBookEntryLocalServiceUtil.fetchDefaultStyleBookEntry(
-					StagingUtil.getLiveGroupId(layout.getGroupId()));
+		FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry =
+			_frontendTokenDefinitionRegistrySnapshot.get();
+
+		FrontendTokenDefinition frontendTokenDefinition =
+			frontendTokenDefinitionRegistry.getFrontendTokenDefinition(layout);
+
+		if (frontendTokenDefinition != null) {
+			return StyleBookEntryLocalServiceUtil.fetchDefaultStyleBookEntry(
+				StagingUtil.getLiveGroupId(layout.getGroupId()),
+				frontendTokenDefinition.getThemeId());
 		}
 
-		return styleBookEntry;
+		return null;
 	}
 
 	public static StyleBookEntry getDefaultStyleBookEntry(Layout layout) {
@@ -53,5 +59,62 @@ public class DefaultStyleBookEntryUtil {
 
 		return getDefaultMasterStyleBookEntry(layout);
 	}
+
+	public static String getStyleBookEntryName(
+		Layout layout, Locale locale, StyleBookEntry styleBookEntry) {
+
+		if ((styleBookEntry != null) &&
+			(styleBookEntry.getStyleBookEntryId() > 0)) {
+
+			return styleBookEntry.getName();
+		}
+
+		StyleBookEntry defaultStyleBookEntry = getDefaultMasterStyleBookEntry(
+			layout);
+
+		if (defaultStyleBookEntry == null) {
+			if (FeatureFlagManagerUtil.isEnabled(
+					layout.getCompanyId(), "LPD-30204")) {
+
+				return LanguageUtil.format(
+					locale, "styles-from-x",
+					StyleBookUtil.getThemeName(layout, locale));
+			}
+
+			return LanguageUtil.get(locale, "styles-from-theme");
+		}
+
+		StyleBookEntry masterLayoutStyleBookEntry =
+			_getMasterLayoutStyleBookEntry(layout);
+
+		if (masterLayoutStyleBookEntry != null) {
+			return LanguageUtil.get(locale, "styles-from-master");
+		}
+
+		return LanguageUtil.get(locale, "styles-by-default");
+	}
+
+	private static StyleBookEntry _getMasterLayoutStyleBookEntry(
+		Layout layout) {
+
+		StyleBookEntry styleBookEntry = null;
+
+		if (layout.getMasterLayoutPlid() > 0) {
+			Layout masterLayout = LayoutLocalServiceUtil.fetchLayout(
+				layout.getMasterLayoutPlid());
+
+			if (masterLayout != null) {
+				styleBookEntry =
+					StyleBookEntryLocalServiceUtil.fetchStyleBookEntry(
+						masterLayout.getStyleBookEntryId());
+			}
+		}
+
+		return styleBookEntry;
+	}
+
+	private static final Snapshot<FrontendTokenDefinitionRegistry>
+		_frontendTokenDefinitionRegistrySnapshot = new Snapshot<>(
+			StyleBookUtil.class, FrontendTokenDefinitionRegistry.class);
 
 }

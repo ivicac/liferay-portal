@@ -10,6 +10,8 @@ import {applicationsMenuPageTest} from '../../../fixtures/applicationsMenuPageTe
 import {commercePagesTest} from '../../../fixtures/commercePagesTest';
 import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
 import {loginTest} from '../../../fixtures/loginTest';
+import getRandomString from '../../../utils/getRandomString';
+import {waitForAlert} from '../../../utils/waitForAlert';
 
 export const test = mergeTests(
 	apiHelpersTest,
@@ -18,82 +20,132 @@ export const test = mergeTests(
 	dataApiHelpersTest,
 	loginTest()
 );
-test('LPD-28891 Key is not automatically generated when writing new Specifications label', async ({
-	apiHelpers,
-	applicationsMenuPage,
-	commerceSpecificationsPage,
-}) => {
-	await applicationsMenuPage.goToCommerceSpecifications();
-
-	await expect(
-		commerceSpecificationsPage.createNewSpecificationsProduct
-	).toBeVisible();
-
-	await commerceSpecificationsPage.createNewSpecificationsProduct.click();
-
-	await commerceSpecificationsPage.waitForKey('Specification 1');
-
-	await commerceSpecificationsPage.addDescriptionSpecifications.fill(
-		'Specification-1 Description'
-	);
-
-	await expect(
-		commerceSpecificationsPage.addDescriptionSpecifications
-	).toBeVisible();
-
-	await commerceSpecificationsPage.keyContent.fill('specification-1');
-
-	await expect(commerceSpecificationsPage.keyContent).toHaveValue(
-		'specification-1'
-	);
-
-	await commerceSpecificationsPage.saveButton.click();
-
-	await expect(commerceSpecificationsPage.successMessage).toBeVisible();
-
-	await commerceSpecificationsPage.goBack.click();
-
-	await commerceSpecificationsPage.goToSpecificationGroup.click();
-
-	await commerceSpecificationsPage.createNewSpecificationsProductGroup.click();
-
-	await commerceSpecificationsPage.addNewProductSpecificationsGroup.fill(
-		'Specification group'
-	);
-
-	await commerceSpecificationsPage.addDescriptionSpecificationsGroup.fill(
-		'Specification group Description'
-	);
-
-	await expect(commerceSpecificationsPage.keyContent).toHaveValue(
-		'Specification group'
-	);
-
-	await commerceSpecificationsPage.saveButton.click();
-
-	await expect(commerceSpecificationsPage.successMessage).toBeVisible();
-
-	const specifications =
-		await apiHelpers.headlessCommerceAdminCatalog.getSpecifications();
-
-	for (let i = 0; i < specifications.totalCount; i++) {
-		if (specifications.items[i].title.en_US === 'Specification 1') {
-			apiHelpers.data.push({
-				id: specifications.items[i].id,
-				type: 'specification',
+test(
+	'Recursive Product Window Reopens When Saving Specification Value',
+	{tag: '@LPD-46276'},
+	async ({
+		apiHelpers,
+		commerceAdminProductDetailsPage,
+		commerceAdminProductPage,
+		page,
+	}) => {
+		const catalog =
+			await apiHelpers.headlessCommerceAdminCatalog.postCatalog({
+				name: getRandomString(),
 			});
+
+		apiHelpers.data.push({id: catalog.id, type: 'catalog'});
+
+		const specification =
+			await apiHelpers.headlessCommerceAdminCatalog.postSpecification();
+
+		const product =
+			await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+				catalogId: catalog.id,
+				name: {en_US: getRandomString()},
+				productSpecifications: [
+					{
+						specificationKey: specification.key,
+						value: {
+							en_US: getRandomString(),
+						},
+					},
+				],
+			});
+
+		apiHelpers.data.push({id: product.id, type: 'product'});
+
+		await commerceAdminProductPage.gotoProduct(product.name['en_US']);
+
+		await expect(
+			await page.getByText(specification.title.en_US)
+		).toBeVisible();
+
+		await commerceAdminProductDetailsPage.ellipsisProductSpecification.click();
+		await (
+			await commerceAdminProductDetailsPage.dropdownProductSpecification(
+				'Edit'
+			)
+		).click();
+
+		const randomSpecificationValue = getRandomString();
+
+		await commerceAdminProductDetailsPage.editFrameSpecificationProductValue.fill(
+			randomSpecificationValue
+		);
+
+		await commerceAdminProductDetailsPage.editFrameSaveButton.click();
+
+		await waitForAlert(
+			commerceAdminProductDetailsPage.ellipsisFrameProductSpecification
+		);
+
+		await commerceAdminProductDetailsPage.closeEditFrame.click();
+
+		await expect(page.getByText(randomSpecificationValue)).toBeVisible();
+	}
+);
+
+test(
+	'Product specification visibility is correctly saved',
+	{tag: '@LPD-48103'},
+	async ({
+		apiHelpers,
+		commerceAdminProductDetailsPage,
+		commerceAdminProductPage,
+	}) => {
+		const picklist =
+			await apiHelpers.listTypeAdmin.postRandomListTypeDefinition();
+
+		try {
+			const specification =
+				await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
+					true,
+					0,
+					getRandomString(),
+					null,
+					false,
+					[picklist.id]
+				);
+
+			await apiHelpers.listTypeAdmin.postListTypeEntry(
+				picklist.externalReferenceCode,
+				'item1'
+			);
+
+			const catalog =
+				await apiHelpers.headlessCommerceAdminCatalog.postCatalog();
+
+			const product =
+				await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+					catalogId: catalog.id,
+				});
+
+			await commerceAdminProductPage.gotoProduct(product.name['en_US']);
+
+			await commerceAdminProductDetailsPage.addOrEditProductSpecification(
+				'Add an Existing Specification',
+				specification.title.en_US,
+				'item1'
+			);
+			await commerceAdminProductDetailsPage.editOrDeleteProductSpecification(
+				'Edit',
+				'item1'
+			);
+			await commerceAdminProductDetailsPage.visibleToggle.check();
+			await commerceAdminProductDetailsPage.editFrameSaveButton.click();
+
+			await expect(
+				commerceAdminProductDetailsPage.editSuccessMessage
+			).toBeVisible();
+			await expect(
+				commerceAdminProductDetailsPage.visibleToggle
+			).toBeChecked();
+		}
+		finally {
+			await apiHelpers.listTypeAdmin.deleteListTypeDefinition(
+				picklist.id
+			);
 		}
 	}
-
-	const optionCategory =
-		await apiHelpers.headlessCommerceAdminCatalog.getOptionCategories();
-
-	for (let i = 0; i < optionCategory.totalCount; i++) {
-		if (optionCategory.items[i].title.en_US === 'Specification group') {
-			apiHelpers.data.push({
-				id: optionCategory.items[i].id,
-				type: 'optionCategory',
-			});
-		}
-	}
-});
+);

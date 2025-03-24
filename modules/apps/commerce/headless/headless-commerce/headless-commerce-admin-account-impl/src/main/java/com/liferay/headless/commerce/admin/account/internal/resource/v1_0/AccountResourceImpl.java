@@ -7,7 +7,6 @@ package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.exception.NoSuchEntryException;
-import com.liferay.account.exception.NoSuchGroupException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryOrganizationRel;
 import com.liferay.account.model.AccountEntryUserRel;
@@ -102,7 +101,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -124,24 +123,12 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		throws Exception {
 
 		AccountGroup accountGroup =
-			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+			_accountGroupService.getAccountGroupByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
-		if (accountGroup == null) {
-			throw new NoSuchGroupException(
-				"Unable to find account group with external reference code " +
-					externalReferenceCode);
-		}
-
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), accountExternalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find Account with external reference code: " +
-					accountExternalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				accountExternalReferenceCode, contextCompany.getCompanyId());
 
 		AccountGroupRel accountGroupRel =
 			_accountGroupRelService.fetchAccountGroupRel(
@@ -171,7 +158,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -227,7 +214,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -297,7 +284,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			throw new NoSuchEntryException(
@@ -318,32 +305,20 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		throws Exception {
 
 		AccountGroup accountGroup =
-			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+			_accountGroupService.getAccountGroupByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
-
-		if (accountGroup == null) {
-			throw new NoSuchGroupException(
-				"Unable to find account group with external reference code " +
-					externalReferenceCode);
-		}
 
 		AccountEntry accountEntry = null;
 
 		if (account.getId() != null) {
-			accountEntry = _accountEntryService.fetchAccountEntry(
+			accountEntry = _accountEntryService.getAccountEntry(
 				account.getId());
 		}
-		else if (account.getExternalReferenceCode() != null) {
+		else {
 			accountEntry =
-				_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-					contextCompany.getCompanyId(),
-					account.getExternalReferenceCode());
-		}
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find Account with external reference code: " +
-					account.getExternalReferenceCode());
+				_accountEntryService.getAccountEntryByExternalReferenceCode(
+					account.getExternalReferenceCode(),
+					contextCompany.getCompanyId());
 		}
 
 		_accountGroupRelService.addAccountGroupRel(

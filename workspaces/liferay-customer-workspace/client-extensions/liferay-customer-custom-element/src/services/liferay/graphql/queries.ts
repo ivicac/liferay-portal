@@ -67,10 +67,10 @@ export const addBusinessEvent = gql`
 				type: "C_BusinessEvent"
 				path: "/c/businessevents/"
 			) {
+			associatedTickets
 			currentLiferayVersion
 			description
 			eventType
-			impactedZendeskTicketIds
 			name
 			newLiferayVersione
 			targetGoLiveDateTime
@@ -687,6 +687,7 @@ export const getUserAccount = gql`
 					name
 				}
 			}
+			emailAddress
 			externalReferenceCode
 			id
 			image
@@ -781,6 +782,34 @@ export const updateAccountSubscriptionGroups = gql`
 			activationStatus
 			externalReferenceCode
 			name
+		}
+	}
+`;
+
+export const updateBusinessEvent = gql`
+	mutation updateBusinessEvent(
+		$businessEvent: InputC_BusinessEvent!
+		$businessEventId: Long!
+	) {
+		updateBusinessEvent(
+			businessEventId: $businessEventId
+			input: $businessEvent
+		)
+			@rest(
+				method: "PUT"
+				type: "C_BusinessEvent"
+				path: "/c/businessevents/{args.businessEventId}"
+			) {
+			actualGoLiveDateTime
+			associatedTickets
+			currentLiferayVersion
+			description
+			eventType
+			feedback
+			name
+			newLiferayVersion
+			targetGoLiveDateTime
+			timeZone
 		}
 	}
 `;

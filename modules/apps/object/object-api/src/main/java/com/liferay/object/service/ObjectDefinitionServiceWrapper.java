@@ -65,6 +65,7 @@ public class ObjectDefinitionServiceWrapper
 			String externalReferenceCode, long userId, long objectFolderId,
 			boolean enableComments, boolean enableFriendlyURLCustomization,
 			boolean enableIndexSearch, boolean enableLocalization,
+			boolean enableObjectEntryDraft,
 			java.util.Map<java.util.Locale, String> labelMap, String name,
 			String panelAppOrder, String panelCategoryKey,
 			java.util.Map<java.util.Locale, String> pluralLabelMap,
@@ -77,9 +78,9 @@ public class ObjectDefinitionServiceWrapper
 		return _objectDefinitionService.addSystemObjectDefinition(
 			externalReferenceCode, userId, objectFolderId, enableComments,
 			enableFriendlyURLCustomization, enableIndexSearch,
-			enableLocalization, labelMap, name, panelAppOrder, panelCategoryKey,
-			pluralLabelMap, portlet, scope, objectDefinitionSettings,
-			objectFields);
+			enableLocalization, enableObjectEntryDraft, labelMap, name,
+			panelAppOrder, panelCategoryKey, pluralLabelMap, portlet, scope,
+			objectDefinitionSettings, objectFields);
 	}
 
 	@Override
@@ -100,6 +101,15 @@ public class ObjectDefinitionServiceWrapper
 		return _objectDefinitionService.
 			fetchObjectDefinitionByExternalReferenceCode(
 				externalReferenceCode, companyId);
+	}
+
+	@Override
+	public java.util.List<com.liferay.object.model.ObjectDefinition>
+		getCMSObjectDefinitions(
+			long companyId, String[] objectFolderExternalReferenceCodes) {
+
+		return _objectDefinitionService.getCMSObjectDefinitions(
+			companyId, objectFolderExternalReferenceCodes);
 	}
 
 	@Override

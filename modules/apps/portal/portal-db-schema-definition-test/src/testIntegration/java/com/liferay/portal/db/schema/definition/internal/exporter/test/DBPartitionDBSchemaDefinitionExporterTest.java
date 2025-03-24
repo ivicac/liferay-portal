@@ -74,6 +74,9 @@ public class DBPartitionDBSchemaDefinitionExporterTest
 
 		_company = CompanyTestUtil.addCompany();
 
+		_companyPartitionName = DBPartitionUtil.getPartitionName(
+			_company.getCompanyId());
+
 		try (SafeCloseable safeCloseable =
 				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
 					_company.getCompanyId())) {
@@ -227,7 +230,10 @@ public class DBPartitionDBSchemaDefinitionExporterTest
 		String defaultPartitionName = DBPartitionUtil.getPartitionName(
 			PortalInstancePool.getDefaultCompanyId());
 
-		try {
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					PortalInstancePool.getDefaultCompanyId())) {
+
 			db.runSQL(
 				"create table " + defaultPartitionName +
 					".TestTable (testColumn bigint primary key)");
@@ -250,12 +256,17 @@ public class DBPartitionDBSchemaDefinitionExporterTest
 						StringUtil.toLowerCase("TestTable2"))));
 		}
 		finally {
-			db.runSQL(
-				"DROP_TABLE_IF_EXISTS(" + defaultPartitionName + ".TestTable)");
-			db.runSQL(
-				"DROP_TABLE_IF_EXISTS(" +
-					DBPartitionUtil.getPartitionName(_company.getCompanyId()) +
+			try (SafeCloseable safeCloseable =
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+						PortalInstancePool.getDefaultCompanyId())) {
+
+				db.runSQL(
+					"DROP_TABLE_IF_EXISTS(" + defaultPartitionName +
+						".TestTable)");
+				db.runSQL(
+					"DROP_TABLE_IF_EXISTS(" + _companyPartitionName +
 						".TestTable2)");
+			}
 		}
 	}
 
@@ -263,7 +274,10 @@ public class DBPartitionDBSchemaDefinitionExporterTest
 	public void testExportImportReportWithMissingView() throws Exception {
 		DB db = DBManagerUtil.getDB();
 
-		try {
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					PortalInstancePool.getDefaultCompanyId())) {
+
 			db.runSQL(
 				"create view " +
 					DBPartitionUtil.getPartitionName(_company.getCompanyId()) +
@@ -279,10 +293,14 @@ public class DBPartitionDBSchemaDefinitionExporterTest
 						StringUtil.toLowerCase("TestView"))));
 		}
 		finally {
-			db.runSQL(
-				"drop view if exists " +
-					DBPartitionUtil.getPartitionName(_company.getCompanyId()) +
+			try (SafeCloseable safeCloseable =
+					CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+						PortalInstancePool.getDefaultCompanyId())) {
+
+				db.runSQL(
+					"drop view if exists " + _companyPartitionName +
 						".TestView");
+			}
 		}
 	}
 
@@ -291,6 +309,7 @@ public class DBPartitionDBSchemaDefinitionExporterTest
 	@Inject
 	private static CompanyLocalService _companyLocalService;
 
+	private static String _companyPartitionName;
 	private static ObjectDefinition _objectDBPartitionDefinition1;
 	private static ObjectDefinition _objectDBPartitionDefinition2;
 

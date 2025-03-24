@@ -13,6 +13,7 @@ import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -65,38 +66,66 @@ public class DBPartitionMigrationValidatorTest extends BaseTestCase {
 	}
 
 	@Test
+	@TestInfo("LPD-6742")
 	public void testExportDefaultDatabase() throws Exception {
 		_testExport(
-			Collections.singletonList(RandomTestUtil.randomLong()), true);
+			true, Collections.singletonList(RandomTestUtil.randomLong()), true);
 	}
 
 	@Test
+	@TestInfo("LPD-6742")
 	public void testExportDefaultDatabaseWithMultipleCompanies()
 		throws Exception {
 
 		_testExport(
+			true,
 			Arrays.asList(
 				RandomTestUtil.randomLong(), RandomTestUtil.randomLong()),
 			true);
 	}
 
 	@Test
+	@TestInfo("LPD-6742")
 	public void testExportNondefaultDatabase() throws Exception {
 		_testExport(
-			Collections.singletonList(RandomTestUtil.randomLong()), false);
+			true, Collections.singletonList(RandomTestUtil.randomLong()),
+			false);
 	}
 
 	@Test
+	@TestInfo("LPD-6742")
 	public void testExportNondefaultDatabaseWithMultipleCompanies()
 		throws Exception {
 
 		_testExport(
+			true,
 			Arrays.asList(
 				RandomTestUtil.randomLong(), RandomTestUtil.randomLong()),
 			false);
 	}
 
 	@Test
+	@TestInfo("LPD-39640")
+	public void testExportNonexistentDatabase() throws Exception {
+		_testExport(
+			false, Collections.singletonList(RandomTestUtil.randomLong()),
+			false);
+	}
+
+	@Test
+	@TestInfo("LPD-39640")
+	public void testExportNonexistentDatabaseWithMultipleCompanies()
+		throws Exception {
+
+		_testExport(
+			false,
+			Arrays.asList(
+				RandomTestUtil.randomLong(), RandomTestUtil.randomLong()),
+			false);
+	}
+
+	@Test
+	@TestInfo("LPD-6742")
 	public void testValidateFailure() throws Exception {
 		String[] messages = {
 			"[ERROR] Company ID 3007447931789165977 already exists in the " +
@@ -150,6 +179,7 @@ public class DBPartitionMigrationValidatorTest extends BaseTestCase {
 	}
 
 	@Test
+	@TestInfo("LPD-6742")
 	public void testValidateSuccess() throws Exception {
 		_testValidate(
 			"source-success.json", "target-success.json",
@@ -164,6 +194,7 @@ public class DBPartitionMigrationValidatorTest extends BaseTestCase {
 	}
 
 	@Test
+	@TestInfo("LPD-6742")
 	public void testValidateTargetNondefaultPartition() throws Exception {
 		_testValidate(
 			"source-success.json", "target-nondefault.json",
@@ -285,7 +316,9 @@ public class DBPartitionMigrationValidatorTest extends BaseTestCase {
 		);
 	}
 
-	private void _testExport(List<Long> companyIds, boolean defaultPartition)
+	private void _testExport(
+			boolean companyExists, List<Long> companyIds,
+			boolean defaultPartition)
 		throws Exception {
 
 		List<Company> companies = Arrays.asList(
@@ -295,6 +328,8 @@ public class DBPartitionMigrationValidatorTest extends BaseTestCase {
 			new Company(
 				RandomTestUtil.randomLong(), RandomTestUtil.randomString(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomString()));
+		long companyId =
+			companyExists ? companyIds.get(0) : RandomTestUtil.randomLong();
 		String password = RandomTestUtil.randomString();
 		String schemaName = RandomTestUtil.randomString();
 		String user = RandomTestUtil.randomString();
@@ -304,7 +339,8 @@ public class DBPartitionMigrationValidatorTest extends BaseTestCase {
 		try {
 			_execute(
 				Arrays.asList(
-					"export", "--jdbc-url", _JDBC_URL, "--output-dir",
+					"export", "--company-id", String.valueOf(companyId),
+					"--jdbc-url", _JDBC_URL, "--output-dir",
 					outputDirectory.getAbsolutePath(), "--password", password,
 					"--schema-name", schemaName, "--user", user),
 				Arrays.asList(
@@ -324,11 +360,10 @@ public class DBPartitionMigrationValidatorTest extends BaseTestCase {
 			String errorFileContent = new String(
 				Files.readAllBytes(_errorFile.toPath()), StringPool.UTF8);
 
-			if (companyIds.size() > 1) {
+			if (!companyExists) {
 				Assert.assertTrue(
 					errorFileContent.contains(
-						"Database schema has to have a single company or " +
-							"database partitioning must be enabled"));
+						"Company " + companyId + " does not exist"));
 				Assert.assertEquals("1", runtimeException.getMessage());
 
 				File[] files = outputDirectory.listFiles();

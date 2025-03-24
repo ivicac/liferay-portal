@@ -9,7 +9,9 @@ import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.exception.ObjectEntryValuesException;
@@ -46,6 +48,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
@@ -777,6 +780,8 @@ public class ObjectRelatedModelsProviderTest {
 
 			ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
 				user.getUserId(), 0, objectDefinition.getObjectDefinitionId(),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 				null, Collections.emptyMap(),
 				ServiceContextTestUtil.getServiceContext());
 
@@ -826,13 +831,16 @@ public class ObjectRelatedModelsProviderTest {
 				_objectRelationship.getObjectRelationshipId());
 
 			_objectDefinitionLocalService.deleteObjectDefinition(
-				objectDefinition.getObjectDefinitionId());
+				objectDefinition);
 
 			_accountEntryLocalService.deleteAccountEntries(
 				new long[] {
 					accountEntry1.getAccountEntryId(),
 					accountEntry2.getAccountEntryId()
 				});
+
+			_assetEntryLocalService.deleteEntry(
+				objectDefinition.getClassName(), objectEntry.getPrimaryKey());
 		}
 		finally {
 			PermissionThreadLocal.setPermissionChecker(
@@ -1058,6 +1066,12 @@ public class ObjectRelatedModelsProviderTest {
 
 	@Inject
 	private AccountEntryLocalService _accountEntryLocalService;
+
+	@Inject
+	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Inject
+	private ClassNameLocalService _classNameLocalService;
 
 	@Inject
 	private CompanyLocalService _companyLocalService;

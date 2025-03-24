@@ -25,11 +25,13 @@ import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.asset.test.util.AssetTestUtil;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.expando.kernel.exception.NoSuchValueException;
 import com.liferay.expando.kernel.model.ExpandoColumn;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
+import com.liferay.expando.test.util.ExpandoTestUtil;
 import com.liferay.headless.admin.user.client.dto.v1_0.Account;
 import com.liferay.headless.admin.user.client.dto.v1_0.AccountContactInformation;
 import com.liferay.headless.admin.user.client.dto.v1_0.Creator;
@@ -70,6 +72,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -84,6 +87,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.junit.After;
@@ -105,8 +109,9 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		super.setUp();
 
 		_accountGroup = _accountGroupLocalService.addAccountGroup(
-			TestPropsValues.getUserId(), StringUtil.randomString(),
-			StringUtil.randomString(), new ServiceContext());
+			StringPool.BLANK, TestPropsValues.getUserId(),
+			StringUtil.randomString(), StringUtil.randomString(),
+			new ServiceContext());
 	}
 
 	@After
@@ -836,6 +841,25 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		return _accountEntryLocalService.updateAccountEntry(accountEntry);
 	}
 
+	private ExpandoColumn _addExpandoColumn(
+			Object defaultData, ExpandoTable expandoTable, int type,
+			Map<String, String> typeSettingsProperties)
+		throws Exception {
+
+		ExpandoColumn expandoColumn = ExpandoTestUtil.addColumn(
+			expandoTable, "A" + RandomTestUtil.randomString(), type,
+			defaultData);
+
+		UnicodeProperties unicodeProperties =
+			expandoColumn.getTypeSettingsProperties();
+
+		unicodeProperties.putAll(typeSettingsProperties);
+
+		expandoColumn.setTypeSettingsProperties(unicodeProperties);
+
+		return _expandoColumnLocalService.updateExpandoColumn(expandoColumn);
+	}
+
 	private FileEntry _addImageFileEntry() throws Exception {
 		Group group = _groupLocalService.getCompanyGroup(
 			_accountGroup.getCompanyId());
@@ -1045,6 +1069,20 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 		return true;
 	}
 
+	private Object _getCustomFieldCustomValueData(Account account, String name)
+		throws Exception {
+
+		for (CustomField customField : account.getCustomFields()) {
+			if (StringUtil.equals(customField.getName(), name)) {
+				CustomValue customValue = customField.getCustomValue();
+
+				return customValue.getData();
+			}
+		}
+
+		throw new NoSuchValueException();
+	}
+
 	private Account _postAccount() throws Exception {
 		return _postAccount(randomAccount());
 	}
@@ -1150,25 +1188,85 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 	}
 
 	private void _testGetAccountsPageWithCustomFields() throws Exception {
-		ExpandoTable expandoTable = _expandoTableLocalService.addTable(
-			testGroup.getCompanyId(),
+		ExpandoTable expandoTable = ExpandoTestUtil.addTable(
 			_classNameLocalService.getClassNameId(AccountEntry.class),
 			"CUSTOM_FIELDS");
 
-		ExpandoColumn expandoColumn = _expandoColumnLocalService.addColumn(
-			expandoTable.getTableId(), "A" + RandomTestUtil.randomString(),
-			ExpandoColumnConstants.STRING);
+		ExpandoColumn expandoColumn = _addExpandoColumn(
+			null, expandoTable, ExpandoColumnConstants.STRING,
+			HashMapBuilder.put(
+				ExpandoColumnConstants.INDEX_TYPE,
+				String.valueOf(ExpandoColumnConstants.INDEX_TYPE_KEYWORD)
+			).build());
 
-		UnicodeProperties unicodeProperties =
-			expandoColumn.getTypeSettingsProperties();
+		double randomDouble = RandomTestUtil.randomDouble();
 
-		unicodeProperties.setProperty(
-			ExpandoColumnConstants.INDEX_TYPE,
-			String.valueOf(ExpandoColumnConstants.INDEX_TYPE_KEYWORD));
+		ExpandoColumn doubleArrayExpandoColumn1 = _addExpandoColumn(
+			new double[] {
+				randomDouble, RandomTestUtil.randomDouble(),
+				RandomTestUtil.randomDouble()
+			},
+			expandoTable, ExpandoColumnConstants.DOUBLE_ARRAY,
+			HashMapBuilder.put(
+				ExpandoColumnConstants.PROPERTY_DISPLAY_TYPE,
+				ExpandoColumnConstants.PROPERTY_DISPLAY_TYPE_RADIO
+			).build());
+		ExpandoColumn doubleArrayExpandoColumn2 = _addExpandoColumn(
+			new double[] {
+				randomDouble, RandomTestUtil.randomDouble(),
+				RandomTestUtil.randomDouble()
+			},
+			expandoTable, ExpandoColumnConstants.DOUBLE_ARRAY,
+			HashMapBuilder.put(
+				ExpandoColumnConstants.PROPERTY_DISPLAY_TYPE,
+				ExpandoColumnConstants.PROPERTY_DISPLAY_TYPE_SELECTION_LIST
+			).build());
 
-		expandoColumn.setTypeSettingsProperties(unicodeProperties);
+		long randomLong = RandomTestUtil.randomLong();
 
-		_expandoColumnLocalService.updateExpandoColumn(expandoColumn);
+		ExpandoColumn longArrayExpandoColumn1 = _addExpandoColumn(
+			new long[] {
+				randomLong, RandomTestUtil.randomLong(),
+				RandomTestUtil.randomLong()
+			},
+			expandoTable, ExpandoColumnConstants.LONG_ARRAY,
+			HashMapBuilder.put(
+				ExpandoColumnConstants.PROPERTY_DISPLAY_TYPE,
+				ExpandoColumnConstants.PROPERTY_DISPLAY_TYPE_RADIO
+			).build());
+		ExpandoColumn longArrayExpandoColumn2 = _addExpandoColumn(
+			new long[] {
+				randomLong, RandomTestUtil.randomLong(),
+				RandomTestUtil.randomLong()
+			},
+			expandoTable, ExpandoColumnConstants.LONG_ARRAY,
+			HashMapBuilder.put(
+				ExpandoColumnConstants.PROPERTY_DISPLAY_TYPE,
+				ExpandoColumnConstants.PROPERTY_DISPLAY_TYPE_SELECTION_LIST
+			).build());
+
+		String randomString = RandomTestUtil.randomString();
+
+		ExpandoColumn stringArrayExpandoColumn1 = _addExpandoColumn(
+			new String[] {
+				randomString, RandomTestUtil.randomString(),
+				RandomTestUtil.randomString()
+			},
+			expandoTable, ExpandoColumnConstants.STRING_ARRAY,
+			HashMapBuilder.put(
+				ExpandoColumnConstants.PROPERTY_DISPLAY_TYPE,
+				ExpandoColumnConstants.PROPERTY_DISPLAY_TYPE_RADIO
+			).build());
+		ExpandoColumn stringArrayExpandoColumn2 = _addExpandoColumn(
+			new String[] {
+				randomString, RandomTestUtil.randomString(),
+				RandomTestUtil.randomString()
+			},
+			expandoTable, ExpandoColumnConstants.STRING_ARRAY,
+			HashMapBuilder.put(
+				ExpandoColumnConstants.PROPERTY_DISPLAY_TYPE,
+				ExpandoColumnConstants.PROPERTY_DISPLAY_TYPE_SELECTION_LIST
+			).build());
 
 		Account account = randomAccount();
 
@@ -1209,16 +1307,50 @@ public class AccountResourceTest extends BaseAccountResourceTestCase {
 
 		Assert.assertEquals(1, page.getTotalCount());
 
-		assertEquals(
-			Collections.singletonList(account), (List<Account>)page.getItems());
+		List<Account> accounts = (List<Account>)page.getItems();
+
+		assertEquals(Collections.singletonList(account), accounts);
+
+		Account actualAccount = accounts.get(0);
+
+		Assert.assertEquals(
+			Arrays.toString(new double[] {0.0}),
+			Arrays.toString(
+				(Object[])_getCustomFieldCustomValueData(
+					actualAccount, doubleArrayExpandoColumn1.getName())));
+		Assert.assertEquals(
+			Arrays.toString(new double[] {randomDouble}),
+			Arrays.toString(
+				(Object[])_getCustomFieldCustomValueData(
+					actualAccount, doubleArrayExpandoColumn2.getName())));
+		Assert.assertEquals(
+			Arrays.toString(new long[] {0}),
+			Arrays.toString(
+				(Object[])_getCustomFieldCustomValueData(
+					actualAccount, longArrayExpandoColumn1.getName())));
+		Assert.assertEquals(
+			Arrays.toString(new long[] {randomLong}),
+			Arrays.toString(
+				(Object[])_getCustomFieldCustomValueData(
+					actualAccount, longArrayExpandoColumn2.getName())));
+		Assert.assertEquals(
+			Arrays.toString(new String[] {"false"}),
+			Arrays.toString(
+				(Object[])_getCustomFieldCustomValueData(
+					actualAccount, stringArrayExpandoColumn1.getName())));
+		Assert.assertEquals(
+			Arrays.toString(new String[] {randomString}),
+			Arrays.toString(
+				(Object[])_getCustomFieldCustomValueData(
+					actualAccount, stringArrayExpandoColumn2.getName())));
 	}
 
 	private void _testGetAccountWithNestedFields() throws Exception {
 		Account postAccount = testGetAccount_addAccount();
 
 		AccountGroup accountGroup = _accountGroupLocalService.addAccountGroup(
-			TestPropsValues.getUserId(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(),
+			StringPool.BLANK, TestPropsValues.getUserId(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext());
 
 		_accountGroupRelLocalService.addAccountGroupRel(

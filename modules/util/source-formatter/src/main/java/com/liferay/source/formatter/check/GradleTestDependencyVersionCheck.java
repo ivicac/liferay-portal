@@ -102,7 +102,7 @@ public class GradleTestDependencyVersionCheck extends BaseFileCheck {
 			}
 
 			if (dependencyName.startsWith("com.liferay.") &&
-				!dependencyName.startsWith("com.liferay.portletmvc4spring") &&
+				!dependencyName.startsWith("com.liferay.jakarta") &&
 				!line.contains("project(\"") &&
 				!allowedDependencyNames.contains(dependencyName)) {
 

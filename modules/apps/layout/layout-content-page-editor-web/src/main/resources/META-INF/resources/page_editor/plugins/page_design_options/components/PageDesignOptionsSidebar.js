@@ -32,10 +32,7 @@ export default function PageDesignOptionsSidebar() {
 	const selectedStyleBook = useStyleBook();
 	const setSelectedStyleBook = useSetStyleBook();
 
-	const [defaultStyleBook, setDefaultStyleBook] = useState({
-		imagePreviewURL: config.defaultStyleBookEntryImagePreviewURL,
-		name: config.defaultStyleBookEntryName,
-	});
+	const [styleBooks, setStyleBooks] = useState(config.styleBooks);
 
 	const masterLayoutPlid = useSelector(
 		(state) => state.masterLayout?.masterLayoutPlid
@@ -47,29 +44,53 @@ export default function PageDesignOptionsSidebar() {
 				changeMasterLayout({
 					masterLayoutPlid: masterLayout.masterLayoutPlid,
 				})
-			).then(({styleBook}) => {
-				const {
-					defaultStyleBookEntryImagePreviewURL,
-					defaultStyleBookEntryName,
-					styleBookEntryId,
-					tokenValues,
-				} = styleBook;
+			).then(({styleBooks = []}) => {
+				setStyleBooks(styleBooks);
 
-				setDefaultStyleBook({
-					imagePreviewURL: defaultStyleBookEntryImagePreviewURL,
-					name: defaultStyleBookEntryName,
-				});
+				if (!styleBooks.length) {
+					setSelectedStyleBook({
+						styleBookEntryId: '0',
+						tokenValues: {},
+					});
 
-				// Changing the master layout should only affect the selected stylebook
-				// only if styleBookEntryId is equal to 0 which means that the stylebook is
-				// inherited
+					return;
+				}
 
-				if (styleBookEntryId === '0') {
-					setSelectedStyleBook({styleBookEntryId, tokenValues});
+				if (Liferay.FeatureFlags['LPD-30204']) {
+
+					// Changing the master layout should affect the selected
+					// stylebook if the selected styleBookEntryId is equal to 0
+					// which means that the stylebook is inherited or if the
+					// selected stylebook is not found in the available style
+					// books which means that the style book is based on a
+					// different theme
+
+					if (
+						selectedStyleBook.styleBookEntryId === '0' ||
+						!(
+							styleBooks.findIndex(
+								(styleBook) =>
+									styleBook.styleBookEntryId ===
+									selectedStyleBook.styleBookEntryId
+							) >= 0
+						)
+					) {
+						setSelectedStyleBook({...styleBooks[0]});
+					}
+				}
+				else {
+
+					// Changing the master layout should only affect the
+					// selected stylebook if the styleBookEntryId is equal to 0
+					// which means that the stylebook is inherited
+
+					if (selectedStyleBook.styleBookEntryId === '0') {
+						setSelectedStyleBook({...styleBooks[0]});
+					}
 				}
 			});
 		},
-		[dispatch, setSelectedStyleBook]
+		[dispatch, selectedStyleBook.styleBookEntryId, setSelectedStyleBook]
 	);
 
 	const onSelectStyleBook = useCallback(
@@ -100,16 +121,16 @@ export default function PageDesignOptionsSidebar() {
 			getTabs(
 				masterLayoutPlid,
 				selectedStyleBook,
-				defaultStyleBook,
 				onSelectMasterLayout,
-				onSelectStyleBook
+				onSelectStyleBook,
+				styleBooks
 			),
 		[
-			defaultStyleBook,
 			masterLayoutPlid,
 			onSelectMasterLayout,
 			onSelectStyleBook,
 			selectedStyleBook,
+			styleBooks,
 		]
 	);
 
@@ -183,7 +204,11 @@ export default function PageDesignOptionsSidebar() {
 }
 
 const OptionList = ({options = [], icon, type}) => {
-	if (type === OPTIONS_TYPES.styleBook && !config.styleBookEnabled) {
+	if (
+		type === OPTIONS_TYPES.styleBook &&
+		!config.styleBookEnabled &&
+		!Liferay.FeatureFlags['LPD-30204']
+	) {
 		return (
 			<ClayAlert className="mt-3" displayType="info">
 				{config.isPrivateLayoutsEnabled
@@ -193,6 +218,16 @@ const OptionList = ({options = [], icon, type}) => {
 					: Liferay.Language.get(
 							'this-page-is-using-a-different-theme-than-the-one-set-for-all-pages'
 						)}
+			</ClayAlert>
+		);
+	}
+
+	if (type === OPTIONS_TYPES.styleBook && !options.length) {
+		return (
+			<ClayAlert className="mt-3" displayType="info">
+				{Liferay.Language.get(
+					'the-current-theme-does-not-support-style-books'
+				)}
 			</ClayAlert>
 		);
 	}
@@ -277,39 +312,13 @@ const OptionList = ({options = [], icon, type}) => {
 	);
 };
 
-function getDefaultStyleBookLabel(defaultStyleBook, masterLayoutPlid) {
-	const inheritingFromMaster =
-		masterLayoutPlid !== '0' && config.layoutType !== LAYOUT_TYPES.master;
-	const usingThemeStylebook = !defaultStyleBook.name;
-
-	if (usingThemeStylebook) {
-		return Liferay.Language.get('styles-from-theme');
-	}
-
-	if (inheritingFromMaster) {
-		return Liferay.Language.get('styles-from-master');
-	}
-
-	return Liferay.Language.get('styles-by-default');
-}
-
 function getTabs(
 	masterLayoutPlid,
 	selectedStyleBook,
-	defaultStyleBook,
 	onSelectMasterLayout,
-	onSelectStyleBook
+	onSelectStyleBook,
+	styleBooks
 ) {
-	const styleBooks = [
-		{
-			imagePreviewURL: defaultStyleBook.imagePreviewURL,
-			name: getDefaultStyleBookLabel(defaultStyleBook, masterLayoutPlid),
-			styleBookEntryId: '0',
-			subtitle: defaultStyleBook.name,
-		},
-		...config.styleBooks,
-	];
-
 	const tabs = [];
 
 	if (config.layoutType !== LAYOUT_TYPES.master) {

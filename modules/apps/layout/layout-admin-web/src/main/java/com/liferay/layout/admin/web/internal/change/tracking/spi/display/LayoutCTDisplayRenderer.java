@@ -160,6 +160,8 @@ public class LayoutCTDisplayRenderer extends BaseCTDisplayRenderer<Layout> {
 
 		url = HttpComponentsUtil.addParameter(url, "persistState", "false");
 		url = HttpComponentsUtil.addParameter(
+			url, "previewCTCollectionId", layout.getCtCollectionId());
+		url = HttpComponentsUtil.addParameter(
 			url, "showUserLocaleOptionsMessage", "false");
 
 		return StringBundler.concat(

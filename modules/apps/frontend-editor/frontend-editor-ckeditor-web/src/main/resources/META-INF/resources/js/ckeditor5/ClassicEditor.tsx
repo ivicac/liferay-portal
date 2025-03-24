@@ -10,13 +10,19 @@ import {
 	Bold,
 	ClassicEditor as BaseClassicEditor,
 	Editor,
-	EditorConfig,
 	Essentials,
 	EventInfo,
 	Font,
 	GeneralHtmlSupport,
 	Heading,
 	HorizontalLine,
+	Image,
+	ImageBlock,
+	ImageCaption,
+	ImageInline,
+	ImageResize,
+	ImageStyle,
+	ImageToolbar,
 	Indent,
 	Italic,
 	Link,
@@ -36,6 +42,10 @@ import {
 import React from 'react';
 
 import '../../css/ckeditor5/editor.scss';
+import ItemSelector from './plugins/ItemSelector';
+import advancedClassicEditorConfig from './presets/advancedClassicEditorConfig';
+import basicClassicEditorConfig from './presets/basicClassicEditorConfig';
+import {ClassicEditorConfig, EClassicEditorConfigPreset} from './utils/types';
 
 const ClassicEditor = ({
 	className,
@@ -44,11 +54,12 @@ const ClassicEditor = ({
 	onChange,
 }: {
 	className?: string;
-	config?: EditorConfig;
+	config?: ClassicEditorConfig;
 	data?: string;
+	id?: string;
 	onChange?: (event: EventInfo, editor: Editor) => void;
 }) => {
-	const defaultConfig: EditorConfig = {
+	const defaultConfig: ClassicEditorConfig = {
 		plugins: [
 			Alignment,
 			BlockQuote,
@@ -58,13 +69,21 @@ const ClassicEditor = ({
 			GeneralHtmlSupport,
 			Heading,
 			HorizontalLine,
+			ItemSelector,
+			Image,
+			ImageBlock,
+			ImageCaption,
+			ImageInline,
+			ImageResize,
+			ImageStyle,
+			ImageToolbar,
 			Indent,
 			Italic,
 			Link,
 			List,
-			MediaEmbed,
 			Paragraph,
 			RemoveFormat,
+			MediaEmbed,
 			SourceEditing,
 			Strikethrough,
 			Style,
@@ -74,7 +93,6 @@ const ClassicEditor = ({
 			TableToolbar,
 			Underline,
 		],
-		toolbar: ['undo', 'redo', '|', 'bold', 'italic', 'underline'],
 		ui: {
 			viewportOffset: {
 				top: 56,
@@ -91,6 +109,9 @@ const ClassicEditor = ({
 			<CKEditor
 				config={{
 					...defaultConfig,
+					...(config?.preset === EClassicEditorConfigPreset.ADVANCED
+						? advancedClassicEditorConfig
+						: basicClassicEditorConfig),
 					...config,
 				}}
 				data={data}

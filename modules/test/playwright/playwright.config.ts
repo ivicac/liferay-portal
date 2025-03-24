@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {defineConfig, devices} from '@playwright/test';
+import {ReporterDescription, defineConfig, devices} from '@playwright/test';
 
 import 'dotenv/config';
 
@@ -117,8 +117,10 @@ import {config as siteAdminWebConfig} from './tests/site-admin-web/config';
 import {config as siteCmsSiteInitializerConfig} from './tests/site-cms-site-initializer/config';
 import {config as siteNavigationAdminWebConfig} from './tests/site-navigation-admin-web/config';
 import {config as siteNavigationBreadcrumbWebConfig} from './tests/site-navigation-breadcrumb-web/config';
+import {config as siteNavigationDirectoryWebConfig} from './tests/site-navigation-directory-web/config';
 import {config as siteNavigationLanguageWebConfig} from './tests/site-navigation-language-web/config';
-import {config as stableConfig} from './tests/stable/config';
+import {config as siteNavigationMenuWebConfig} from './tests/site-navigation-menu-web/config';
+import {config as smokeConfig} from './tests/smoke/config';
 import {config as stagingConfig} from './tests/staging-configuration-web/config';
 import {config as stylebookWebConfig} from './tests/style-book-web/config';
 import {config as templateWebConfig} from './tests/template-web/config';
@@ -128,7 +130,10 @@ import {config as customerConfig} from './tests/workspaces/liferay-customer-work
 import {config as commerceWorkspaceConfig} from './tests/workspaces/liferay-workspace-commerce/config';
 import {config as jethr0Config} from './tests/workspaces/liferay-workspace-jethr0/config';
 import {config as marketplaceConfig} from './tests/workspaces/liferay-workspace-marketplace/config';
+
 const setupProjects = [pageManagementSiteSetup, pageManagementSiteTeardown];
+
+const resultsPath = 'test-results/TEST-playwright.xml';
 
 export default defineConfig({
 	expect: {
@@ -247,8 +252,10 @@ export default defineConfig({
 		siteCmsSiteInitializerConfig,
 		siteNavigationAdminWebConfig,
 		siteNavigationBreadcrumbWebConfig,
+		siteNavigationDirectoryWebConfig,
 		siteNavigationLanguageWebConfig,
-		stableConfig,
+		siteNavigationMenuWebConfig,
+		smokeConfig,
 		stagingConfig,
 		stylebookWebConfig,
 		templateWebConfig,
@@ -269,9 +276,19 @@ export default defineConfig({
 		[
 			'junit',
 			{
-				outputFile: 'test-results/TEST-playwright.xml',
+				outputFile: resultsPath,
 			},
 		],
+		...(process.env.ci
+			? ([
+					[
+						'./reporters/FlakyTestReporter',
+						{
+							resultsPath,
+						},
+					],
+				] as ReporterDescription[])
+			: []),
 	],
 	retries: process.env.CI ? 1 : 0,
 	testDir: './tests',

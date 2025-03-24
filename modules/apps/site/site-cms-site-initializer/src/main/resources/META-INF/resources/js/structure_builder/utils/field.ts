@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {Uuid} from '../contexts/StateContext';
 import getRandomId from './getRandomId';
+import getUuid from './getUuid';
 import normalizeName from './normalizeName';
 
 // Constants
@@ -27,7 +29,7 @@ export const FIELD_TYPE_LABEL: Record<FieldType, string> = {
 	'date': Liferay.Language.get('date'),
 	'datetime': Liferay.Language.get('date-and-time'),
 	'decimal': Liferay.Language.get('decimal'),
-	'integer': Liferay.Language.get('integer'),
+	'integer': Liferay.Language.get('numeric'),
 	'long-text': Liferay.Language.get('long-text'),
 	'multiselect': Liferay.Language.get('multiselect'),
 	'rich-text': Liferay.Language.get('rich-text'),
@@ -50,7 +52,7 @@ export const FIELD_TYPE_ICON: Record<FieldType, string> = {
 	'upload': 'upload',
 } as const;
 
-export const FIELD_TYPE_BUSINESS_TYPE: Record<FieldType, string> = {
+export const FIELD_TYPE_TO_BUSINESS_TYPE: Record<FieldType, string> = {
 	'boolean': 'Boolean',
 	'date': 'Date',
 	'datetime': 'DateTime',
@@ -64,7 +66,7 @@ export const FIELD_TYPE_BUSINESS_TYPE: Record<FieldType, string> = {
 	'upload': 'Attachment',
 } as const;
 
-export const FIELD_TYPE_DB_TYPE: Record<FieldType, string> = {
+export const FIELD_TYPE_TO_DB_TYPE: Record<FieldType, string> = {
 	'boolean': 'Boolean',
 	'date': 'Date',
 	'datetime': 'DateTime',
@@ -95,29 +97,91 @@ type BaseField = {
 	localized: boolean;
 	name: string;
 	required: boolean;
+	settings: {};
+	uuid: Uuid;
+};
+
+export type UniqueValuesSettingsField = {
+	settings: {
+		uniqueValues?: boolean;
+	};
+};
+
+export type MaxLengthSettingsField = {
+	settings: {
+		maxLength?: number;
+		showCounter?: boolean;
+	};
+};
+
+export type DateTimeField = BaseField & {
+	settings: {timeStorage: 'convertToUTC' | 'useInputAsEntered'};
+	type: 'datetime';
+};
+
+export type LongTextField = BaseField & {
+	type: 'long-text';
+} & MaxLengthSettingsField;
+
+export type MultiselectField = BaseField & {
+	picklistId: string;
+	type: 'multiselect';
+};
+
+export type NumericField = BaseField & {
+	type: 'integer';
+} & UniqueValuesSettingsField;
+
+export type SingleSelectField = BaseField & {
+	picklistId: string;
+	type: 'single-select';
+};
+
+export type TextField = BaseField & {
+	type: 'text';
+} & MaxLengthSettingsField &
+	UniqueValuesSettingsField;
+
+export type UploadField = BaseField & {
+	type: 'upload';
+} & {
+	settings: {
+		acceptedFileExtensions: string;
+		fileSource: 'userComputer' | 'documentsAndMedia';
+		maximumFileSize: number;
+		showFilesInDocumentsAndMedia?: boolean;
+		storageDLFolderPath?: string;
+	};
 };
 
 export type Field =
+	| DateTimeField
+	| LongTextField
+	| MultiselectField
+	| NumericField
+	| SingleSelectField
+	| TextField
+	| UploadField
 	| (BaseField & {
-			settings: {timeStorage: 'convertToUTC'};
-			type: 'datetime';
-	  })
-	| (BaseField & {
-			settings: {
-				acceptedFileExtensions: string;
-				fileSource: 'userComputer';
-				maximumFileSize: number;
-			};
-			type: 'upload';
-	  })
-	| (BaseField & {
-			type: Exclude<FieldType, ['datetime', 'upload']>;
+			settings: {};
+			type: Exclude<
+				FieldType,
+				[
+					'datetime',
+					'long-text',
+					'multiselect',
+					'numeric',
+					'single-select',
+					'text',
+					'upload',
+				]
+			>;
 	  });
 
 export type FieldType = (typeof FIELD_TYPES)[number];
 
 export type FieldBusinessType =
-	(typeof FIELD_TYPE_BUSINESS_TYPE)[keyof typeof FIELD_TYPE_BUSINESS_TYPE];
+	(typeof FIELD_TYPE_TO_BUSINESS_TYPE)[keyof typeof FIELD_TYPE_TO_BUSINESS_TYPE];
 
 // Functions
 
@@ -133,10 +197,11 @@ export function getDefaultField(type: FieldType): Field {
 			[Liferay.ThemeDisplay.getDefaultLanguageId()]:
 				FIELD_TYPE_LABEL[type],
 		},
-		localized: false,
+		localized: Liferay.FeatureFlags['LPD-32050'],
 		name: normalizeName(type),
 		required: false,
 		settings: {},
+		uuid: getUuid(),
 	};
 
 	if (type === 'datetime') {
@@ -157,6 +222,20 @@ export function getDefaultField(type: FieldType): Field {
 				maximumFileSize: 100,
 			},
 			type: 'upload',
+		};
+	}
+	else if (type === 'single-select') {
+		return {
+			...base,
+			picklistId: '',
+			type: 'single-select',
+		};
+	}
+	else if (type === 'multiselect') {
+		return {
+			...base,
+			picklistId: '',
+			type: 'multiselect',
 		};
 	}
 

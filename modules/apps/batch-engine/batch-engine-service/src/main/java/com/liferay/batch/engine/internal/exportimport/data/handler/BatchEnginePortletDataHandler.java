@@ -18,14 +18,18 @@ import com.liferay.exportimport.kernel.lar.BasePortletDataHandler;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataException;
-import com.liferay.exportimport.kernel.lar.PortletDataHandlerBoolean;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerControl;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
+import com.liferay.exportimport.kernel.lar.StagedModelType;
+import com.liferay.exportimport.kernel.lar.UserIdStrategy;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.transaction.Propagation;
+import com.liferay.portal.kernel.transaction.TransactionConfig;
+import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 
@@ -51,26 +55,29 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 		BatchEngineExportTaskService batchEngineExportTaskService,
 		BatchEngineImportTaskExecutor batchEngineImportTaskExecutor,
 		BatchEngineImportTaskService batchEngineImportTaskService,
-		String className, String taskItemDelegateName) {
+		String className, String itemClassName, String taskItemDelegateName) {
 
 		_batchEngineExportTaskExecutor = batchEngineExportTaskExecutor;
 		_batchEngineExportTaskService = batchEngineExportTaskService;
 		_batchEngineImportTaskExecutor = batchEngineImportTaskExecutor;
 		_batchEngineImportTaskService = batchEngineImportTaskService;
 		_className = className;
+		_itemClassName = itemClassName;
 		_taskItemDelegateName = taskItemDelegateName;
 
 		_fileName = taskItemDelegateName + ".json";
 
-		setExportControls(
-			new PortletDataHandlerBoolean(
-				taskItemDelegateName, taskItemDelegateName, true, true, null,
-				className));
+		setEmptyControlsAllowed(true);
 	}
 
 	@Override
 	public String[] getClassNames() {
 		return new String[] {_className};
+	}
+
+	@Override
+	public StagedModelType[] getDeletionSystemEventStagedModelTypes() {
+		return new StagedModelType[] {new StagedModelType(_itemClassName)};
 	}
 
 	@Override
@@ -150,7 +157,8 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 				null, _className, _getBytes(_fileName, inputStream), "JSON",
 				BatchEngineTaskExecuteStatus.INITIAL.name(),
 				Collections.emptyMap(),
-				BatchEngineImportTaskConstants.IMPORT_STRATEGY_ON_ERROR_FAIL,
+				BatchEngineImportTaskConstants.
+					IMPORT_STRATEGY_ON_ERROR_CONTINUE,
 				BatchEngineTaskOperation.CREATE.name(),
 				HashMapBuilder.<String, Serializable>put(
 					"batchRestrictFields",
@@ -166,10 +174,39 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 					}
 				).put(
 					"createStrategy", CreateStrategy.UPSERT.getDBOperation()
+				).put(
+					"importCreatorStrategy",
+					() -> {
+						if (!UserIdStrategy.CURRENT_USER_ID.equals(
+								MapUtil.getString(
+									portletDataContext.getParameterMap(),
+									PortletDataHandlerKeys.USER_ID_STRATEGY))) {
+
+							return null;
+						}
+
+						return BatchEngineImportTaskConstants.
+							IMPORT_CREATOR_STRATEGY_KEEP_CREATOR;
+					}
 				).build(),
 				_taskItemDelegateName);
 
-		_batchEngineImportTaskExecutor.execute(batchEngineImportTask);
+		try {
+			BatchEngineImportTask finalBatchEngineImportTask =
+				batchEngineImportTask;
+
+			TransactionInvokerUtil.invoke(
+				transactionConfig,
+				() -> {
+					_batchEngineImportTaskExecutor.execute(
+						finalBatchEngineImportTask);
+
+					return null;
+				});
+		}
+		catch (Throwable throwable) {
+			throw new PortletDataException(throwable);
+		}
 
 		batchEngineImportTask =
 			_batchEngineImportTaskService.getBatchEngineImportTask(
@@ -199,6 +236,10 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 
 		return 0;
 	}
+
+	protected static final TransactionConfig transactionConfig =
+		TransactionConfig.Factory.create(
+			Propagation.REQUIRES_NEW, new Class<?>[] {Exception.class});
 
 	private byte[] _getBytes(String fileName, InputStream inputStream)
 		throws Exception {
@@ -232,6 +273,7 @@ public class BatchEnginePortletDataHandler extends BasePortletDataHandler {
 	private final BatchEngineImportTaskService _batchEngineImportTaskService;
 	private final String _className;
 	private final String _fileName;
+	private final String _itemClassName;
 	private final String _taskItemDelegateName;
 
 }

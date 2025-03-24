@@ -20,6 +20,7 @@ import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.test.util.CommerceTestUtil;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -73,6 +74,8 @@ public class CommerceReturnObjectEntryValuesContributorTest {
 
 	@Before
 	public void setUp() throws Exception {
+		Assume.assumeTrue(FeatureFlagManagerUtil.isEnabled("LPD-10562"));
+
 		_group = GroupTestUtil.addGroup();
 		_user = UserTestUtil.addUser();
 
@@ -138,14 +141,13 @@ public class CommerceReturnObjectEntryValuesContributorTest {
 				"currency"
 		);
 
-		Assume.assumeTrue(FeatureFlagManagerUtil.isEnabled("LPD-10562"));
-
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.fetchSystemObjectDefinition(
 				TestPropsValues.getCompanyId(), "CommerceReturn");
 
 		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
 			_user.getUserId(), 0, objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			null,
 			HashMapBuilder.<String, Serializable>put(
 				"channelGroupId", _commerceChannel.getSiteGroupId()

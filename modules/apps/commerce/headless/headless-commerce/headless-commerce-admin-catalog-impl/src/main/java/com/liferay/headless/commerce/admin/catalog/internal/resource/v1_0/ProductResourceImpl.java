@@ -63,6 +63,7 @@ import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Attachment;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Category;
+import com.liferay.headless.commerce.admin.catalog.dto.v1_0.CustomField;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Diagram;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.MappedProduct;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Pin;
@@ -112,7 +113,6 @@ import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -510,7 +510,8 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		serviceContext.setAssetTagNames(assetTagNames);
 
 		serviceContext.setExpandoBridgeAttributes(
-			_getExpandoBridgeAttributes(product));
+			_getExpandoBridgeAttributes(
+				CPDefinition.class.getName(), product.getCustomFields()));
 
 		DateConfig displayDateConfig = DateConfig.toDisplayDateConfig(
 			product.getDisplayDate(), serviceContext.getTimeZone());
@@ -876,21 +877,18 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 	}
 
 	private Map<String, Serializable> _getExpandoBridgeAttributes(
-		Attachment attachment) {
+		String className, CustomField[] customFields) {
 
-		return CustomFieldsUtil.toMap(
-			CPAttachmentFileEntry.class.getName(),
-			contextCompany.getCompanyId(), attachment.getCustomFields(),
-			contextAcceptLanguage.getPreferredLocale());
-	}
+		Map<String, Serializable> expandoBridgeAttributes =
+			CustomFieldsUtil.toMap(
+				className, contextCompany.getCompanyId(), customFields,
+				contextAcceptLanguage.getPreferredLocale());
 
-	private Map<String, Serializable> _getExpandoBridgeAttributes(
-		Product product) {
+		if (expandoBridgeAttributes == null) {
+			expandoBridgeAttributes = new HashMap<>();
+		}
 
-		return CustomFieldsUtil.toMap(
-			CPDefinition.class.getName(), contextCompany.getCompanyId(),
-			product.getCustomFields(),
-			contextAcceptLanguage.getPreferredLocale());
+		return expandoBridgeAttributes;
 	}
 
 	private ProductShippingConfiguration _getProductShippingConfiguration(
@@ -932,9 +930,7 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			CPDefinition.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
-			object -> {
-				SearchContext searchContext = (SearchContext)object;
-
+			searchContext -> {
 				searchContext.setCompanyId(companyId);
 
 				long[] commerceCatalogGroupIds = transformToLongArray(
@@ -1181,11 +1177,9 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		if (productOptions != null) {
 			for (ProductOption productOption : productOptions) {
 				serviceContext.setExpandoBridgeAttributes(
-					CustomFieldsUtil.toMap(
+					_getExpandoBridgeAttributes(
 						CPDefinitionOptionRel.class.getName(),
-						contextCompany.getCompanyId(),
-						productOption.getCustomFields(),
-						contextAcceptLanguage.getPreferredLocale()));
+						productOption.getCustomFields()));
 
 				CPDefinitionOptionRel cpDefinitionOptionRel =
 					ProductOptionUtil.addOrUpdateCPDefinitionOptionRel(
@@ -1235,10 +1229,8 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		if (skus != null) {
 			for (Sku sku : skus) {
 				serviceContext.setExpandoBridgeAttributes(
-					CustomFieldsUtil.toMap(
-						CPInstance.class.getName(),
-						contextCompany.getCompanyId(), sku.getCustomFields(),
-						contextAcceptLanguage.getPreferredLocale()));
+					_getExpandoBridgeAttributes(
+						CPInstance.class.getName(), sku.getCustomFields()));
 
 				CPInstance cpInstance = SkuUtil.addOrUpdateCPInstance(
 					_cpInstanceService, sku, cpDefinition,
@@ -1280,7 +1272,9 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			for (Attachment attachment : images) {
 				serviceContext.setAssetTagNames(attachment.getTags());
 				serviceContext.setExpandoBridgeAttributes(
-					_getExpandoBridgeAttributes(attachment));
+					_getExpandoBridgeAttributes(
+						CPAttachmentFileEntry.class.getName(),
+						attachment.getCustomFields()));
 
 				AttachmentUtil.addOrUpdateCPAttachmentFileEntry(
 					cpDefinition.getGroupId(), _cpAttachmentFileEntryService,
@@ -1303,7 +1297,9 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			for (Attachment attachment : attachments) {
 				serviceContext.setAssetTagNames(attachment.getTags());
 				serviceContext.setExpandoBridgeAttributes(
-					_getExpandoBridgeAttributes(attachment));
+					_getExpandoBridgeAttributes(
+						CPAttachmentFileEntry.class.getName(),
+						attachment.getCustomFields()));
 
 				AttachmentUtil.addOrUpdateCPAttachmentFileEntry(
 					cpDefinition.getGroupId(), _cpAttachmentFileEntryService,
@@ -1510,7 +1506,8 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		serviceContext.setAssetTagNames(assetTagNames);
 
 		serviceContext.setExpandoBridgeAttributes(
-			_getExpandoBridgeAttributes(product));
+			_getExpandoBridgeAttributes(
+				CPDefinition.class.getName(), product.getCustomFields()));
 
 		Category[] categories = product.getCategories();
 

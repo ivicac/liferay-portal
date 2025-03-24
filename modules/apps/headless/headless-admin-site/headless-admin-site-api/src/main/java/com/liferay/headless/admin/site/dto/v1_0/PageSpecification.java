@@ -21,8 +21,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -43,7 +41,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Generated("")
 @GraphQLName(
-	description = "A page specification of a content page, content page template, widget page, or widget page template. A content page may contain 0 or 1 page specifications in draft status and 0 or 1 page specifications in published status. A widget page contains only 1 page specification in published status.",
+	description = "A page specification of a content page, content page template, widget page, or widget page template. A content page will contain 1 page specifications for its draft layout and 1 page specifications for its published layout. A widget page contains only 1 page specification for its published layout.",
 	value = "PageSpecification"
 )
 @JsonFilter("Liferay.Vulcan")
@@ -74,7 +72,7 @@ public abstract class PageSpecification implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(PageSpecification.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The page specification's external reference code, unique per site."
 	)
 	public String getExternalReferenceCode() {
@@ -119,7 +117,7 @@ public abstract class PageSpecification implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Settings getSettings() {
 		if (_settingsSupplier != null) {
@@ -161,8 +159,10 @@ public abstract class PageSpecification implements Serializable {
 	@JsonIgnore
 	private Supplier<Settings> _settingsSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The status of the page specification."
+	)
 	@JsonGetter("status")
-	@Schema(description = "The status of the page specification.")
 	@Valid
 	public Status getStatus() {
 		if (_statusSupplier != null) {
@@ -215,8 +215,10 @@ public abstract class PageSpecification implements Serializable {
 	@JsonIgnore
 	private Supplier<Status> _statusSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The type of the page specification."
+	)
 	@JsonGetter("type")
-	@Schema(description = "The type of the page specification.")
 	@Valid
 	public Type getType() {
 		if (_typeSupplier != null) {
@@ -359,8 +361,8 @@ public abstract class PageSpecification implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.site.dto.v1_0.PageSpecification",
 		name = "x-class-name"
 	)

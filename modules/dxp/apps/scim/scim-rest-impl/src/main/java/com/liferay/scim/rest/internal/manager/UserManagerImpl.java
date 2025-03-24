@@ -15,9 +15,7 @@ import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.expando.kernel.service.ExpandoValueLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -38,7 +36,6 @@ import com.liferay.portal.kernel.service.UserService;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -61,10 +58,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
 import org.wso2.charon3.core.exceptions.AbstractCharonException;
+import org.wso2.charon3.core.exceptions.BadRequestException;
 import org.wso2.charon3.core.exceptions.CharonException;
 import org.wso2.charon3.core.exceptions.ConflictException;
 import org.wso2.charon3.core.exceptions.NotFoundException;
@@ -250,9 +247,12 @@ public class UserManagerImpl implements UserManager {
 
 	@Override
 	public GroupsGetResponse listGroupsWithGET(
-		Node node, Integer startIndex, Integer count, String sortBy,
-		String sortOrder, String domainName,
-		Map<String, Boolean> requiredAttributes) {
+			Node node, Integer startIndex, Integer count, String sortBy,
+			String sortOrder, String domainName,
+			Map<String, Boolean> requiredAttributes)
+		throws BadRequestException {
+
+		_validate(node, "displayName");
 
 		if (startIndex != null) {
 			startIndex--;
@@ -263,8 +263,8 @@ public class UserManagerImpl implements UserManager {
 
 		ScimClientOAuth2ApplicationConfiguration
 			scimClientOAuth2ApplicationConfiguration =
-				_getScimClientOAuth2ApplicationConfiguration(
-					serviceContext.getCompanyId());
+				ScimUtil.getScimClientOAuth2ApplicationConfiguration(
+					serviceContext.getCompanyId(), _configurationAdmin);
 
 		String scimClientId = ScimClientUtil.generateScimClientId(
 			scimClientOAuth2ApplicationConfiguration.oAuth2ApplicationName());
@@ -341,9 +341,12 @@ public class UserManagerImpl implements UserManager {
 
 	@Override
 	public UsersGetResponse listUsersWithGET(
-		Node node, Integer startIndex, Integer count, String sortBy,
-		String sortOrder, String domainName,
-		Map<String, Boolean> requiredAttributes) {
+			Node node, Integer startIndex, Integer count, String sortBy,
+			String sortOrder, String domainName,
+			Map<String, Boolean> requiredAttributes)
+		throws BadRequestException {
+
+		_validate(node, "externalId", "userName");
 
 		if (startIndex != null) {
 			startIndex--;
@@ -354,8 +357,8 @@ public class UserManagerImpl implements UserManager {
 
 		ScimClientOAuth2ApplicationConfiguration
 			scimClientOAuth2ApplicationConfiguration =
-				_getScimClientOAuth2ApplicationConfiguration(
-					serviceContext.getCompanyId());
+				ScimUtil.getScimClientOAuth2ApplicationConfiguration(
+					serviceContext.getCompanyId(), _configurationAdmin);
 
 		String scimClientId = ScimClientUtil.generateScimClientId(
 			scimClientOAuth2ApplicationConfiguration.oAuth2ApplicationName());
@@ -503,8 +506,8 @@ public class UserManagerImpl implements UserManager {
 
 		ScimClientOAuth2ApplicationConfiguration
 			scimClientOAuth2ApplicationConfiguration =
-				_getScimClientOAuth2ApplicationConfiguration(
-					company.getCompanyId());
+				ScimUtil.getScimClientOAuth2ApplicationConfiguration(
+					company.getCompanyId(), _configurationAdmin);
 
 		com.liferay.portal.kernel.model.User portalUser = _fetchPortalUser(
 			scimClientOAuth2ApplicationConfiguration, scimUser);
@@ -566,8 +569,8 @@ public class UserManagerImpl implements UserManager {
 
 		ScimClientOAuth2ApplicationConfiguration
 			scimClientOAuth2ApplicationConfiguration =
-				_getScimClientOAuth2ApplicationConfiguration(
-					company.getCompanyId());
+				ScimUtil.getScimClientOAuth2ApplicationConfiguration(
+					company.getCompanyId(), _configurationAdmin);
 
 		UserGroup userGroup = _fetchUserGroup(
 			company.getCompanyId(), group.getExternalId(),
@@ -575,11 +578,8 @@ public class UserManagerImpl implements UserManager {
 
 		if (userGroup == null) {
 			userGroup = _userGroupService.addUserGroup(
-				group.getDisplayName(), null, new ServiceContext());
-
-			userGroup.setExternalReferenceCode(group.getExternalId());
-
-			userGroup = _userGroupLocalService.updateUserGroup(userGroup);
+				group.getExternalId(), group.getDisplayName(), null,
+				new ServiceContext());
 
 			_saveScimClientId(
 				UserGroup.class.getName(), userGroup.getPrimaryKey(),
@@ -604,17 +604,9 @@ public class UserManagerImpl implements UserManager {
 			}
 
 			userGroup = _userGroupService.updateUserGroup(
-				userGroup.getPrimaryKey(), group.getDisplayName(),
-				userGroup.getDescription(), new ServiceContext());
-
-			if (!Objects.equals(
-					group.getExternalId(),
-					userGroup.getExternalReferenceCode())) {
-
-				userGroup.setExternalReferenceCode(group.getExternalId());
-
-				userGroup = _userGroupLocalService.updateUserGroup(userGroup);
-			}
+				group.getExternalId(), userGroup.getPrimaryKey(),
+				group.getDisplayName(), userGroup.getDescription(),
+				new ServiceContext());
 
 			if (Validator.isNull(userGroupScimClientId)) {
 				_saveScimClientId(
@@ -759,42 +751,6 @@ public class UserManagerImpl implements UserManager {
 		return expandoValue.getData();
 	}
 
-	private ScimClientOAuth2ApplicationConfiguration
-		_getScimClientOAuth2ApplicationConfiguration(long companyId) {
-
-		try {
-			Configuration[] configurations =
-				_configurationAdmin.listConfigurations(
-					StringBundler.concat(
-						"(&(", ConfigurationAdmin.SERVICE_FACTORYPID,
-						"=com.liferay.scim.rest.internal.configuration.",
-						"ScimClientOAuth2ApplicationConfiguration)(companyId=",
-						companyId, "))"));
-
-			if (ArrayUtil.isEmpty(configurations)) {
-				throw new NotFoundException(
-					"SCIM is not configured for company " + companyId);
-			}
-
-			Configuration configuration = configurations[0];
-
-			return ConfigurableUtil.createConfigurable(
-				ScimClientOAuth2ApplicationConfiguration.class,
-				configuration.getProperties());
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					StringBundler.concat(
-						"Unable to get the SCIM client OAuth 2 application ",
-						"configuration for company ", companyId),
-					exception);
-			}
-
-			return ReflectionUtil.throwException(exception);
-		}
-	}
-
 	private ScimUser _getScimUser(long companyId, long userId)
 		throws AbstractCharonException {
 
@@ -822,7 +778,8 @@ public class UserManagerImpl implements UserManager {
 
 		ScimClientOAuth2ApplicationConfiguration
 			scimClientOAuth2ApplicationConfiguration =
-				_getScimClientOAuth2ApplicationConfiguration(companyId);
+				ScimUtil.getScimClientOAuth2ApplicationConfiguration(
+					companyId, _configurationAdmin);
 
 		String scimClientId = ScimClientUtil.generateScimClientId(
 			scimClientOAuth2ApplicationConfiguration.oAuth2ApplicationName());
@@ -886,7 +843,8 @@ public class UserManagerImpl implements UserManager {
 
 		ScimClientOAuth2ApplicationConfiguration
 			scimClientOAuth2ApplicationConfiguration =
-				_getScimClientOAuth2ApplicationConfiguration(companyId);
+				ScimUtil.getScimClientOAuth2ApplicationConfiguration(
+					companyId, _configurationAdmin);
 
 		String scimClientId = ScimClientUtil.generateScimClientId(
 			scimClientOAuth2ApplicationConfiguration.oAuth2ApplicationName());
@@ -1032,6 +990,27 @@ public class UserManagerImpl implements UserManager {
 
 					return GetterUtil.getLong(userId);
 				}));
+	}
+
+	private void _validate(Node node, String... fieldNames)
+		throws BadRequestException {
+
+		if (node == null) {
+			return;
+		}
+
+		ExpressionNode expressionNode = (ExpressionNode)node;
+
+		for (String fieldName : fieldNames) {
+			if (StringUtil.contains(
+					expressionNode.getAttributeValue(), fieldName,
+					StringPool.COLON)) {
+
+				return;
+			}
+		}
+
+		throw new BadRequestException();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

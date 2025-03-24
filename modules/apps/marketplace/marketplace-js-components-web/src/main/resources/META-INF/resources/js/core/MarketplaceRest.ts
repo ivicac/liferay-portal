@@ -60,9 +60,10 @@ async function getBaseFetch<T = any>(url: string, options?: FetchOptions) {
 
 const sessionKey = '@marketplace/token';
 
-const PRODUCT_DRAFT_STATUS = 2;
-
 export class MarketplaceRest {
+	private tokenRequestPromise: Promise<MarketplaceAuthorization> | null =
+		null;
+
 	constructor(
 		protected baseResourceURL: string,
 		protected marketplaceConfiguration: MarketplaceConfiguration
@@ -118,34 +119,9 @@ export class MarketplaceRest {
 		return cart;
 	}
 
-	async createProduct({
-		catalogId,
-		description,
-		name,
-		...product
-	}: Partial<Product>) {
-		return this.fetchMarketplace<Product>(
-			'/o/headless-commerce-admin-catalog/v1.0/products?nestedFields=productVirtualSettings',
-			{
-				body: JSON.stringify({
-					active: true,
-					catalogId,
-					description: {en_US: description},
-					name: {en_US: name},
-					productStatus: PRODUCT_DRAFT_STATUS,
-					productType: 'virtual',
-					productVirtualSettings: {},
-					workflowStatusInfo: PRODUCT_DRAFT_STATUS,
-					...product,
-				}),
-				method: 'POST',
-			}
-		);
-	}
-
 	public async checkoutCart(cart: Cart) {
 		return this.fetchMarketplace<Cart>(
-			`/o/headless-commerce-delivery-cart/v1.0/carts/${cart.id}/checkout?nestedFields=cartItems`,
+			`/o/headless-commerce-delivery-cart/v1.0/carts/${cart.id}/checkout`,
 			{
 				method: 'POST',
 			}
@@ -221,27 +197,43 @@ export class MarketplaceRest {
 				Liferay.Util.SessionStorage.TYPES.NECESSARY
 			) as string
 		);
-
 		if (
 			cachedToken &&
 			new Date().getTime() < Number(cachedToken.accessTokenExpirationTime)
 		) {
-			return cachedToken;
+			return cachedToken as MarketplaceAuthorization;
 		}
 
-		const authorization = await getBaseFetch<MarketplaceAuthorization>(
-			createResourceURL(this.baseResourceURL, {
-				p_p_resource_id: '/marketplace_settings/get_authorization',
-			}).toString()
-		);
+		// If a token request is already in progress, wait for it
 
-		Liferay.Util.SessionStorage.setItem(
-			sessionKey,
-			JSON.stringify(authorization),
-			Liferay.Util.SessionStorage.TYPES.NECESSARY
-		);
+		if (this.tokenRequestPromise) {
+			return this.tokenRequestPromise;
+		}
 
-		return authorization;
+		this.tokenRequestPromise = (async () => {
+			try {
+				const authorization =
+					await getBaseFetch<MarketplaceAuthorization>(
+						createResourceURL(this.baseResourceURL, {
+							p_p_resource_id:
+								'/marketplace_settings/get_authorization',
+						}).toString()
+					);
+
+				Liferay.Util.SessionStorage.setItem(
+					sessionKey,
+					JSON.stringify(authorization),
+					Liferay.Util.SessionStorage.TYPES.NECESSARY
+				);
+
+				return authorization;
+			}
+			finally {
+				this.tokenRequestPromise = null;
+			}
+		})();
+
+		return this.tokenRequestPromise;
 	}
 
 	public async getPlacedOrder(

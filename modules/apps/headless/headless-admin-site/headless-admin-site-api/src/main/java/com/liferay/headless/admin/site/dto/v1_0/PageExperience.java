@@ -16,8 +16,6 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.io.Serializable;
 
 import java.util.Iterator;
@@ -53,7 +51,7 @@ public class PageExperience implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(PageExperience.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The experience's external reference code, unique per site."
 	)
 	public String getExternalReferenceCode() {
@@ -98,7 +96,9 @@ public class PageExperience implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema(description = "The experience's key.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The experience's key."
+	)
 	public String getKey() {
 		if (_keySupplier != null) {
 			key = _keySupplier.get();
@@ -137,7 +137,9 @@ public class PageExperience implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _keySupplier;
 
-	@Schema(description = "The localized experience's names.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The localized experience's names."
+	)
 	@Valid
 	public Map<String, String> getName_i18n() {
 		if (_name_i18nSupplier != null) {
@@ -180,7 +182,9 @@ public class PageExperience implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _name_i18nSupplier;
 
-	@Schema(description = "The page elements in the experience.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The page elements in the experience."
+	)
 	@Valid
 	public PageElement[] getPageElements() {
 		if (_pageElementsSupplier != null) {
@@ -222,7 +226,9 @@ public class PageExperience implements Serializable {
 	@JsonIgnore
 	private Supplier<PageElement[]> _pageElementsSupplier;
 
-	@Schema(description = "The page rules in the experience.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The page rules in the experience."
+	)
 	@Valid
 	public PageRule[] getPageRules() {
 		if (_pageRulesSupplier != null) {
@@ -264,7 +270,58 @@ public class PageExperience implements Serializable {
 	@JsonIgnore
 	private Supplier<PageRule[]> _pageRulesSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The page specification's external reference code."
+	)
+	public String getPageSpecificationExternalReferenceCode() {
+		if (_pageSpecificationExternalReferenceCodeSupplier != null) {
+			pageSpecificationExternalReferenceCode =
+				_pageSpecificationExternalReferenceCodeSupplier.get();
+
+			_pageSpecificationExternalReferenceCodeSupplier = null;
+		}
+
+		return pageSpecificationExternalReferenceCode;
+	}
+
+	public void setPageSpecificationExternalReferenceCode(
+		String pageSpecificationExternalReferenceCode) {
+
+		this.pageSpecificationExternalReferenceCode =
+			pageSpecificationExternalReferenceCode;
+
+		_pageSpecificationExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setPageSpecificationExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			pageSpecificationExternalReferenceCodeUnsafeSupplier) {
+
+		_pageSpecificationExternalReferenceCodeSupplier = () -> {
+			try {
+				return pageSpecificationExternalReferenceCodeUnsafeSupplier.
+					get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The page specification's external reference code."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String pageSpecificationExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _pageSpecificationExternalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "the experience's priority. It must be a unique value within the page specification. The default experience will always be assigned priority 0. A priority higher than 0 will result in an experience being active and a priority lower than 0 will result in an experience being inactive."
 	)
 	public Integer getPriority() {
@@ -309,7 +366,9 @@ public class PageExperience implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _prioritySupplier;
 
-	@Schema(description = "The segment's external reference code.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The segment's external reference code."
+	)
 	public String getSegmentExternalReferenceCode() {
 		if (_segmentExternalReferenceCodeSupplier != null) {
 			segmentExternalReferenceCode =
@@ -353,51 +412,6 @@ public class PageExperience implements Serializable {
 
 	@JsonIgnore
 	private Supplier<String> _segmentExternalReferenceCodeSupplier;
-
-	@Schema(description = "The segment's external reference code.")
-	public String getSitePageExternalReferenceCode() {
-		if (_sitePageExternalReferenceCodeSupplier != null) {
-			sitePageExternalReferenceCode =
-				_sitePageExternalReferenceCodeSupplier.get();
-
-			_sitePageExternalReferenceCodeSupplier = null;
-		}
-
-		return sitePageExternalReferenceCode;
-	}
-
-	public void setSitePageExternalReferenceCode(
-		String sitePageExternalReferenceCode) {
-
-		this.sitePageExternalReferenceCode = sitePageExternalReferenceCode;
-
-		_sitePageExternalReferenceCodeSupplier = null;
-	}
-
-	@JsonIgnore
-	public void setSitePageExternalReferenceCode(
-		UnsafeSupplier<String, Exception>
-			sitePageExternalReferenceCodeUnsafeSupplier) {
-
-		_sitePageExternalReferenceCodeSupplier = () -> {
-			try {
-				return sitePageExternalReferenceCodeUnsafeSupplier.get();
-			}
-			catch (RuntimeException runtimeException) {
-				throw runtimeException;
-			}
-			catch (Exception exception) {
-				throw new RuntimeException(exception);
-			}
-		};
-	}
-
-	@GraphQLField(description = "The segment's external reference code.")
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String sitePageExternalReferenceCode;
-
-	@JsonIgnore
-	private Supplier<String> _sitePageExternalReferenceCodeSupplier;
 
 	@Override
 	public boolean equals(Object object) {
@@ -514,6 +528,23 @@ public class PageExperience implements Serializable {
 			sb.append("]");
 		}
 
+		String pageSpecificationExternalReferenceCode =
+			getPageSpecificationExternalReferenceCode();
+
+		if (pageSpecificationExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"pageSpecificationExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(pageSpecificationExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		Integer priority = getPriority();
 
 		if (priority != null) {
@@ -542,30 +573,13 @@ public class PageExperience implements Serializable {
 			sb.append("\"");
 		}
 
-		String sitePageExternalReferenceCode =
-			getSitePageExternalReferenceCode();
-
-		if (sitePageExternalReferenceCode != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"sitePageExternalReferenceCode\": ");
-
-			sb.append("\"");
-
-			sb.append(_escape(sitePageExternalReferenceCode));
-
-			sb.append("\"");
-		}
-
 		sb.append("}");
 
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.site.dto.v1_0.PageExperience",
 		name = "x-class-name"
 	)

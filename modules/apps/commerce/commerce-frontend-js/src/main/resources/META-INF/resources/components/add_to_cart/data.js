@@ -64,6 +64,9 @@ export async function addToCart(
 	skuOptions,
 	skuOptionsNamespace
 ) {
+	const currencyCode =
+		Liferay.CommerceContext?.currency?.currencyCode ?? channel.currencyCode;
+
 	if (!cartId) {
 		const newCart = await CartResource.createCartByChannelId(channel.id, {
 			accountId,
@@ -75,9 +78,11 @@ export async function addToCart(
 					skuOptionsNamespace
 				)
 			),
-			currencyCode: channel.currencyCode,
+			currencyCode,
 			orderTypeId,
 		});
+
+		newCart.currencyCode = currencyCode;
 
 		Liferay.fire(CURRENT_ORDER_UPDATED, {order: newCart});
 
@@ -96,6 +101,8 @@ export async function addToCart(
 		);
 
 		const fetchedCart = await CartResource.getCartByIdWithItems(cartId);
+
+		fetchedCart.currencyCode = currencyCode;
 
 		Liferay.fire(CURRENT_ORDER_UPDATED, {order: fetchedCart});
 
@@ -208,6 +215,8 @@ export async function addToCart(
 			title: Liferay.Language.get('cart-updated'),
 		});
 	}
+
+	updatedCart.currencyCode = currencyCode;
 
 	Liferay.fire(CURRENT_ORDER_UPDATED, {order: updatedCart});
 

@@ -93,6 +93,9 @@ const BaseOutlet: React.FC<BaseOutletProps> = ({
 };
 
 const AppOutlet = () => {
+	const {orderId} = useParams();
+	const {data} = useGetProductByOrderId(orderId as string);
+
 	return (
 		<BaseOutlet
 			backTitle={i18n.translate('back-to-my-apps')}
@@ -145,10 +148,7 @@ const AppOutlet = () => {
 					];
 				}
 
-				if (
-					placedOrder.orderTypeExternalReferenceCode ===
-					ORDER_TYPES.DXPAPP
-				) {
+				if (data?.marketplaceDeliveryOrder.isDownloadable) {
 					return [
 						...tabs,
 						{

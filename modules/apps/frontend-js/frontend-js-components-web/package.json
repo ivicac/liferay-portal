@@ -3,16 +3,16 @@
 		"@clayui/alert": "3.129.1",
 		"@clayui/badge": "3.128.0",
 		"@clayui/button": "3.128.0",
-		"@clayui/card": "3.129.0",
-		"@clayui/core": "3.128.0",
-		"@clayui/drop-down": "3.129.0",
-		"@clayui/form": "3.128.0",
+		"@clayui/card": "3.130.0",
+		"@clayui/core": "3.130.0",
+		"@clayui/drop-down": "3.130.0",
+		"@clayui/form": "3.130.0",
 		"@clayui/icon": "3.128.0",
 		"@clayui/label": "3.128.0",
 		"@clayui/layout": "3.128.0",
 		"@clayui/link": "3.128.0",
 		"@clayui/loading-indicator": "3.128.0",
-		"@clayui/localized-input": "3.129.0",
+		"@clayui/localized-input": "3.130.0",
 		"@clayui/modal": "3.128.0",
 		"@clayui/popover": "3.129.0",
 		"@clayui/sticker": "3.129.0",
@@ -22,7 +22,9 @@
 		"@liferay/frontend-js-state-web": "*",
 		"classnames": "2.3.1",
 		"frontend-js-web": "*",
+		"prop-types": "15.7.2",
 		"react": "18.2.0",
+		"react-dom": "18.2.0",
 		"uuid": "9.0.0"
 	},
 	"main": "index.ts",
@@ -31,7 +33,7 @@
 		"build": "node-scripts build",
 		"checkFormat": "node-scripts format --check",
 		"format": "node-scripts format",
-		"test": "USE_REACT_16=true node-scripts test"
+		"test": "node-scripts test"
 	},
 	"version": "2.0.83"
 }

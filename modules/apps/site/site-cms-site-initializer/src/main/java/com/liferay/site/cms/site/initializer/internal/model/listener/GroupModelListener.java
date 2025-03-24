@@ -6,7 +6,9 @@
 package com.liferay.site.cms.site.initializer.internal.model.listener;
 
 import com.liferay.object.constants.ObjectEntryFolderConstants;
+import com.liferay.object.entry.folder.util.ObjectEntryFolderThreadLocal;
 import com.liferay.object.service.ObjectEntryFolderLocalService;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.BaseModelListener;
@@ -53,18 +55,17 @@ public class GroupModelListener extends BaseModelListener<Group> {
 			return;
 		}
 
-		// TODO We need to protect L_ in ObjectEntryFolderLocalServiceImpl
-		// via a thread local
-
 		_objectEntryFolderLocalService.addObjectEntryFolder(
-			"L_CONTENTS", group.getCreatorUserId(), group.getGroupId(),
+			ObjectEntryFolderConstants.EXTERNAL_REFERENCE_CODE_CONTENTS,
+			group.getCreatorUserId(), group.getGroupId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			HashMapBuilder.put(
 				LocaleUtil.ENGLISH, "Contents"
 			).build(),
 			"Contents", ServiceContextThreadLocal.getServiceContext());
 		_objectEntryFolderLocalService.addObjectEntryFolder(
-			"L_FILES", group.getCreatorUserId(), group.getGroupId(),
+			ObjectEntryFolderConstants.EXTERNAL_REFERENCE_CODE_FILES,
+			group.getCreatorUserId(), group.getGroupId(),
 			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 			HashMapBuilder.put(
 				LocaleUtil.ENGLISH, "Files"
@@ -80,10 +81,20 @@ public class GroupModelListener extends BaseModelListener<Group> {
 			return;
 		}
 
-		_objectEntryFolderLocalService.deleteObjectEntryFolder(
-			"L_CONTENTS", group.getGroupId(), group.getCompanyId());
-		_objectEntryFolderLocalService.deleteObjectEntryFolder(
-			"L_FILES", group.getGroupId(), group.getCompanyId());
+		try (SafeCloseable safeCloseable =
+				ObjectEntryFolderThreadLocal.
+					setForceDeleteSystemObjectEntryFolderWithSafeCloseable(
+						true)) {
+
+			_objectEntryFolderLocalService.
+				deleteObjectEntryFolderByExternalReferenceCode(
+					ObjectEntryFolderConstants.EXTERNAL_REFERENCE_CODE_CONTENTS,
+					group.getGroupId(), group.getCompanyId());
+			_objectEntryFolderLocalService.
+				deleteObjectEntryFolderByExternalReferenceCode(
+					ObjectEntryFolderConstants.EXTERNAL_REFERENCE_CODE_FILES,
+					group.getGroupId(), group.getCompanyId());
+		}
 	}
 
 	@Reference

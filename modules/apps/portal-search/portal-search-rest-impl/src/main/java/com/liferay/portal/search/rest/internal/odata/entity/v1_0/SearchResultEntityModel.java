@@ -33,8 +33,8 @@ public class SearchResultEntityModel implements EntityModel {
 					"keywords", locale -> "assetTagNames.lowercase")),
 			new CollectionEntityField(
 				new StringEntityField(
-					"objectDefinitionFolder",
-					locale -> "objectDefinitionFolder")),
+					"objectFolderExternalReferenceCode",
+					locale -> "objectFolderExternalReferenceCode")),
 			new DateTimeEntityField(
 				"dateCreated",
 				locale -> Field.getSortableFieldName(Field.CREATE_DATE),
@@ -44,6 +44,8 @@ public class SearchResultEntityModel implements EntityModel {
 				locale -> Field.getSortableFieldName(Field.MODIFIED_DATE),
 				locale -> Field.MODIFIED_DATE),
 			new IntegerEntityField("creatorId", locale -> Field.USER_ID),
+			new IntegerEntityField("folderId", locale -> Field.FOLDER_ID),
+			new StringEntityField("cmsSection", locale -> "cms_section"),
 			new StringEntityField(
 				"title",
 				locale -> Field.getSortableFieldName(

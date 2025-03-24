@@ -141,6 +141,7 @@ function isLocalizable(businessType: ObjectFieldBusinessTypes) {
 		'integer',
 		'longInteger',
 		'multiselectPicklist',
+		'picklist',
 		'precisionDecimal',
 		'text',
 	];
@@ -174,8 +175,8 @@ export function createObjectFields(
 		},
 		name,
 		type: objectFieldbusinessTypeInfo[businessType].type,
-		...additionalSettings,
 		...baseObjectField,
+		...additionalSettings,
 	}));
 }
 

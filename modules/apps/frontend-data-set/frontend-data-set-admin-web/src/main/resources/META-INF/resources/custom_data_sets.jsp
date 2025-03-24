@@ -7,7 +7,7 @@
 
 <%@ include file="/init.jsp" %>
 
-<div>
+<div class="container-fluid container-fluid-max-xxl">
 	<react:component
 		module="{CustomDataSets} from frontend-data-set-admin-web"
 		props='<%=

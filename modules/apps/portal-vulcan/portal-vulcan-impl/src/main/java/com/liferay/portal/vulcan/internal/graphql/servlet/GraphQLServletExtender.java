@@ -1894,6 +1894,10 @@ public class GraphQLServletExtender {
 		else if (String.class.equals(clazz)) {
 			return Scalars.GraphQLString;
 		}
+		else if (clazz.isArray()) {
+			return new GraphQLList(
+				_toGraphQLType(clazz.getComponentType(), graphQLTypes, input));
+		}
 
 		String key = (input ? "Input" : "") + clazz.getSimpleName();
 
@@ -2511,16 +2515,10 @@ public class GraphQLServletExtender {
 				return false;
 			}
 
-			if (StringUtil.endsWith(
-					ClassUtil.getClassName(
-						_getThrowable(
-							(ExceptionWhileDataFetching)graphQLError)),
-					"StatusException")) {
-
-				return true;
-			}
-
-			return false;
+			return StringUtil.endsWith(
+				ClassUtil.getClassName(
+					_getThrowable((ExceptionWhileDataFetching)graphQLError)),
+				"StatusException");
 		}
 
 		private final Set<String> _graphQLNamespaces;

@@ -5,8 +5,12 @@
 
 package com.liferay.headless.admin.site.internal.resource.v1_0;
 
+import com.liferay.headless.admin.site.dto.v1_0.PageElement;
 import com.liferay.headless.admin.site.dto.v1_0.PageExperience;
+import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.LayoutStructureItemImporter;
+import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.context.LayoutStructureItemImporterContext;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.GroupUtil;
+import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutStructureItemImporterUtil;
 import com.liferay.headless.admin.site.resource.v1_0.PageExperienceResource;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
@@ -25,6 +29,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
+import com.liferay.segments.exception.NoSuchExperienceException;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsEntryLocalService;
@@ -56,11 +61,27 @@ public class PageExperienceResourceImpl extends BasePageExperienceResourceImpl {
 			throw new UnsupportedOperationException();
 		}
 
+		long groupId = GroupUtil.getGroupId(
+			false, contextCompany.getCompanyId(), siteExternalReferenceCode);
+
+		SegmentsExperience segmentsExperience =
+			_segmentsExperienceService.
+				fetchSegmentsExperienceByExternalReferenceCode(
+					pageExperienceExternalReferenceCode, groupId);
+
+		if (segmentsExperience == null) {
+			throw new NoSuchExperienceException();
+		}
+
+		Layout layout = _layoutLocalService.fetchLayout(
+			segmentsExperience.getPlid());
+
+		if (!layout.isDraftLayout()) {
+			throw new UnsupportedOperationException();
+		}
+
 		_segmentsExperienceService.deleteSegmentsExperience(
-			pageExperienceExternalReferenceCode,
-			GroupUtil.getGroupId(
-				false, contextCompany.getCompanyId(),
-				siteExternalReferenceCode));
+			pageExperienceExternalReferenceCode, groupId);
 	}
 
 	@Override
@@ -108,7 +129,7 @@ public class PageExperienceResourceImpl extends BasePageExperienceResourceImpl {
 				_segmentsExperienceService.getSegmentsExperiences(
 					layout.getGroupId(), layout.getPlid(), true,
 					QueryUtil.ALL_POS, QueryUtil.ALL_POS, null),
-				segmentsExperience -> _toPageExperience(segmentsExperience)));
+				this::_toPageExperience));
 	}
 
 	@Override
@@ -123,11 +144,18 @@ public class PageExperienceResourceImpl extends BasePageExperienceResourceImpl {
 			throw new UnsupportedOperationException();
 		}
 
-		return _addPageExperience(
-			GroupUtil.getGroupId(
-				false, contextCompany.getCompanyId(),
-				siteExternalReferenceCode),
-			pageExperience);
+		long groupId = GroupUtil.getGroupId(
+			false, contextCompany.getCompanyId(), siteExternalReferenceCode);
+
+		Layout layout = _layoutLocalService.fetchLayoutByExternalReferenceCode(
+			pageExperience.getPageSpecificationExternalReferenceCode(),
+			groupId);
+
+		if (!layout.isDraftLayout()) {
+			throw new UnsupportedOperationException();
+		}
+
+		return _addPageExperience(groupId, pageExperience);
 	}
 
 	@Override
@@ -143,6 +171,14 @@ public class PageExperienceResourceImpl extends BasePageExperienceResourceImpl {
 
 		long groupId = GroupUtil.getGroupId(
 			false, contextCompany.getCompanyId(), siteExternalReferenceCode);
+
+		Layout layout = _layoutLocalService.fetchLayoutByExternalReferenceCode(
+			pageExperience.getPageSpecificationExternalReferenceCode(),
+			groupId);
+
+		if (!layout.isDraftLayout()) {
+			throw new UnsupportedOperationException();
+		}
 
 		SegmentsExperience segmentsExperience =
 			_segmentsExperienceService.
@@ -175,12 +211,44 @@ public class PageExperienceResourceImpl extends BasePageExperienceResourceImpl {
 				).build()));
 	}
 
+	@Override
+	protected void preparePatch(
+		PageExperience pageExperience, PageExperience existingPageExperience) {
+
+		if (pageExperience.getPageElements() != null) {
+			existingPageExperience.setPageElements(
+				pageExperience::getPageElements);
+		}
+	}
+
+	private void _addLayoutStructureItem(
+			LayoutStructure layoutStructure,
+			LayoutStructureItemImporterContext
+				layoutStructureItemImporterContext,
+			PageElement pageElement)
+		throws Exception {
+
+		LayoutStructureItemImporter layoutStructureItemImporter =
+			LayoutStructureItemImporterUtil.getLayoutStructureItemImporter(
+				pageElement.getType());
+
+		layoutStructureItemImporter.addLayoutStructureItem(
+			layoutStructure, layoutStructureItemImporterContext, pageElement);
+
+		for (PageElement childPageElement : pageElement.getPageElements()) {
+			_addLayoutStructureItem(
+				layoutStructure, layoutStructureItemImporterContext,
+				childPageElement);
+		}
+	}
+
 	private PageExperience _addPageExperience(
 			long groupId, PageExperience pageExperience)
 		throws Exception {
 
 		Layout layout = _layoutLocalService.fetchLayoutByExternalReferenceCode(
-			pageExperience.getSitePageExternalReferenceCode(), groupId);
+			pageExperience.getPageSpecificationExternalReferenceCode(),
+			groupId);
 
 		if ((layout == null) ||
 			!Objects.equals(layout.getType(), LayoutConstants.TYPE_CONTENT)) {
@@ -208,18 +276,26 @@ public class PageExperienceResourceImpl extends BasePageExperienceResourceImpl {
 
 		layoutStructure.addRootLayoutStructureItem();
 
+		for (PageElement pageElement : pageExperience.getPageElements()) {
+			_addLayoutStructureItem(
+				layoutStructure,
+				new LayoutStructureItemImporterContext(
+					groupId, layout,
+					segmentsExperience.getSegmentsExperienceId(),
+					contextUser.getUserId()),
+				pageElement);
+		}
+
+		_layoutPageTemplateStructureLocalService.
+			updateLayoutPageTemplateStructureData(
+				layout.getGroupId(), layout.getPlid(),
+				layoutStructure.toString());
+
 		String data = layoutStructure.toString();
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
 				groupId, layout.getPlid(),
-				segmentsExperience.getSegmentsExperienceId(), data);
-
-		Layout draftLayout = layout.fetchDraftLayout();
-
-		_layoutPageTemplateStructureLocalService.
-			updateLayoutPageTemplateStructureData(
-				groupId, draftLayout.getPlid(),
 				segmentsExperience.getSegmentsExperienceId(), data);
 
 		return _toPageExperience(segmentsExperience);

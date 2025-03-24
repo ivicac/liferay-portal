@@ -5,6 +5,7 @@
 
 import {
 	ObjectDefinitionApi,
+	ObjectField,
 	ObjectFieldApi,
 	ObjectValidationRuleApi,
 } from '@liferay/object-admin-rest-client-js';
@@ -486,7 +487,11 @@ test.describe('Form Configuration', () => {
 				`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
 			);
 
-			await page.getByLabel('Lemon Weight', {exact: true}).fill('100');
+			const lemonWeightInput = page.getByRole('spinbutton', {
+				name: 'Lemon Weight',
+			});
+
+			await lemonWeightInput.fill('100');
 
 			await page.getByText('Submit', {exact: true}).click();
 
@@ -506,7 +511,7 @@ test.describe('Form Configuration', () => {
 				`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
 			);
 
-			await page.getByLabel('Lemon Weight', {exact: true}).fill('100');
+			await lemonWeightInput.fill('100');
 
 			await page.getByText('Submit', {exact: true}).click();
 
@@ -840,7 +845,7 @@ test.describe('Date Fragment', () => {
 
 			await expect(
 				dateInput.getByText('Expiration Date')
-			).not.toHaveClass('sr-only');
+			).not.toHaveClass(/sr-only/);
 
 			// Hide label
 
@@ -852,7 +857,7 @@ test.describe('Date Fragment', () => {
 			});
 
 			await expect(dateInput.getByText('Expiration Date')).toHaveClass(
-				'sr-only'
+				/sr-only/
 			);
 
 			// Show help text
@@ -2103,11 +2108,13 @@ test.describe('Form Localization', () => {
 
 			await page.getByLabel('Legal Things').check();
 
+			const spanishOption = page.getByRole('option', {
+				name: 'Spanish (Spain) Language',
+			});
+
 			await clickAndExpectToBeVisible({
 				autoClick: true,
-				target: page.getByRole('option', {
-					name: 'Spanish (Spain) Language',
-				}),
+				target: spanishOption,
 				trigger: page.getByLabel(
 					'Select a language, current language:'
 				),
@@ -2121,11 +2128,7 @@ test.describe('Form Localization', () => {
 				.getByLabel('Select a language, current language:')
 				.click();
 
-			expect(
-				page.getByRole('option', {
-					name: 'Spanish (Spain) Language',
-				})
-			).toContainText(/Translated/);
+			await expect(spanishOption).toContainText('Language: Translated');
 
 			await page.keyboard.press('Escape');
 
@@ -2256,11 +2259,13 @@ test.describe('Form Localization', () => {
 				trigger: page.getByPlaceholder('Choose an Option'),
 			});
 
+			const spanishOption = page.getByRole('option', {
+				name: 'Spanish (Spain) Language',
+			});
+
 			await clickAndExpectToBeVisible({
 				autoClick: true,
-				target: page.getByRole('option', {
-					name: 'Spanish (Spain) Language',
-				}),
+				target: spanishOption,
 				trigger: page.getByLabel(
 					'Select a language, current language:'
 				),
@@ -2280,11 +2285,7 @@ test.describe('Form Localization', () => {
 				.getByLabel('Select a language, current language:')
 				.click();
 
-			expect(
-				page.getByRole('option', {
-					name: 'Spanish (Spain) Language',
-				})
-			).toContainText(/Translated/);
+			await expect(spanishOption).toContainText('Language: Translated');
 
 			await page.keyboard.press('Escape');
 
@@ -2412,11 +2413,13 @@ test.describe('Form Localization', () => {
 			await page.getByRole('checkbox', {name: 'Spain'}).check();
 			await page.getByRole('checkbox', {name: 'Italy'}).check();
 
+			const spanishOption = page.getByRole('option', {
+				name: 'Spanish (Spain) Language',
+			});
+
 			await clickAndExpectToBeVisible({
 				autoClick: true,
-				target: page.getByRole('option', {
-					name: 'Spanish (Spain) Language',
-				}),
+				target: spanishOption,
 				trigger: translationTrigger,
 			});
 
@@ -2426,11 +2429,7 @@ test.describe('Form Localization', () => {
 
 			await translationTrigger.click();
 
-			expect(
-				page.getByRole('option', {
-					name: 'Spanish (Spain) Language',
-				})
-			).toContainText(/Translated/);
+			await expect(spanishOption).toContainText('Language: Translated');
 
 			await page.keyboard.press('Escape');
 
@@ -3522,8 +3521,8 @@ test.describe('Form Localization', () => {
 							required: false,
 						},
 						{
-							DBType: ObjectField.DBTypeEnum.Integer,
-							businessType: ObjectField.BusinessTypeEnum.Integer,
+							DBType: 'Integer',
+							businessType: 'Integer',
 							externalReferenceCode: 'idealTemperatureERC',
 							indexed: true,
 							indexedAsKeyword: false,
@@ -3536,7 +3535,7 @@ test.describe('Form Localization', () => {
 							required: false,
 						},
 						{
-							DBType: ObjectField.DBTypeEnum.DateTime,
+							DBType: 'DateTime',
 							externalReferenceCode: 'lastWateringERC',
 							indexed: true,
 							indexedAsKeyword: false,
@@ -3553,7 +3552,7 @@ test.describe('Form Localization', () => {
 							],
 						},
 						{
-							DBType: ObjectField.DBTypeEnum.Date,
+							DBType: 'Date',
 							externalReferenceCode: 'plantingDateERC',
 							indexed: true,
 							indexedAsKeyword: false,
@@ -4177,6 +4176,294 @@ test.describe('Form Localization', () => {
 			);
 		}
 	);
+
+	test(
+		'Visualize text fields in RTL languages',
+		{tag: '@LPD-48787'},
+		async ({apiHelpers, page, pageEditorPage, site}) => {
+			const objectDefinitionApiClient =
+				await apiHelpers.buildRestClient(ObjectDefinitionApi);
+
+			const listTypeDefinition =
+				await apiHelpers.listTypeAdmin.postRandomListTypeDefinition();
+
+			for (const option of ['Spain', 'Italy']) {
+				await apiHelpers.listTypeAdmin.postListTypeEntry(
+					listTypeDefinition.externalReferenceCode,
+					option
+				);
+			}
+
+			const objectFields: ObjectField[] = [
+				{
+					DBType: 'Clob',
+					businessType: 'RichText',
+					externalReferenceCode: 'richTextERC',
+					indexed: true,
+					indexedAsKeyword: false,
+					label: {
+						en_US: 'Rich Text',
+					},
+					localized: true,
+					name: 'richText',
+					required: false,
+				},
+				{
+					DBType: 'Clob',
+					businessType: 'LongText',
+					externalReferenceCode: 'longTextERC',
+					indexed: true,
+					indexedAsKeyword: false,
+					label: {
+						en_US: 'Long Text',
+					},
+					localized: true,
+					name: 'longText',
+					required: false,
+				},
+				{
+					DBType: 'String',
+					businessType: 'Text',
+					externalReferenceCode: 'text',
+					indexed: true,
+					indexedAsKeyword: false,
+					label: {
+						en_US: 'Text',
+					},
+					localized: true,
+					name: 'text',
+					required: false,
+				},
+				{
+					DBType: 'Integer',
+					externalReferenceCode: 'numeric-erc',
+					indexed: true,
+					indexedAsKeyword: false,
+					indexedLanguageId: '',
+					label: {
+						en_US: 'Numeric',
+					},
+					name: 'numeric',
+				},
+				{
+					DBType: 'DateTime',
+					externalReferenceCode: 'date-time-erc',
+					indexed: true,
+					indexedAsKeyword: false,
+					label: {
+						en_US: 'Date And Time',
+					},
+					name: 'dateAndTime',
+					objectFieldSettings: [
+						{
+							name: 'timeStorage',
+							value: {},
+						},
+					],
+				},
+				{
+					DBType: 'Date',
+					externalReferenceCode: 'date-erc',
+					indexed: true,
+					indexedAsKeyword: false,
+					label: {
+						en_US: 'Date',
+					},
+					name: 'date',
+				},
+				{
+					DBType: 'String',
+					businessType: 'Picklist',
+					externalReferenceCode: 'selectERC',
+					indexed: true,
+					indexedAsKeyword: false,
+					label: {
+						en_US: 'Select',
+					},
+					listTypeDefinitionExternalReferenceCode:
+						listTypeDefinition.externalReferenceCode,
+					listTypeDefinitionId: listTypeDefinition.id,
+					localized: true,
+					name: 'select',
+					required: false,
+				},
+			];
+
+			// Create an object with localizable fields
+
+			const {body: localizableObjectDefinition} =
+				await objectDefinitionApiClient.postObjectDefinition({
+					active: true,
+					enableLocalization: true,
+					externalReferenceCode: 'localizableFieldsGroupERC',
+					label: {
+						en_US: 'Localizable Fields Group',
+					},
+					name: 'LocalizableFieldsGroup',
+					objectFields,
+					panelCategoryKey: 'control_panel.object',
+					pluralLabel: {
+						en_US: 'Localizable Fields Groups',
+					},
+					portlet: true,
+					scope: 'company',
+					status: {
+						code: 0,
+					},
+				});
+
+			apiHelpers.data.push({
+				id: localizableObjectDefinition.id,
+				type: 'objectDefinition',
+			});
+
+			// Create an object with unlocalizable fields
+
+			const {body: nonLocalizableObjectDefinition} =
+				await objectDefinitionApiClient.postObjectDefinition({
+					active: true,
+					enableLocalization: true,
+					externalReferenceCode: 'UnlocalizableFieldsGroupERC',
+					label: {
+						en_US: 'Unlocalizable Fields Group',
+					},
+					name: 'UnlocalizableFieldsGroup',
+					objectFields: objectFields.map((field) => ({
+						...field,
+						localized: true,
+					})),
+					panelCategoryKey: 'control_panel.object',
+					pluralLabel: {
+						en_US: 'Unlocalizable Fields Groups',
+					},
+					portlet: true,
+					scope: 'company',
+					status: {
+						code: 0,
+					},
+				});
+
+			apiHelpers.data.push({
+				id: nonLocalizableObjectDefinition.id,
+				type: 'objectDefinition',
+			});
+
+			// Create a page with two Forms for both objects
+
+			const localizableFormId = getRandomString();
+
+			const localizableFormDefinition = getFormContainerDefinition({
+				id: localizableFormId,
+			});
+
+			const unlocalizableFormId = getRandomString();
+
+			const unlocalizableFormDefinition = getFormContainerDefinition({
+				id: unlocalizableFormId,
+			});
+
+			const layout = await apiHelpers.headlessDelivery.createSitePage({
+				pageDefinition: getPageDefinition([
+					localizableFormDefinition,
+					unlocalizableFormDefinition,
+				]),
+				siteId: site.id,
+				title: getRandomString(),
+			});
+
+			await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+			// Map the forms to both objects and publish the page
+
+			await pageEditorPage.mapFormFragment(
+				localizableFormId,
+				'Localizable Fields Group',
+				'all',
+				{
+					addLocalizationSelect: true,
+				}
+			);
+
+			await pageEditorPage.mapFormFragment(
+				unlocalizableFormId,
+				'Unlocalizable Fields Group',
+				'all'
+			);
+
+			await pageEditorPage.publishPage();
+
+			// Go to view mode and check the "dir" attribute of the fields
+
+			await page.goto(
+				`/web${site.friendlyUrlPath}${layout.friendlyUrlPath}`
+			);
+
+			const localizableForm = page
+				.locator('.lfr-layout-structure-item-form')
+				.first();
+
+			const unlocalizableForm = page
+				.locator('.lfr-layout-structure-item-form')
+				.nth(1);
+
+			const getFields = (form: Locator) => [
+				form.getByRole('textbox', {
+					exact: true,
+					name: 'Text',
+				}),
+				form.getByRole('textbox', {
+					exact: true,
+					name: 'Long Text',
+				}),
+				form.getByLabel('Numeric'),
+				form.getByRole('textbox', {
+					exact: true,
+					name: 'Date',
+				}),
+				form.getByRole('textbox', {
+					exact: true,
+					name: 'Date And Time',
+				}),
+				form.frameLocator('iframe[title="editor"]').locator('html'),
+				form.getByPlaceholder('Choose an Option'),
+			];
+
+			// Check the "dir" attribute before changing the translation language
+
+			const localizableFields = getFields(localizableForm);
+			const unlocalizableFields = getFields(unlocalizableForm);
+
+			for (const field of localizableFields) {
+				await expect(field).toHaveAttribute('dir', 'ltr');
+			}
+
+			for (const field of unlocalizableFields) {
+				await expect(field).toHaveAttribute('dir', 'ltr');
+			}
+
+			// Change the translation language
+
+			await clickAndExpectToBeVisible({
+				autoClick: true,
+				target: page.getByRole('option', {
+					name: 'Arabic (Saudi Arabia) Language',
+				}),
+				trigger: page.getByLabel(
+					'Select a language, current language:'
+				),
+			});
+
+			// Check the "dir" attribute after changing the translation language
+
+			for (const field of localizableFields) {
+				await expect(field).toHaveAttribute('dir', 'rtl');
+			}
+
+			for (const field of unlocalizableFields) {
+				await expect(field).toHaveAttribute('dir', 'rtl');
+			}
+		}
+	);
 });
 
 test.describe('Numeric input field', () => {
@@ -4323,7 +4610,9 @@ test.describe('Numeric input field', () => {
 			`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
 		);
 
-		const lemonWeightInput = page.getByLabel('Lemon Weight', {exact: true});
+		const lemonWeightInput = page.getByRole('spinbutton', {
+			name: 'Lemon Weight',
+		});
 
 		await expect(lemonWeightInput).toHaveAttribute('type', 'number');
 		await expect(lemonWeightInput).toHaveAttribute('max');
@@ -4674,7 +4963,9 @@ test.describe('Submit button', () => {
 				`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
 			);
 
-			await page.getByLabel('Lemon Weight', {exact: true}).fill('200');
+			await page
+				.getByRole('spinbutton', {name: 'Lemon Weight'})
+				.fill('200');
 
 			await page.getByText('Submit', {exact: true}).click();
 
@@ -8462,15 +8753,17 @@ async function chooseFileFromDocumentLibrary({
 	page: Page;
 	trigger: Locator;
 }) {
-	await trigger.click();
-
 	const iframe = page.frameLocator('iframe');
 
-	await expect(
-		iframe.getByText('Drag & Drop Your Files or Browse to Upload')
-	).toBeVisible();
+	await clickAndExpectToBeVisible({
+		target: iframe.getByText('Drag & Drop Your Files or Browse to Upload'),
+		timeout: 2000,
+		trigger,
+	});
 
-	await iframe.getByText(fileName).click();
-
-	await expect(iframe.getByText(fileName)).not.toBeVisible();
+	await clickAndExpectToBeHidden({
+		target: iframe.getByText(fileName),
+		timeout: 2000,
+		trigger: iframe.getByText(fileName),
+	});
 }

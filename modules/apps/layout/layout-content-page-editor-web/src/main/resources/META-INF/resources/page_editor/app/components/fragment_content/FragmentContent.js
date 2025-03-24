@@ -85,7 +85,7 @@ const FragmentContent = ({
 
 			return nextEditables;
 		},
-		[isMounted, fragmentEntryLinkId, item, computeEditables]
+		[isMounted, fragmentEntryLinkId, item.itemId, computeEditables]
 	);
 
 	const fragmentEntryLink = useSelectorCallback(
@@ -118,8 +118,10 @@ const FragmentContent = ({
 
 	const cssClasses = getLayoutDataItemCssClasses(item);
 
-	const portletCustomActions = useMemo(
-		() => getPortletCustomActions(fragmentEntryLink),
+	const showPortletTopper = useMemo(
+		() =>
+			getPortletCustomActions(fragmentEntryLink).length ||
+			fragmentEntryLink.fragmentEntryType !== 'widget',
 		[fragmentEntryLink]
 	);
 
@@ -234,17 +236,27 @@ const FragmentContent = ({
 		getFieldValue
 	);
 
-	const style = {};
+	const style = useMemo(() => {
+		const style = {};
 
-	if (backgroundImageValue.url) {
-		style[`--lfr-background-image-${item.itemId}`] =
-			`url(${backgroundImageValue.url})`;
+		if (backgroundImageValue.url) {
+			style[`--lfr-background-image-${item.itemId}`] =
+				`url(${backgroundImageValue.url})`;
 
-		if (backgroundImage?.fileEntryId) {
-			style['--background-image-file-entry-id'] =
-				backgroundImage.fileEntryId;
+			if (backgroundImage?.fileEntryId) {
+				style['--background-image-file-entry-id'] =
+					backgroundImage.fileEntryId;
+			}
 		}
-	}
+
+		return style;
+	}, [backgroundImageValue?.url, item.itemId, backgroundImage]);
+
+	const data = useMemo(() => {
+		return {
+			fragmentEntryLinkId,
+		};
+	}, [fragmentEntryLinkId]);
 
 	return (
 		<>
@@ -266,12 +278,11 @@ const FragmentContent = ({
 								!hasInnerCommonStyles(fragmentEntryLink),
 							'custom-height': item.config.styles?.height,
 							'page-editor__fragment-content--portlet-topper-hidden':
-								!canConfigureWidgets ||
-								!portletCustomActions.length,
+								!canConfigureWidgets || !showPortletTopper,
 						}
 					)}
 					contentRef={elementRef}
-					data={{fragmentEntryLinkId}}
+					data={data}
 					getPortals={getPortals}
 					globalContext={globalContext}
 					id={elementId}

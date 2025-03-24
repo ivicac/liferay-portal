@@ -398,8 +398,9 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 		long commerceOrderId = commerceOrder.getCommerceOrderId();
 
 		CommerceContext commerceContext = _commerceContextFactory.create(
-			commerceOrder.getCompanyId(), commerceOrder.getGroupId(), userId,
-			commerceOrderId, commerceOrder.getCommerceAccountId());
+			commerceOrder.getCommerceAccountId(), commerceOrder.getGroupId(),
+			commerceOrder.getCommerceCurrencyCode(), commerceOrderId,
+			commerceOrder.getCompanyId());
 
 		TransactionCommitCallbackUtil.registerCallback(
 			() -> {
@@ -489,7 +490,7 @@ public class CommerceOrderEngineImpl implements CommerceOrderEngine {
 		dtoConverterContext.setAttribute("secure", Boolean.FALSE);
 
 		JSONObject commerceOrderJSONObject = _jsonFactory.createJSONObject(
-			String.valueOf(
+			_jsonFactory.looseSerializeDeep(
 				commerceOrderDTOConverter.toDTO(dtoConverterContext)));
 
 		JSONArray commerceOrderItemsJSONArray = _jsonFactory.createJSONArray();

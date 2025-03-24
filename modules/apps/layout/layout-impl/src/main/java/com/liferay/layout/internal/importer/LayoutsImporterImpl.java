@@ -20,6 +20,7 @@ import com.liferay.fragment.listener.FragmentEntryLinkListener;
 import com.liferay.fragment.listener.FragmentEntryLinkListenerRegistry;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.fragment.renderer.FragmentRendererRegistry;
 import com.liferay.fragment.service.FragmentCollectionLocalService;
 import com.liferay.fragment.service.FragmentCollectionService;
@@ -372,9 +373,7 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 			new WidgetLayoutStructureItemImporter(
 				_fragmentEntryLinkLocalService, _fragmentEntryProcessorRegistry,
 				_portletConfigurationImporterHelper, _portletLocalService,
-				_portletPermissionsImporterHelper,
-				_portletPreferencesLocalService,
-				_segmentsExperienceLocalService));
+				_portletPermissionsImporterHelper, _portletRegistry));
 	}
 
 	private void _addClientExtensionEntryRel(
@@ -2442,6 +2441,9 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Reference
+	private PortletRegistry _portletRegistry;
 
 	@Reference
 	private SegmentsExperienceLocalService _segmentsExperienceLocalService;

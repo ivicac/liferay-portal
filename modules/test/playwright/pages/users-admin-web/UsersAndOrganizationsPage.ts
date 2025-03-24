@@ -82,6 +82,7 @@ export class UsersAndOrganizationsPage {
 	readonly myOrganizationsUserAndOrgsTableRowLink: (
 		organizationName: string
 	) => Promise<Locator>;
+	readonly noResultsMessage: Locator;
 	readonly noUsersMessage: Locator;
 	readonly organizationActionsMenu: (
 		organizationName: string
@@ -263,6 +264,9 @@ export class UsersAndOrganizationsPage {
 				`Cannot locate organization row with name ${organizationName}`
 			);
 		};
+		this.noResultsMessage = page.getByText('No results were found.', {
+			exact: true,
+		});
 		this.noUsersMessage = page.getByText('No users were found');
 		this.optionsMenu = page
 			.getByTestId('headerOptions')
@@ -508,6 +512,21 @@ export class UsersAndOrganizationsPage {
 		await waitForAlert(this.page);
 	}
 
+	async filterUsers(option: string) {
+		await Promise.all([
+			clickAndExpectToBeVisible({
+				autoClick: true,
+				target: this.tableFilterMenuItem(option),
+				trigger: this.tableFilterMenu,
+			}),
+			this.page.waitForResponse(
+				(resp) =>
+					resp.status() === 200 &&
+					resp.url().includes('navigation=' + option)
+			),
+		]);
+	}
+
 	async goto(forceReload?: boolean) {
 		await this.applicationsMenuPage.goToUsersAndOrganizations(forceReload);
 	}
@@ -596,24 +615,13 @@ export class UsersAndOrganizationsPage {
 		]);
 	}
 
-	async filterUsers(option: string) {
-		await Promise.all([
-			clickAndExpectToBeVisible({
-				autoClick: true,
-				target: this.tableFilterMenuItem(option),
-				trigger: this.tableFilterMenu,
-			}),
-			this.page.waitForResponse(
-				(resp) =>
-					resp.status() === 200 &&
-					resp.url().includes('navigation=' + option)
-			),
-		]);
-	}
-
 	async openOptionsMenu() {
 		await this.optionsMenu
 			.and(this.page.locator('[aria-haspopup]'))
 			.click();
+	}
+
+	async goToUser(userName: string) {
+		await this.page.getByRole('link', {name: userName}).click();
 	}
 }

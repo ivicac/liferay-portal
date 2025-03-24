@@ -24,12 +24,16 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -51,6 +55,7 @@ import javax.portlet.Portlet;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -105,6 +110,12 @@ public class CETConfigurationFactoryTest {
 		}
 	}
 
+	@Before
+	public void setUp() throws Exception {
+		_group = GroupTestUtil.addGroup();
+		_user = UserTestUtil.getAdminUser(_virtualInstanceCompanyId);
+	}
+
 	@Test
 	public void testAddCET() throws Exception {
 		FeatureFlagTestHelper featureFlagTestHelper =
@@ -133,7 +144,8 @@ public class CETConfigurationFactoryTest {
 		Layout layout = _getControlPanelLayout(_virtualInstanceCompanyId);
 		String pid1 = ConfigurationTestUtil.createFactoryConfiguration(
 			_PID,
-			_getThemeCSSCETConfigurationProperties(_virtualInstanceCompanyId));
+			_getThemeCSSCETConfigurationProperties(
+				_virtualInstanceCompanyId, true));
 		String pid2 = null;
 
 		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
@@ -154,7 +166,7 @@ public class CETConfigurationFactoryTest {
 			pid2 = ConfigurationTestUtil.createFactoryConfiguration(
 				_PID,
 				_getThemeCSSCETConfigurationProperties(
-					_virtualInstanceCompanyId));
+					_virtualInstanceCompanyId, true));
 
 			clientExtensionEntryRels =
 				_clientExtensionEntryRelLocalService.
@@ -195,6 +207,40 @@ public class CETConfigurationFactoryTest {
 			clientExtensionEntryRels.size());
 	}
 
+	@Test
+	public void testModified() throws Exception {
+		Dictionary<String, Object> themeCSSCETConfigurationProperties =
+			_getThemeCSSCETConfigurationProperties(
+				_virtualInstanceCompanyId, false);
+
+		String pid = ConfigurationTestUtil.createFactoryConfiguration(
+			_PID, themeCSSCETConfigurationProperties);
+
+		String externalReferenceCode =
+			"LXC:" + pid.substring(pid.indexOf(StringPool.TILDE) + 1);
+
+		LayoutSet publicLayoutSet = _group.getPublicLayoutSet();
+
+		ClientExtensionEntryRel clientExtensionEntryRel =
+			_clientExtensionEntryRelLocalService.addClientExtensionEntryRel(
+				_user.getUserId(), _group.getGroupId(),
+				_portal.getClassNameId(LayoutSet.class),
+				publicLayoutSet.getLayoutSetId(), externalReferenceCode,
+				ClientExtensionEntryConstants.TYPE_THEME_CSS, StringPool.BLANK,
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		Assert.assertNotNull(clientExtensionEntryRel);
+
+		ConfigurationTestUtil.saveConfiguration(
+			pid, themeCSSCETConfigurationProperties);
+
+		clientExtensionEntryRel =
+			_clientExtensionEntryRelLocalService.fetchClientExtensionEntryRel(
+				clientExtensionEntryRel.getClientExtensionEntryRelId());
+
+		Assert.assertNotNull(clientExtensionEntryRel);
+	}
+
 	private Layout _getControlPanelLayout(long companyId) throws Exception {
 		Group group = _groupLocalService.fetchGroup(
 			companyId, GroupConstants.CONTROL_PANEL);
@@ -211,7 +257,7 @@ public class CETConfigurationFactoryTest {
 	}
 
 	private Dictionary<String, Object> _getThemeCSSCETConfigurationProperties(
-			long companyId)
+			long companyId, boolean controlPanelScoped)
 		throws Exception {
 
 		String name = RandomTestUtil.randomString();
@@ -231,9 +277,11 @@ public class CETConfigurationFactoryTest {
 		).put(
 			"type", ClientExtensionEntryConstants.TYPE_THEME_CSS
 		).put(
-			"typeSettings", Collections.singletonList("scope=controlPanel")
+			"typeSettings",
+			Collections.singletonList(
+				"scope=" + (controlPanelScoped ? "controlPanel" : ""))
 		).put(
-			"userId", TestPropsValues.getUserId()
+			"userId", _user.getUserId()
 		).put(
 			"webContextPath", "/" + name
 		).build();
@@ -349,6 +397,8 @@ public class CETConfigurationFactoryTest {
 	private ClientExtensionEntryRelLocalService
 		_clientExtensionEntryRelLocalService;
 
+	private Group _group;
+
 	@Inject
 	private GroupLocalService _groupLocalService;
 
@@ -357,5 +407,7 @@ public class CETConfigurationFactoryTest {
 
 	@Inject
 	private Portal _portal;
+
+	private User _user;
 
 }

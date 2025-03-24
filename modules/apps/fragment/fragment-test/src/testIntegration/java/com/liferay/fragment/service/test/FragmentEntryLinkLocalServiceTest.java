@@ -118,7 +118,7 @@ public class FragmentEntryLinkLocalServiceTest {
 			_fragmentCollection.getFragmentCollectionId(), null,
 			"Fragment Name", StringPool.BLANK, "<div>test</div>",
 			StringPool.BLANK, false, _read("configuration-light.json"), null, 0,
-			false, FragmentConstants.TYPE_SECTION, null,
+			false, false, FragmentConstants.TYPE_SECTION, null,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		_fragmentEntryWithFreeMarker =
@@ -127,7 +127,7 @@ public class FragmentEntryLinkLocalServiceTest {
 				_fragmentCollection.getFragmentCollectionId(), null,
 				"Fragment Name", StringPool.BLANK,
 				_read("fragment-freemarker.html"), StringPool.BLANK, false,
-				_read("configuration-light.json"), null, 0, false,
+				_read("configuration-light.json"), null, 0, false, false,
 				FragmentConstants.TYPE_SECTION, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
@@ -656,8 +656,9 @@ public class FragmentEntryLinkLocalServiceTest {
 				_fragmentCollection.getFragmentCollectionId(), null,
 				"Fragment Name", RandomTestUtil.randomString(),
 				"<div>test</div>", RandomTestUtil.randomString(), false,
-				configuration, null, 0, false, FragmentConstants.TYPE_SECTION,
-				null, WorkflowConstants.STATUS_APPROVED, _serviceContext);
+				configuration, null, 0, false, false,
+				FragmentConstants.TYPE_SECTION, null,
+				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
@@ -710,7 +711,7 @@ public class FragmentEntryLinkLocalServiceTest {
 				_fragmentCollection.getFragmentCollectionId(), null,
 				"Fragment Name", StringPool.BLANK, StringUtil.randomString(),
 				StringPool.BLANK, false, _read("configuration-light.json"),
-				null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
+				null, 0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		FragmentEntryLink fragmentEntryLink =
@@ -764,7 +765,7 @@ public class FragmentEntryLinkLocalServiceTest {
 				_fragmentCollection.getFragmentCollectionId(), null,
 				"Fragment Name", StringPool.BLANK,
 				_read("fragment-configuration.html"), StringPool.BLANK, false,
-				_read("configuration-new-field.json"), null, 0, false,
+				_read("configuration-new-field.json"), null, 0, false, false,
 				FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
@@ -811,7 +812,7 @@ public class FragmentEntryLinkLocalServiceTest {
 				_fragmentCollection.getFragmentCollectionId(), null,
 				"Fragment Name", StringPool.BLANK,
 				_read("fragment-editable.html"), StringPool.BLANK, false,
-				StringPool.BLANK, null, 0, false,
+				StringPool.BLANK, null, 0, false, false,
 				FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
@@ -857,7 +858,7 @@ public class FragmentEntryLinkLocalServiceTest {
 				_fragmentCollection.getFragmentCollectionId(), null,
 				"Fragment Name", StringPool.BLANK,
 				_read("fragment-editable.html"), StringPool.BLANK, false,
-				StringPool.BLANK, null, 0, false,
+				StringPool.BLANK, null, 0, false, false,
 				FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
@@ -909,7 +910,7 @@ public class FragmentEntryLinkLocalServiceTest {
 				RandomTestUtil.randomString(), StringPool.BLANK,
 				_read("fragment-freemarker-with-configuration.html"),
 				StringPool.BLANK, false, _read("configuration-tabs.json"), null,
-				0, false, FragmentConstants.TYPE_COMPONENT, null,
+				0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		FragmentEntryLink fragmentEntryLink1 =
@@ -989,7 +990,7 @@ public class FragmentEntryLinkLocalServiceTest {
 				"Fragment Name", StringPool.BLANK,
 				"<div><img src=\"[resources:liferay]\" /></div>",
 				StringPool.BLANK, false, StringPool.BLANK, null, 0, false,
-				FragmentConstants.TYPE_COMPONENT, null,
+				false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		FragmentEntryLink fragmentEntryLink =

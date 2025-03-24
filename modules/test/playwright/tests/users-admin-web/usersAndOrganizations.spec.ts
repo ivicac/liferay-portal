@@ -7,6 +7,7 @@ import {expect, mergeTests} from '@playwright/test';
 import {createReadStream} from 'fs';
 import path from 'path';
 
+import {accountSettingsPagesTest} from '../../fixtures/accountSettingsPagesTest';
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
 import {loginTest} from '../../fixtures/loginTest';
@@ -21,6 +22,7 @@ import performLogin, {
 import {waitForAlert} from '../../utils/waitForAlert';
 
 export const test = mergeTests(
+	accountSettingsPagesTest,
 	apiHelpersTest,
 	dataApiHelpersTest,
 	loginTest(),
@@ -199,9 +201,7 @@ test('LPD-30589 Add Organization Team', async ({
 
 	await waitForAlert(page);
 
-	await expect(
-		(await teamsPage.teamsTableRow(1, newTeamName, true)).row
-	).toBeVisible();
+	await expect(teamsPage.teamsTable.cell(newTeamName)).toBeVisible();
 });
 
 test('LPD-31669 Check whether admin user is redirected to organization page after user to org assignment', async ({
@@ -840,6 +840,10 @@ test(
 		await siteMembershipsPage.userGroupsLink.click();
 		await siteMembershipsPage.newUserGroupButton.click();
 
+		await expect(
+			siteMembershipsPage.assignUserGroupIFrameTitle
+		).toBeVisible();
+
 		await siteMembershipsPage.assignUserGroupTable.changeView('Table');
 
 		await expect(
@@ -898,5 +902,501 @@ test(
 				document.title
 			)
 		).toBeVisible();
+	}
+);
+
+test(
+	'Impersonating Administrator and Owner',
+	{tag: '@50219'},
+	async ({apiHelpers, context, page, usersAndOrganizationsPage}) => {
+		const userAccount1 =
+			await apiHelpers.headlessAdminUser.postUserAccount();
+
+		userData[userAccount1.alternateName] = {
+			name: userAccount1.givenName,
+			password: 'test',
+			surname: userAccount1.familyName,
+		};
+
+		const userAccount2 =
+			await apiHelpers.headlessAdminUser.postUserAccount();
+
+		const userAccount3 =
+			await apiHelpers.headlessAdminUser.postUserAccount();
+
+		userData[userAccount3.alternateName] = {
+			name: userAccount3.givenName,
+			password: 'test',
+			surname: userAccount3.familyName,
+		};
+
+		const companyId = await page.evaluate(() => {
+			return Liferay.ThemeDisplay.getCompanyId();
+		});
+
+		const role = await apiHelpers.headlessAdminUser.postRole({
+			name: getRandomString(),
+			rolePermissions: [
+				{
+					actionIds: ['VIEW_CONTROL_PANEL'],
+					primaryKey: companyId,
+					resourceName: '90',
+					scope: 1,
+				},
+				{
+					actionIds: ['VIEW'],
+					primaryKey: companyId,
+					resourceName: 'com.liferay.portal.kernel.model.User',
+					scope: 1,
+				},
+				{
+					actionIds: ['ACCESS_IN_CONTROL_PANEL', 'VIEW'],
+					primaryKey: companyId,
+					resourceName:
+						'com_liferay_users_admin_web_portlet_UsersAdminPortlet',
+					scope: 1,
+				},
+			],
+			roleType: 'regular',
+		});
+
+		await apiHelpers.headlessAdminUser.postRoleByExternalReferenceCodeUserAccountAssociation(
+			role.externalReferenceCode,
+			userAccount1.id
+		);
+
+		const role2 = await apiHelpers.headlessAdminUser.postRole({
+			name: getRandomString(),
+			rolePermissions: [
+				{
+					actionIds: ['IMPERSONATE'],
+					primaryKey: companyId,
+					resourceName: 'com.liferay.portal.kernel.model.User',
+					scope: 1,
+				},
+			],
+			roleType: 'regular',
+		});
+
+		const administratorRole =
+			await apiHelpers.headlessAdminUser.getRoleByName('Administrator');
+
+		await apiHelpers.headlessAdminUser.postRoleByExternalReferenceCodeUserAccountAssociation(
+			administratorRole.externalReferenceCode,
+			userAccount3.id
+		);
+
+		await performLogout(page);
+		await performLoginViaApi(page, userAccount1.alternateName);
+
+		await usersAndOrganizationsPage.goToUsersWithLimitedAccess();
+
+		await expect(
+			await usersAndOrganizationsPage.usersTableRowActions(
+				userAccount2.alternateName
+			)
+		).not.toBeVisible();
+		await expect(
+			await usersAndOrganizationsPage.usersTableRowActions(
+				userAccount3.alternateName
+			)
+		).not.toBeVisible();
+
+		await performLogout(page);
+		await performLoginViaApi(page, 'test');
+
+		await apiHelpers.headlessAdminUser.postRoleByExternalReferenceCodeUserAccountAssociation(
+			role2.externalReferenceCode,
+			userAccount1.id
+		);
+
+		await performLogout(page);
+		await performLoginViaApi(page, userAccount1.alternateName);
+
+		await usersAndOrganizationsPage.goToUsersWithLimitedAccess();
+
+		await expect(
+			await usersAndOrganizationsPage.usersTableRowActions(
+				userAccount2.alternateName
+			)
+		).toBeVisible();
+		await expect(
+			await usersAndOrganizationsPage.usersTableRowActions(
+				userAccount3.alternateName
+			)
+		).not.toBeVisible();
+
+		const pagePromise = context.waitForEvent('page');
+
+		await (
+			await usersAndOrganizationsPage.usersTableRowActions(
+				userAccount2.alternateName
+			)
+		).click();
+		await usersAndOrganizationsPage.impersonateUserMenuItem.click();
+
+		const newPage = await pagePromise;
+
+		await expect(newPage.getByTitle('User Profile Menu')).toBeVisible();
+
+		await newPage.close();
+
+		await performLogout(page);
+		await performLoginViaApi(page, userAccount3.alternateName);
+
+		await usersAndOrganizationsPage.goToUsers();
+
+		await (
+			await usersAndOrganizationsPage.usersTableRowActions('test')
+		).click();
+
+		await expect(
+			usersAndOrganizationsPage.impersonateUserMenuItem
+		).toBeVisible();
+
+		await usersAndOrganizationsPage.usersSearchBar.click();
+
+		await (
+			await usersAndOrganizationsPage.usersTableRowActions(
+				userAccount1.alternateName
+			)
+		).click();
+
+		await expect(
+			usersAndOrganizationsPage.impersonateUserMenuItem
+		).toBeVisible();
+
+		await usersAndOrganizationsPage.usersSearchBar.click();
+
+		await (
+			await usersAndOrganizationsPage.usersTableRowActions(
+				userAccount2.alternateName
+			)
+		).click();
+
+		await expect(
+			usersAndOrganizationsPage.impersonateUserMenuItem
+		).toBeVisible();
+	}
+);
+
+test(
+	'Can edit organization site team',
+	{tag: '@LPD-50685'},
+	async ({
+		apiHelpers,
+		editOrganizationPage,
+		page,
+		siteConfigurationDetailsPage,
+		siteSettingsPage,
+		teamsPage,
+		usersAndOrganizationsPage,
+	}) => {
+		const organization =
+			await apiHelpers.headlessAdminUser.postOrganization();
+
+		await usersAndOrganizationsPage.goToOrganizations();
+
+		await (
+			await usersAndOrganizationsPage.organizationActionsMenu(
+				organization.name
+			)
+		).click();
+		await editOrganizationPage.organizationEditMenuItem.click();
+		await editOrganizationPage.organizationSiteLink.click();
+		await editOrganizationPage.createSiteToggle.check();
+		await editOrganizationPage.organizationSiteSaveButton.click();
+
+		const siteUrl = `/${organization.name}`;
+
+		await siteSettingsPage.goToSiteSetting(
+			'Site Configuration',
+			null,
+			siteUrl
+		);
+
+		await siteConfigurationDetailsPage.allowManualMembershipManagementToggle.check();
+		await siteConfigurationDetailsPage.saveButton.click();
+
+		await waitForAlert(page);
+
+		await teamsPage.goTo(siteUrl);
+
+		const newTeamName = getRandomString();
+
+		await teamsPage.newTeamButton.click();
+		await teamsPage.nameInput.fill(newTeamName);
+		await teamsPage.descriptionInput.fill(getRandomString());
+		await teamsPage.saveButton.click();
+
+		await waitForAlert(page);
+
+		await (
+			await teamsPage.teamsTable.rowActions(newTeamName, 1, true)
+		).click();
+
+		await teamsPage.editButton.click();
+
+		const editedName = getRandomString();
+		const editedDescription = getRandomString();
+
+		await teamsPage.nameInput.fill(editedName);
+		await teamsPage.descriptionInput.fill(editedDescription);
+		await teamsPage.saveButton.click();
+
+		await waitForAlert(page);
+
+		await expect(teamsPage.teamsTable.cell(editedName, true)).toBeVisible();
+		await expect(
+			teamsPage.teamsTable.cell(editedDescription, true)
+		).toBeVisible();
+		await expect(
+			teamsPage.teamsTable.cell(newTeamName, true)
+		).not.toBeVisible();
+	}
+);
+
+test(
+	'Only global tag can be associated to user',
+	{tag: ['@LPD-50770', '@LPS-111656']},
+	async ({
+		apiHelpers,
+		editUserPage,
+		page,
+		tagsEditPage,
+		usersAndOrganizationsPage,
+	}) => {
+		const tags = [
+			{name: getRandomString(), siteUrl: '/global'},
+			{name: getRandomString(), siteUrl: '/global'},
+			{name: getRandomString(), siteUrl: '/guest'},
+		];
+
+		for (const {name, siteUrl} of tags) {
+			await tagsEditPage.add(name, siteUrl);
+		}
+
+		const userAccount =
+			await apiHelpers.headlessAdminUser.postUserAccount();
+
+		await usersAndOrganizationsPage.goToUsers();
+		await (
+			await usersAndOrganizationsPage.usersTableRowLink(
+				userAccount.alternateName
+			)
+		).click();
+
+		await editUserPage.selectTagsButton.click();
+		await editUserPage.selectTag([tags[0].name, tags[1].name]);
+
+		await expect(editUserPage.tagInput(tags[0].name)).toBeVisible();
+		await expect(editUserPage.tagInput(tags[1].name)).toBeVisible();
+		await expect(editUserPage.tagInput(tags[2].name)).toHaveCount(0);
+
+		await editUserPage.saveButton.click();
+
+		await waitForAlert(page);
+
+		await editUserPage.membershipsLink.click();
+		await editUserPage.saveButton.click();
+
+		await waitForAlert(page);
+
+		await usersAndOrganizationsPage.goToUsers();
+		await (
+			await usersAndOrganizationsPage.usersTableRowLink(
+				userAccount.alternateName
+			)
+		).click();
+
+		await expect(editUserPage.tagInput(tags[0].name)).toBeVisible();
+		await expect(editUserPage.tagInput(tags[1].name)).toBeVisible();
+	}
+);
+
+test(
+	'Can search users in organizations',
+	{tag: '@LPD-50958'},
+	async ({apiHelpers, usersAndOrganizationsPage}) => {
+		const organization =
+			await apiHelpers.headlessAdminUser.postOrganization();
+
+		const userAccount =
+			await apiHelpers.headlessAdminUser.postUserAccount();
+
+		await apiHelpers.headlessAdminUser.assignUserToOrganizationByEmailAddress(
+			organization.id,
+			userAccount.emailAddress
+		);
+
+		apiHelpers.data.push({
+			id: `${organization.id}_${userAccount.emailAddress}`,
+			type: 'organizationUserAccountAssociation',
+		});
+
+		await usersAndOrganizationsPage.goToOrganizations();
+		await (
+			await usersAndOrganizationsPage.organizationsTableRowLink(
+				organization.name
+			)
+		).click();
+
+		await expect(
+			usersAndOrganizationsPage.organizationUsersTable
+		).toBeVisible();
+
+		await usersAndOrganizationsPage.usersSearchBar.fill(userAccount.name);
+		await usersAndOrganizationsPage.usersSearchBarButton.click();
+
+		await expect(
+			(
+				await usersAndOrganizationsPage.organizationUsersTableRow(
+					1,
+					userAccount.name,
+					true
+				)
+			).row
+		).toBeVisible();
+
+		await usersAndOrganizationsPage.usersSearchBar.fill('test');
+		await usersAndOrganizationsPage.usersSearchBarButton.click();
+
+		await expect(usersAndOrganizationsPage.noResultsMessage).toBeVisible();
+	}
+);
+
+test(
+	'Can assign multiple users to an organization',
+	{tag: '@LPD-50958'},
+	async ({apiHelpers, page, usersAndOrganizationsPage}) => {
+		const userAccounts: TUserAccount[] = [];
+
+		for (let i = 0; i < 5; i++) {
+			const user = await apiHelpers.headlessAdminUser.postUserAccount();
+			userAccounts.push(user);
+		}
+
+		const organization =
+			await apiHelpers.headlessAdminUser.postOrganization();
+
+		await usersAndOrganizationsPage.goToOrganizations();
+
+		await (
+			await usersAndOrganizationsPage.organizationActionsMenu(
+				organization.name
+			)
+		).click();
+		await usersAndOrganizationsPage.assignUsersMenuItem.click();
+
+		for (const user of userAccounts) {
+			await (
+				await usersAndOrganizationsPage.assignUsersCheckbox(user.name)
+			).check();
+		}
+
+		await usersAndOrganizationsPage.assignUsersDoneButton.click();
+
+		await waitForAlert(page);
+
+		for (const user of userAccounts) {
+			apiHelpers.data.push({
+				id: `${organization.id}_${user.emailAddress}`,
+				type: 'organizationUserAccountAssociation',
+			});
+
+			await expect(
+				(
+					await usersAndOrganizationsPage.organizationUsersTableRow(
+						1,
+						user.name,
+						true
+					)
+				).row
+			).toBeVisible();
+		}
+	}
+);
+
+test(
+	'Can change user password',
+	{tag: '@LPD-50958'},
+	async ({accountSettingsPage, apiHelpers, page}) => {
+		const user = await apiHelpers.headlessAdminUser.postUserAccount();
+
+		userData[user.alternateName] = {
+			name: user.givenName,
+			password: 'test',
+			surname: user.familyName,
+		};
+
+		await performLogout(page);
+		await performLoginViaApi(page, user.alternateName);
+
+		await accountSettingsPage.goToAccountSettings();
+		await accountSettingsPage.passwordMenuItem.click();
+		await accountSettingsPage.currentPasswordInput.fill('test');
+
+		const newPassword = getRandomString();
+
+		await accountSettingsPage.newPasswordInput.fill(newPassword);
+		await accountSettingsPage.reenterPasswordInput.fill(newPassword);
+		await accountSettingsPage.saveButton.click();
+
+		await waitForAlert(page);
+
+		userData[user.alternateName] = {
+			name: user.givenName,
+			password: newPassword,
+			surname: user.familyName,
+		};
+
+		await performLogout(page);
+		await performLoginViaApi(page, user.alternateName);
+
+		await expect(accountSettingsPage.userPersonalMenuButton).toBeVisible();
+	}
+);
+
+test(
+	'Change user password invalid',
+	{tag: '@LPD-50958'},
+	async ({accountSettingsPage, apiHelpers, page}) => {
+		const user = await apiHelpers.headlessAdminUser.postUserAccount();
+
+		userData[user.alternateName] = {
+			name: user.givenName,
+			password: 'test',
+			surname: user.familyName,
+		};
+
+		await performLogout(page);
+		await performLoginViaApi(page, user.alternateName);
+
+		await accountSettingsPage.goToAccountSettings();
+		await accountSettingsPage.passwordMenuItem.click();
+
+		await accountSettingsPage.newPasswordInput.fill('password');
+		await accountSettingsPage.reenterPasswordInput.fill('password');
+		await accountSettingsPage.saveButton.click();
+
+		await expect(
+			accountSettingsPage.passwordErrorMessage(
+				'The Current Password field is required.'
+			)
+		).toBeVisible();
+
+		await accountSettingsPage.currentPasswordInput.fill(getRandomString());
+		await accountSettingsPage.saveButton.click();
+
+		await expect(
+			accountSettingsPage.passwordErrorMessage(
+				'Error:The password you entered for the current password does not match your current password. Please try again.'
+			)
+		).toBeVisible();
+
+		await performLogout(page);
+		await performLoginViaApi(page, user.alternateName);
+
+		await expect(accountSettingsPage.userPersonalMenuButton).toBeVisible();
 	}
 );

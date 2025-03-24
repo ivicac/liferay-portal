@@ -15,10 +15,10 @@ export const FIELD_TYPES = [
 	'Text',
 	'Long Text',
 	'Rich Text',
-	'Integer',
 	'Decimal',
 	'Single Select',
 	'Multiselect',
+	'Numeric',
 	'Date',
 	'Date and Time',
 	'Boolean',
@@ -33,7 +33,7 @@ export class StructureBuilderPage {
 	private readonly labelInput: Locator;
 	private readonly nameInput: Locator;
 	private readonly publishButton: Locator;
-	private readonly saveButton: Locator;
+	readonly saveButton: Locator;
 
 	constructor(page: Page) {
 		this.page = page;
@@ -71,29 +71,79 @@ export class StructureBuilderPage {
 		});
 	}
 
-	async changeFieldSettings({name}: {name?: string}) {
-		if (name) {
-			await this.page.getByLabel('Field Name').fill(name);
+	async changeFieldSettings({
+		erc,
+		label,
+		localizable,
+		mandatory,
+		name,
+	}: {
+		erc?: string;
+		label?: string;
+		localizable?: boolean;
+		mandatory?: boolean;
+		name?: string;
+	}) {
+		if (erc !== undefined) {
+			const ercInput = this.page.getByLabel('ERC');
 
-			await this.page.getByRole('tab', {name: 'General'}).click();
+			await ercInput.fill(erc);
+			await ercInput.blur();
+		}
+
+		if (name !== undefined) {
+			const fieldNameInput = this.page.getByLabel('Field Name');
+
+			await fieldNameInput.fill(name);
+			await fieldNameInput.blur();
+		}
+
+		if (label !== undefined) {
+			const labelInput = this.page.getByLabel('Label');
+
+			await labelInput.fill(label);
+			await labelInput.blur();
+		}
+
+		const localizableToggle = this.page.getByLabel('Localizable');
+
+		if (
+			localizable !== undefined &&
+			!(await localizableToggle.isChecked())
+		) {
+			await this.page.getByLabel('Localizable').click();
+		}
+
+		const mandatoryToggle = this.page.getByLabel('Mandatory');
+
+		if (mandatory !== undefined && !(await mandatoryToggle.isChecked())) {
+			await this.page.getByLabel('Mandatory').click();
 		}
 	}
 
 	async changeStructureSettings({
+		erc,
 		label,
 		name,
 	}: {
+		erc?: string;
 		label?: string;
 		name?: string;
 	}) {
-		if (label) {
-			await this.labelInput.fill(label);
-			await this.page.getByRole('tab', {name: 'General'}).click();
+		if (erc !== undefined) {
+			const ercInput = this.page.getByLabel('ERC');
+			await ercInput.fill(erc);
+			await ercInput.blur();
 		}
 
-		if (name) {
+		if (label !== undefined) {
+			await this.labelInput.fill(label);
+			await this.labelInput.blur();
+		}
+
+		if (name !== undefined) {
 			await this.nameInput.fill(name);
-			await this.page.getByRole('tab', {name: 'General'}).click();
+			await this.nameInput.blur();
 		}
 	}
 
@@ -138,18 +188,32 @@ export class StructureBuilderPage {
 	}
 
 	async publishStructure() {
-		await this.publishButton.click();
+		const publish = async () => {
+			await this.publishButton.click();
 
-		await waitForAlert(this.page, 'published successfully', {
-			timeout: 1000,
-		});
+			await waitForAlert(this.page, 'published successfully', {
+				timeout: 5000,
+			});
+		};
+
+		const [response] = await Promise.all([
+			this.page.waitForResponse(
+				(response) =>
+					response.url().includes('object-definitions') &&
+					response.status() === 200,
+				{timeout: 5000}
+			),
+			await publish(),
+		]);
+
+		return await response.json();
 	}
 
 	async saveStructure() {
 		const save = async () => {
 			await this.saveButton.click();
 
-			await waitForAlert(this.page, 'successfully', {timeout: 1000});
+			await waitForAlert(this.page, 'successfully', {timeout: 5000});
 		};
 
 		const [response] = await Promise.all([
@@ -162,12 +226,10 @@ export class StructureBuilderPage {
 			await save(),
 		]);
 
-		const {id} = await response.json();
-
-		return {id};
+		return await response.json();
 	}
 
-	async selectField({label, nth}: {label: string; nth?: number}) {
+	async selectField({label, nth = 0}: {label: string; nth?: number}) {
 		await clickAndExpectToBeVisible({
 			target: this.page.locator('.breadcrumb-link', {hasText: label}),
 			trigger: this.page

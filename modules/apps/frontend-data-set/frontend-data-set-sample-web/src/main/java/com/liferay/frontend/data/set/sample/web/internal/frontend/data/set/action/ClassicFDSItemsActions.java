@@ -40,7 +40,25 @@ public class ClassicFDSItemsActions implements FDSItemsActions {
 			new FDSActionDropdownItem(
 				null, null, null, "#", "archive", "navigateToArchive",
 				_language.get(httpServletRequest, "job-archive"), null, null,
-				null, null, null, "link", null, "item"));
+				null, null, null, "link", null, "item"),
+			new FDSActionDropdownItem(
+				null, null, null, "#", "cog", "deactivate",
+				_language.get(httpServletRequest, "deactivate"), null, null,
+				null, null, null, "link", null, "item",
+				new String[] {"active", Boolean.TRUE.toString()}),
+			new FDSActionDropdownItem(
+				null, null, null, "#", "cog", "activate",
+				_language.get(httpServletRequest, "activate"), null, null, null,
+				null, null, "link", null, "item",
+				new String[] {"active", Boolean.FALSE.toString()}),
+			new FDSActionDropdownItem(
+				null, null, null, "#", "cog", "activity",
+				_language.get(httpServletRequest, "activity"), null, null, null,
+				null, null, "link", null, "item",
+				new String[] {
+					"active", Boolean.TRUE.toString(), "emailAddress",
+					"manager.user@liferay.com"
+				}));
 	}
 
 	@Override

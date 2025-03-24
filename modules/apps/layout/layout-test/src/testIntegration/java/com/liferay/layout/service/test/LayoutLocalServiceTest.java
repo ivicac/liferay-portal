@@ -572,7 +572,7 @@ public class LayoutLocalServiceTest {
 				"fragment-entry-key", RandomTestUtil.randomString(),
 				StringPool.BLANK, "<div>" + keyword + "</div>",
 				StringPool.BLANK, false, StringPool.BLANK, null, 0, false,
-				FragmentConstants.TYPE_COMPONENT, null,
+				false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		Layout draftLayout = layout.fetchDraftLayout();

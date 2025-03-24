@@ -5,6 +5,7 @@
 
 import buildObjectDefinition from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/buildObjectDefinition';
 import {Field} from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/field';
+import getUuid from '../../../../src/main/resources/META-INF/resources/js/structure_builder/utils/getUuid';
 
 const DATE_TIME_FIELD: Field = {
 	erc: 'datetime-field',
@@ -17,6 +18,7 @@ const DATE_TIME_FIELD: Field = {
 		timeStorage: 'convertToUTC',
 	},
 	type: 'datetime',
+	uuid: getUuid(),
 };
 
 const TEXT_FIELD: Field = {
@@ -26,8 +28,20 @@ const TEXT_FIELD: Field = {
 	localized: false,
 	name: 'textField',
 	required: true,
+	settings: {},
 	type: 'text',
+	uuid: getUuid(),
 };
+
+jest.mock(
+	'../../../../src/main/resources/META-INF/resources/js/structure_builder/config',
+	() => ({
+		config: {
+			acceptedGroupExternalReferenceCodes:
+				'acceptedGroupExternalReferenceCodesConfig',
+		},
+	})
+);
 
 describe('buildObjectDefinition', () => {
 	it('Builds objectDefinition with a field without settings', () => {
@@ -37,9 +51,12 @@ describe('buildObjectDefinition', () => {
 			id: 1,
 			label: {en_US: 'Structure'},
 			name: 'myStructure',
+			spaces: [],
 		});
 
 		expect(result).toEqual({
+			enableIndexSearch: true,
+			enableLocalization: true,
 			enableObjectEntryDraft: true,
 			externalReferenceCode: 'structureERC',
 			id: 1,
@@ -56,11 +73,12 @@ describe('buildObjectDefinition', () => {
 					label: {en_US: 'Text Field'},
 					localized: false,
 					name: 'textField',
+					objectFieldSettings: [],
 					required: true,
 				},
 			],
 			pluralLabel: {en_US: 'Structure'},
-			scope: 'site',
+			scope: 'depot',
 		});
 	});
 
@@ -71,9 +89,12 @@ describe('buildObjectDefinition', () => {
 			id: 1,
 			label: {en_US: 'Structure'},
 			name: 'myStructure',
+			spaces: [],
 		});
 
 		expect(result).toEqual({
+			enableIndexSearch: true,
+			enableLocalization: true,
 			enableObjectEntryDraft: true,
 			externalReferenceCode: 'structureERC',
 			id: 1,
@@ -95,7 +116,51 @@ describe('buildObjectDefinition', () => {
 				},
 			],
 			pluralLabel: {en_US: 'Structure'},
-			scope: 'site',
+			scope: 'depot',
+		});
+	});
+
+	it('Builds objectDefinition with spaces selected', () => {
+		const result = buildObjectDefinition({
+			erc: 'structureERC',
+			fields: [TEXT_FIELD],
+			id: 1,
+			label: {en_US: 'Structure'},
+			name: 'myStructure',
+			spaces: ['space-1-erc', 'space-2-erc'],
+		});
+
+		expect(result).toEqual({
+			enableIndexSearch: true,
+			enableLocalization: true,
+			enableObjectEntryDraft: true,
+			externalReferenceCode: 'structureERC',
+			id: 1,
+			label: {en_US: 'Structure'},
+			name: 'myStructure',
+			objectDefinitionSettings: [
+				{
+					name: 'acceptedGroupExternalReferenceCodes',
+					value: 'space-1-erc,space-2-erc',
+				},
+			],
+			objectFields: [
+				{
+					DBType: 'String',
+					businessType: 'Text',
+					externalReferenceCode: 'text-field',
+					indexed: true,
+					indexedAsKeyword: true,
+					indexedLanguageId: '',
+					label: {en_US: 'Text Field'},
+					localized: false,
+					name: 'textField',
+					objectFieldSettings: [],
+					required: true,
+				},
+			],
+			pluralLabel: {en_US: 'Structure'},
+			scope: 'depot',
 		});
 	});
 });

@@ -34,6 +34,7 @@
 		<column name="street1" type="String" />
 		<column name="street2" type="String" />
 		<column name="street3" type="String" />
+		<column name="subtype" type="String" />
 		<column name="validationDate" type="Date" />
 		<column name="validationStatus" type="int" />
 		<column name="zip" type="String" />
@@ -1360,10 +1361,6 @@
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
-		<finder name="C_DP" return-type="PasswordPolicy">
-			<finder-column name="companyId" />
-			<finder-column name="defaultPolicy" />
-		</finder>
 		<finder name="C_N" return-type="PasswordPolicy" unique="true">
 			<finder-column name="companyId" />
 			<finder-column name="name" />
@@ -2195,6 +2192,7 @@
 		<column localized="true" name="description" type="String" />
 		<column name="type" type="int" />
 		<column name="subtype" type="String" />
+		<column name="status" type="int" />
 
 		<!-- Relationships -->
 
@@ -3149,7 +3147,7 @@
 			<finder-column name="classNameId" />
 			<finder-column name="classPK" />
 		</finder>
-		<finder name="G_C_C_C_T" return-type="WorkflowDefinitionLink">
+		<finder name="G_C_C_C_T" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="companyId" />
 			<finder-column name="classNameId" />

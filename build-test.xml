@@ -700,7 +700,6 @@ module.framework.properties.osgi.console=11312</echo>
 
 							pg_dump \
 								--dbname=lportal \
-								--username=${database.postgresql.username} \
 								--encoding=UTF8 \
 								--exclude-table=^L_[0-9]+_* \
 								--exclude-table=^l_[0-9]+_* \
@@ -712,7 +711,8 @@ module.framework.properties.osgi.console=11312</echo>
 								--no-subscriptions \
 								--no-unlogged-table-data \
 								--schema==${database.schema.name} \
-								--schema-only
+								--schema-only \
+								--username=${database.postgresql.username}
 								> ${docker.src.file.path}
 						]]>
 					</echo>
@@ -2918,6 +2918,9 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 								/>
 							</not>
 							<then>
+								<var name="security.line" unless:blank="${database.password}" value="&lt;security user-name=&quot;${database.username}&quot; password=&quot;${database.password}&quot; /&gt;" />
+								<var if:blank="${database.password}" name="security.line" value="&lt;security user-name=&quot;${database.username}&quot; /&gt;" />
+
 								<replace
 									file="${app.server.dir}/standalone/configuration/standalone.xml"
 								>
@@ -2928,10 +2931,7 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 														<datasource jndi-name="java:/jdbc/LiferayPool" pool-name="LiferayPool" enabled="true" jta="true" use-java-context="true" use-ccm="true">
 															<connection-url>${database.url}</connection-url>
 															<driver>${database.type}</driver>
-															<security>
-																<user-name>${database.username}</user-name>
-																<password>${database.password}</password>
-															</security>
+															${security.line}
 														</datasource>
 												]]>
 									</replacevalue>
@@ -6954,7 +6954,7 @@ log.sanitizer.enabled=false</echo>
 					</then>
 				</elseif>
 				<else>
-					<var name="app.server.tomcat.version" value="9.0.98" />
+					<var name="app.server.tomcat.version" value="9.0.102" />
 				</else>
 			</if>
 
@@ -8873,7 +8873,37 @@ war.path=${app.server.portal.dir}/</echo>
 			</if>
 
 			<echo file="validate_db_upgrade_schemas.sh">
-diff -B --new-line-format='%L' --old-line-format= --unchanged-line-format= ${selenium.output.dir.name}/upgraded-@{upgraded.db.schema}.sql ${selenium.output.dir.name}/fresh-@{fresh.db.schema}.sql || true
+				<![CDATA[
+					#!/bin/bash
+
+					function main {
+						grep -i "CREATE TABLE" "${selenium.output.dir.name}/fresh-@{fresh.db.schema}.sql" | awk '{print $3}' | tr -d '`' > ${selenium.output.dir.name}/tables-fresh.txt
+
+						local upgraded_sql_file="${selenium.output.dir.name}/upgraded-@{upgraded.db.schema}.sql"
+
+						grep -i "CREATE TABLE" "${upgraded_sql_file}" | awk '{print $3}' | tr -d '`' > ${selenium.output.dir.name}/tables-upgraded.txt
+
+						grep -Fxvf ${selenium.output.dir.name}/tables-fresh.txt ${selenium.output.dir.name}/tables-upgraded.txt > ${selenium.output.dir.name}/tables-to-remove.txt
+
+						#
+						# Remove SQL statements for tables that are only present in the upgraded SQL file
+						#
+
+						while read -r table; do
+							sed -i "/^CREATE TABLE \`$table\`/,/ENDCREATE/d" "${upgraded_sql_file}"
+							sed -i "/^CREATE TABLE public.$table/,/^);/d" "${upgraded_sql_file}"
+							sed -i "/^CREATE INDEX.*$TABLE/d" "${upgraded_sql_file}"
+							sed -i "/^CREATE UNIQUE INDEX.*$TABLE/d" "${upgraded_sql_file}"
+							sed -i "/^ALTER TABLE ONLY public\.$table/,/^);/d" "${upgraded_sql_file}"
+							sed -i "/^CREATE RULE update_$table/,/);$/d" "${upgraded_sql_file}"
+							sed -i "/^CREATE RULE delete_$table/,/);$/d" "${upgraded_sql_file}"
+						done < ${selenium.output.dir.name}/tables-to-remove.txt
+
+						diff -B -W250 -y ${selenium.output.dir.name}/upgraded-@{upgraded.db.schema}.sql ${selenium.output.dir.name}/fresh-@{fresh.db.schema}.sql | expand | grep -C5 -E '^.{123} [|><]( |$)' || true
+					}
+
+					main
+				]]>
 			</echo>
 
 			<chmod
@@ -8883,27 +8913,18 @@ diff -B --new-line-format='%L' --old-line-format= --unchanged-line-format= ${sel
 
 			<exec executable="./validate_db_upgrade_schemas.sh" outputproperty="database.changes.master" />
 
+			<delete failonerror="false" file="${selenium.output.dir.name}/tables-fresh.txt" />
+			<delete failonerror="false" file="${selenium.output.dir.name}/tables-to-remove.txt" />
+			<delete failonerror="false" file="${selenium.output.dir.name}/tables-upgraded.txt" />
+
 			<if>
 				<not>
 					<equals arg1="${database.changes.master}" arg2="" />
 				</not>
 				<then>
 					<echo file="${selenium.output.dir.name}/@{upgraded.db.schema}-@{fresh.db.schema}-validate-db-schemas.txt">
-Upgraded database is missing the following elements from a fresh database: ${line.separator}${database.changes.master}
-
-diff:${line.separator}${selenium.output.dir.name}/upgraded-@{upgraded.db.schema}.sql > ${selenium.output.dir.name}/fresh-@{fresh.db.schema}.sql
+						Fresh and upgraded schemas differ: ${line.separator}${database.changes.master}
 					</echo>
-
-					<echo file="validate_db_upgrade_schemas.sh">
-diff -y -B -W250 ${selenium.output.dir.name}/upgraded-@{upgraded.db.schema}.sql ${selenium.output.dir.name}/fresh-@{fresh.db.schema}.sql | expand | grep -E -C40 '^.{123} [|>]( |$)'
-					</echo>
-
-					<chmod
-						file="validate_db_upgrade_schemas.sh"
-						perm="a+x"
-					/>
-
-					<exec append="true" executable="./validate_db_upgrade_schemas.sh" output="${selenium.output.dir.name}/@{upgraded.db.schema}-@{fresh.db.schema}-validate-db-schemas.txt" />
 				</then>
 				<else>
 					<echo file="${selenium.output.dir.name}/@{upgraded.db.schema}-@{fresh.db.schema}-validate-db-schemas.txt">Database schemas match</echo>
@@ -9704,29 +9725,11 @@ go</echo>
 	</target>
 
 	<target name="cluster-session-replication">
-		<if>
-			<not>
-				<resourcecontains
-					resource="${app.server.tomcat.dir}/webapps/ROOT/WEB-INF/classes/logging.properties"
-					substring="org.apache.catalina.ha.session.handlers"
-				/>
-			</not>
-			<then>
-				<echo append="true" file="${app.server.tomcat.dir}/webapps/ROOT/WEB-INF/classes/logging.properties">
-			<![CDATA[
-org.apache.catalina.ha.session.handlers=java.util.logging.ConsoleHandler
-org.apache.catalina.ha.session.level=INFO]]>
-				</echo>
-			</then>
-		</if>
-
 		<replace
-			failOnNoReplacements="true"
-			file="${app.server.tomcat.dir}/webapps/ROOT/WEB-INF/web.xml"
+			file="${app.server.tomcat.dir}/conf/context.xml"
 		>
-			<replacetoken><![CDATA[xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">]]></replacetoken>
-			<replacevalue><![CDATA[xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
-	<distributable />]]></replacevalue>
+			<replacetoken><![CDATA[    <Manager pathname="SESSIONS.ser" />]]></replacetoken>
+			<replacevalue><![CDATA[]]></replacevalue>
 		</replace>
 
 		<echo append="true" file="${app.server.tomcat.dir}/conf/logging.properties">
@@ -9771,6 +9774,31 @@ org.apache.catalina.tribes.level = FINE]]>
 			</Sender>
 		</Channel>
 	</Cluster>]]></replacevalue>
+		</replace>
+
+		<if>
+			<not>
+				<resourcecontains
+					resource="${app.server.tomcat.dir}/webapps/ROOT/WEB-INF/classes/logging.properties"
+					substring="org.apache.catalina.ha.session.handlers"
+				/>
+			</not>
+			<then>
+				<echo append="true" file="${app.server.tomcat.dir}/webapps/ROOT/WEB-INF/classes/logging.properties">
+			<![CDATA[
+org.apache.catalina.ha.session.handlers=java.util.logging.ConsoleHandler
+org.apache.catalina.ha.session.level=INFO]]>
+				</echo>
+			</then>
+		</if>
+
+		<replace
+			failOnNoReplacements="true"
+			file="${app.server.tomcat.dir}/webapps/ROOT/WEB-INF/web.xml"
+		>
+			<replacetoken><![CDATA[xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">]]></replacetoken>
+			<replacevalue><![CDATA[xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+	<distributable />]]></replacevalue>
 		</replace>
 	</target>
 
@@ -10916,17 +10944,46 @@ send_user $expect_out(buffer)]]></echo>
 		<get-test-app-server-lib-portal-dir />
 
 		<if>
-			<equals arg1="${database.type}" arg2="mysql" />
+			<not>
+				<isset property="custom.database.url" />
+			</not>
 			<then>
-				<sql autocommit="${sql.autocommit}" classpath="${test.app.server.lib.portal.dir}/${jdbc.mysql.driver}" driver="${database.mysql.driver}" onerror="continue" output="${sql.output.file}" password="${database.mysql.password}" print="true" showheaders="false" showtrailers="false" src="${sql.input.file}" url="${database.mysql.url}" userid="${database.mysql.username}" />
+				<get-testcase-property property.name="custom.database.url" />
 			</then>
 		</if>
 
 		<if>
-			<equals arg1="${database.type}" arg2="postgresql" />
+			<isset property="custom.database.url" />
 			<then>
-				<sql autocommit="${sql.autocommit}" classpath="${test.app.server.lib.portal.dir}/${jdbc.postgresql.driver}" driver="${database.postgresql.driver}" onerror="continue" output="${sql.output.file}" password="${database.postgresql.password}" print="true" showheaders="false" showtrailers="false" src="${sql.input.file}" url="${database.postgresql.url}" userid="${database.postgresql.username}" />
+				<if>
+					<equals arg1="${database.type}" arg2="mysql" />
+					<then>
+						<sql autocommit="${sql.autocommit}" classpath="${test.app.server.lib.portal.dir}/${jdbc.mysql.driver}" driver="${database.mysql.driver}" onerror="continue" output="${sql.output.file}" password="${database.mysql.password}" print="true" showheaders="false" showtrailers="false" src="${sql.input.file}" url="${custom.database.url}" userid="${database.mysql.username}" />
+					</then>
+				</if>
+
+				<if>
+					<equals arg1="${database.type}" arg2="postgresql" />
+					<then>
+						<sql autocommit="${sql.autocommit}" classpath="${test.app.server.lib.portal.dir}/${jdbc.postgresql.driver}" driver="${database.postgresql.driver}" onerror="continue" output="${sql.output.file}" password="${database.postgresql.password}" print="true" showheaders="false" showtrailers="false" src="${sql.input.file}" url="${custom.database.url}" userid="${database.postgresql.username}" />
+					</then>
+				</if>
 			</then>
+			<else>
+				<if>
+					<equals arg1="${database.type}" arg2="mysql" />
+					<then>
+						<sql autocommit="${sql.autocommit}" classpath="${test.app.server.lib.portal.dir}/${jdbc.mysql.driver}" driver="${database.mysql.driver}" onerror="continue" output="${sql.output.file}" password="${database.mysql.password}" print="true" showheaders="false" showtrailers="false" src="${sql.input.file}" url="${database.mysql.url}" userid="${database.mysql.username}" />
+					</then>
+				</if>
+
+				<if>
+					<equals arg1="${database.type}" arg2="postgresql" />
+					<then>
+						<sql autocommit="${sql.autocommit}" classpath="${test.app.server.lib.portal.dir}/${jdbc.postgresql.driver}" driver="${database.postgresql.driver}" onerror="continue" output="${sql.output.file}" password="${database.postgresql.password}" print="true" showheaders="false" showtrailers="false" src="${sql.input.file}" url="${database.postgresql.url}" userid="${database.postgresql.username}" />
+					</then>
+				</if>
+			</else>
 		</if>
 	</target>
 
@@ -11852,7 +11909,7 @@ ${update.properties}</echo>
 		<echo file="${liferay.home}/osgi/log4j/com.liferay.portal.cache.ehcache.impl-log4j-ext.xml"><![CDATA[<?xml version="1.0"?>
 <Configuration strict="true">
 	<Loggers>
-		<Logger level="DEBUG" name="com.liferay.portal.cache.ehcache.internal.event.PortalCacheCacheEventListener.test.cache" />
+		<Logger level="DEBUG" name="com.liferay.portal.cache.ehcache.internal.events.PortalCacheCacheEventListener.test.cache" />
 	</Loggers>
 </Configuration>]]></echo>
 

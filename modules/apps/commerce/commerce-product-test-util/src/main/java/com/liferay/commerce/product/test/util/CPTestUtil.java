@@ -574,6 +574,19 @@ public class CPTestUtil {
 		return cpInstance;
 	}
 
+	public static CPInstance addCPInstanceFromCatalogWithoutCommercePriceEntry(
+			long groupId, BigDecimal price, BigDecimal promoPrice, String sku)
+		throws PortalException {
+
+		CPInstance cpInstance = addCPInstanceFromCatalog(groupId);
+
+		cpInstance.setSku(sku);
+		cpInstance.setPrice(price);
+		cpInstance.setPromoPrice(promoPrice);
+
+		return CPInstanceLocalServiceUtil.updateCPInstance(cpInstance);
+	}
+
 	public static CPInstanceUnitOfMeasure addCPInstanceUnitOfMeasure(
 			long groupId, long cpInstanceId, String key,
 			BigDecimal incrementalOrderQuantity, String sku)
@@ -752,7 +765,7 @@ public class CPTestUtil {
 			RandomTestUtil.randomString(), serviceContext.getUserId(), 0, null,
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(), facetable,
-			RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomDouble(), true,
 			serviceContext);
 	}
 

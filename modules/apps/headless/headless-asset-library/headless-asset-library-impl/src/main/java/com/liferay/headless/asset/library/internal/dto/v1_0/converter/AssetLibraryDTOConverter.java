@@ -6,22 +6,25 @@
 package com.liferay.headless.asset.library.internal.dto.v1_0.converter;
 
 import com.liferay.depot.model.DepotEntry;
-import com.liferay.depot.model.DepotEntryGroupRel;
-import com.liferay.depot.service.DepotEntryGroupRelLocalService;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.headless.asset.library.dto.v1_0.AssetLibrary;
+import com.liferay.headless.asset.library.dto.v1_0.MimeTypeLimit;
+import com.liferay.headless.asset.library.dto.v1_0.Settings;
 import com.liferay.headless.asset.library.internal.resource.v1_0.BaseAssetLibraryResourceImpl;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
-import com.liferay.portal.vulcan.util.GroupUtil;
+import com.liferay.portal.vulcan.fields.NestedFieldsSupplier;
 import com.liferay.portal.vulcan.util.JaxRsLinkUtil;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.UriInfo;
 
@@ -46,7 +49,7 @@ public class AssetLibraryDTOConverter
 	@Override
 	public String getJaxRsLink(long classPK, UriInfo uriInfo) {
 		return JaxRsLinkUtil.getJaxRsLink(
-			"headless-delivery", BaseAssetLibraryResourceImpl.class,
+			"headless-asset-library", BaseAssetLibraryResourceImpl.class,
 			"getAssetLibrary", uriInfo, classPK);
 	}
 
@@ -54,14 +57,21 @@ public class AssetLibraryDTOConverter
 	public AssetLibrary toDTO(DTOConverterContext dtoConverterContext)
 		throws Exception {
 
-		DepotEntry depotEntry = _depotEntryLocalService.getGroupDepotEntry(
-			(Long)dtoConverterContext.getId());
+		return toDTO(
+			dtoConverterContext,
+			_depotEntryLocalService.getGroupDepotEntry(
+				(Long)dtoConverterContext.getId()));
+	}
+
+	@Override
+	public AssetLibrary toDTO(
+			DTOConverterContext dtoConverterContext, DepotEntry depotEntry)
+		throws Exception {
 
 		Group group = depotEntry.getGroup();
 
 		return new AssetLibrary() {
 			{
-				setAssetLibraryKey(() -> GroupUtil.getAssetLibraryKey(group));
 				setDateCreated(depotEntry::getCreateDate);
 				setDateModified(depotEntry::getModifiedDate);
 				setDescription(
@@ -72,67 +82,85 @@ public class AssetLibraryDTOConverter
 						dtoConverterContext.isAcceptAllLanguages(),
 						group.getDescriptionMap()));
 				setExternalReferenceCode(group::getExternalReferenceCode);
-				setId(depotEntry::getDepotEntryId);
-				setLinkedSiteIds(
-					() -> {
-						List<DepotEntryGroupRel> depotEntryGroupRels =
-							_depotEntryGroupRelLocalService.
-								getDepotEntryGroupRels(depotEntry);
-
-						List<Long> toGroupIds = new ArrayList<>(
-							depotEntryGroupRels.size());
-
-						for (DepotEntryGroupRel depotEntryGroupRel :
-								depotEntryGroupRels) {
-
-							toGroupIds.add(depotEntryGroupRel.getToGroupId());
-						}
-
-						return toGroupIds.toArray(new Long[0]);
-					});
-				setLinkedSitesExternalReferenceCodes(
-					() -> {
-						List<DepotEntryGroupRel> depotEntryGroupRels =
-							_depotEntryGroupRelLocalService.
-								getDepotEntryGroupRels(depotEntry);
-
-						List<String> toGroupExternalReferenceCodes =
-							new ArrayList<>(depotEntryGroupRels.size());
-
-						for (DepotEntryGroupRel depotEntryGroupRel :
-								depotEntryGroupRels) {
-
-							Group toGroup = _groupLocalService.getGroup(
-								depotEntryGroupRel.getToGroupId());
-
-							toGroupExternalReferenceCodes.add(
-								toGroup.getExternalReferenceCode());
-						}
-
-						return toGroupExternalReferenceCodes.toArray(
-							new String[0]);
-					});
+				setId(group::getGroupId);
 				setName(() -> group.getName(dtoConverterContext.getLocale()));
 				setName_i18n(
 					() -> LocalizedMapUtil.getI18nMap(
 						dtoConverterContext.isAcceptAllLanguages(),
 						group.getNameMap()));
-				setSiteId(group::getGroupId);
-				setUsersCount(
-					() -> _userLocalService.getGroupUsersCount(
-						group.getGroupId()));
+				setNumberOfUserAccounts(
+					() -> NestedFieldsSupplier.supply(
+						"numberOfUserAccounts",
+						nestedField -> _userLocalService.getGroupUsersCount(
+							group.getGroupId())));
+				setNumberOfUserGroups(
+					() -> NestedFieldsSupplier.supply(
+						"numberOfUserGroups",
+						nestedField ->
+							_userGroupLocalService.getGroupUserGroupsCount(
+								group.getGroupId())));
+				setSettings(
+					() -> NestedFieldsSupplier.supply(
+						"settings", nestedField -> _toSettings(group)));
+			}
+		};
+	}
+
+	private MimeTypeLimit[] _toMimeTypeLimits(
+		UnicodeProperties unicodeProperties) {
+
+		List<MimeTypeLimit> mimeTypeLimits = new ArrayList<>();
+
+		for (Map.Entry<String, String> entry : unicodeProperties.entrySet()) {
+			String key = entry.getKey();
+
+			if (!key.startsWith("mimeTypeLimit-")) {
+				continue;
+			}
+
+			mimeTypeLimits.add(
+				new MimeTypeLimit() {
+					{
+						setMaximumSize(
+							() -> GetterUtil.getInteger(entry.getValue()));
+						setMimeType(
+							() -> key.substring("mimeTypeLimit-".length()));
+					}
+				});
+		}
+
+		return mimeTypeLimits.toArray(new MimeTypeLimit[0]);
+	}
+
+	private Settings _toSettings(Group group) {
+		UnicodeProperties unicodeProperties = group.getTypeSettingsProperties();
+
+		return new Settings() {
+			{
+				setAutoTaggingEnabled(
+					() -> GetterUtil.getBoolean(
+						unicodeProperties.get("autoTaggingEnabled")));
+				setAvailableLanguageIds(group::getAvailableLanguageIds);
+				setDefaultLanguageId(group::getDefaultLanguageId);
+				setLogoColor(
+					() -> GetterUtil.get(
+						unicodeProperties.get("logoColor"), "color-0"));
+				setMimeTypeLimits(() -> _toMimeTypeLimits(unicodeProperties));
+				setSharingEnabled(
+					() -> GetterUtil.getBoolean(
+						unicodeProperties.get("sharingEnabled")));
+				setUseCustomLanguages(
+					() -> GetterUtil.getBoolean(
+						unicodeProperties.get("useCustomLanguages")));
 			}
 		};
 	}
 
 	@Reference
-	private DepotEntryGroupRelLocalService _depotEntryGroupRelLocalService;
-
-	@Reference
 	private DepotEntryLocalService _depotEntryLocalService;
 
 	@Reference
-	private GroupLocalService _groupLocalService;
+	private UserGroupLocalService _userGroupLocalService;
 
 	@Reference
 	private UserLocalService _userLocalService;

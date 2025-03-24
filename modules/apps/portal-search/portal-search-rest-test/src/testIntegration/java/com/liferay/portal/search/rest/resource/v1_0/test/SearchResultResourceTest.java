@@ -391,6 +391,11 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 	}
 
 	@Override
+	protected String[] getIgnoredEntityFieldNames() {
+		return _IGNORED_ENTITY_FIELD_NAMES;
+	}
+
+	@Override
 	protected com.liferay.portal.search.rest.client.dto.v1_0.SearchResult
 			testGetSearchPage_addSearchResult(
 				com.liferay.portal.search.rest.client.dto.v1_0.SearchResult
@@ -1394,6 +1399,10 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 				jsonObject.getInt("page"), jsonObject.getInt("pageSize")),
 			jsonObject.getLong("totalCount"));
 	}
+
+	private static final String[] _IGNORED_ENTITY_FIELD_NAMES = {
+		"cmsSection", "folderId", "objectFolderExternalReferenceCode"
+	};
 
 	@Inject
 	private static DTOConverterRegistry _dtoConverterRegistry;

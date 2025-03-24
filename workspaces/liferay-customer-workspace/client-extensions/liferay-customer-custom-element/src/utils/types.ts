@@ -28,17 +28,53 @@ export interface IAccountSubscriptionGroup {
 }
 
 export interface IBusinessEvent {
+	actualGoLiveDate?: string;
+	actualGoLiveDateTime?: string;
+	actualGoLiveTime?: string;
 	associatedTickets?: any;
-	currentLiferayVersion?: string;
+	currentLiferayVersion?: {
+		key: string;
+		name: string;
+	};
+	dateModified?: string;
+	description?: string;
 	details?: string;
-	eventStatus?: string;
-	eventType?: string;
+	eventStatus?: {
+		key: string;
+		name: string;
+	};
+	eventType?: {
+		key: string;
+		name: string;
+	};
 	id?: number;
 	name?: string;
-	newLiferayVersion?: string;
+	newLiferayVersion?: {
+		key: string;
+		name: string;
+	};
+	r_accountEntryToBusinessEvents_accountEntryId?: number;
 	targetGoLiveDate?: string;
-	targetGoLiveDateTime?: Date | string;
+	targetGoLiveDateTime?: string;
 	targetGoLiveTime?: string;
+	timeZone?: {
+		key: string;
+		name: string;
+	};
+}
+
+export interface IBusinessEventVersion {
+	change?: {
+		key: string;
+		name: string;
+	};
+	comment?: string;
+	creator?: {
+		name: string;
+	};
+	dateModified?: string;
+	r_accountEntryToBusinessEventVersions_accountEntryId?: number;
+	r_businessEventtoBusinesssEventVersions_c_businessEventId?: number;
 }
 
 export interface IKoroneikiAccount {
@@ -64,6 +100,12 @@ export interface IKoroneikiAccount {
 	status: string;
 }
 
+export interface IOption {
+	disabled?: boolean;
+	label: string;
+	value: string | number;
+}
+
 export interface IOrganizationBrief {
 	name: string;
 }
@@ -87,11 +129,17 @@ export interface IRoleBrief {
 	name: string;
 }
 
+export interface ITimeInput {
+	hours: string;
+	minutes: string;
+}
+
 export interface IUserAccount {
 	accountBriefs?: IAccountBrief[];
 	accountKey?: string;
 	code?: string;
 	email?: string;
+	emailAddress?: string;
 	familyName?: string;
 	firstName?: string;
 	givenName?: string;

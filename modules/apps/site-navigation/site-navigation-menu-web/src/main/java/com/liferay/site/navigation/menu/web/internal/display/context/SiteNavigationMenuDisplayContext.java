@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -27,8 +28,8 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.display.template.PortletDisplayTemplate;
 import com.liferay.site.navigation.constants.SiteNavigationConstants;
-import com.liferay.site.navigation.item.selector.criterion.SiteNavigationMenuItemItemSelectorCriterion;
-import com.liferay.site.navigation.item.selector.criterion.SiteNavigationMenuItemSelectorCriterion;
+import com.liferay.site.navigation.item.selector.SiteNavigationMenuItemItemSelectorCriterion;
+import com.liferay.site.navigation.item.selector.SiteNavigationMenuItemSelectorCriterion;
 import com.liferay.site.navigation.menu.web.internal.configuration.SiteNavigationMenuPortletInstanceConfiguration;
 import com.liferay.site.navigation.menu.web.internal.constants.SiteNavigationMenuWebKeys;
 import com.liferay.site.navigation.model.SiteNavigationMenu;
@@ -202,18 +203,38 @@ public class SiteNavigationMenuDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		SiteNavigationMenuItem siteNavigationMenuItem =
-			SiteNavigationMenuItemLocalServiceUtil.
-				fetchSiteNavigationMenuItemByExternalReferenceCode(
-					rootMenuItemExternalReferenceCode,
-					_getSiteNavigationMenuGroupId());
+		if (isSiteNavigationMenuSelected()) {
+			SiteNavigationMenuItem siteNavigationMenuItem =
+				SiteNavigationMenuItemLocalServiceUtil.
+					fetchSiteNavigationMenuItemByExternalReferenceCode(
+						rootMenuItemExternalReferenceCode,
+						_getSiteNavigationMenuGroupId());
 
-		if (siteNavigationMenuItem == null) {
-			return StringPool.BLANK;
+			if (siteNavigationMenuItem == null) {
+				return StringPool.BLANK;
+			}
+
+			_rootMenuItemId = String.valueOf(
+				siteNavigationMenuItem.getSiteNavigationMenuItemId());
 		}
+		else {
+			Layout rootLayout =
+				LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
+					rootMenuItemExternalReferenceCode,
+					_themeDisplay.getScopeGroupId(), false);
 
-		_rootMenuItemId = String.valueOf(
-			siteNavigationMenuItem.getSiteNavigationMenuItemId());
+			if (rootLayout == null) {
+				rootLayout = LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
+					rootMenuItemExternalReferenceCode,
+					_themeDisplay.getScopeGroupId(), true);
+			}
+
+			if (rootLayout == null) {
+				return StringPool.BLANK;
+			}
+
+			_rootMenuItemId = rootMenuItemExternalReferenceCode;
+		}
 
 		return _rootMenuItemId;
 	}

@@ -5,22 +5,15 @@
 
 package com.liferay.site.cms.site.initializer.internal.display.context;
 
-import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
+import com.liferay.object.constants.ObjectFolderConstants;
+import com.liferay.object.service.ObjectDefinitionService;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.portlet.LiferayWindowState;
-import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.site.cms.site.initializer.internal.configuration.CMSSiteInitializerConfiguration;
 
-import java.util.List;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -30,52 +23,19 @@ import javax.servlet.http.HttpServletRequest;
 public class AllSectionDisplayContext extends BaseSectionDisplayContext {
 
 	public AllSectionDisplayContext(
-		CMSSiteInitializerConfiguration cmsSiteInitializerConfiguration,
-		HttpServletRequest httpServletRequest) {
+		HttpServletRequest httpServletRequest, Language language,
+		ObjectDefinitionService objectDefinitionService) {
 
-		super(cmsSiteInitializerConfiguration, httpServletRequest);
+		super(httpServletRequest, language, objectDefinitionService);
 	}
 
 	@Override
 	public CreationMenu getCreationMenu() {
-		return CreationMenuBuilder.addPrimaryDropdownItem(
-			dropdownItem -> {
-				dropdownItem.setIcon("forms");
-				dropdownItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "basic-content"));
+		return new CreationMenu() {
+			{
+				addStructureContentDropdownItems(this);
 			}
-		).addPrimaryDropdownItem(
-			dropdownItem -> {
-				dropdownItem.setIcon("upload");
-				dropdownItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "single-file"));
-			}
-		).addPrimaryDropdownItem(
-			dropdownItem -> {
-				dropdownItem.setIcon("upload-multiple");
-				dropdownItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "multiple-files"));
-			}
-		).addPrimaryDropdownItem(
-			dropdownItem -> {
-				dropdownItem.setIcon("blogs");
-				dropdownItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "blog"));
-			}
-		).addPrimaryDropdownItem(
-			dropdownItem -> {
-				dropdownItem.setIcon("wiki");
-				dropdownItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "knowledge-base"));
-			}
-		).addPrimaryDropdownItem(
-			dropdownItem -> {
-				dropdownItem.setIcon("video");
-				dropdownItem.setLabel(
-					LanguageUtil.get(
-						httpServletRequest, "external-video-shortcut"));
-			}
-		).build();
+		};
 	}
 
 	@Override
@@ -92,53 +52,16 @@ public class AllSectionDisplayContext extends BaseSectionDisplayContext {
 	}
 
 	@Override
-	public List<FDSActionDropdownItem> getFDSActionDropdownItems()
-		throws Exception {
-
-		return ListUtil.fromArray(
-			new FDSActionDropdownItem(
-				_getPermissionsURL(), "password-policies", "permissions",
-				LanguageUtil.get(httpServletRequest, "permissions"), "get",
-				"permissions", "modal-permissions"),
-			new FDSActionDropdownItem(
-				LanguageUtil.get(
-					httpServletRequest,
-					"are-you-sure-you-want-to-delete-this-entry"),
-				null, "trash", "delete",
-				LanguageUtil.get(httpServletRequest, "delete"), "delete",
-				"delete", "headless"));
+	public String[] getObjectFolderExternalReferenceCodes() {
+		return new String[] {
+			ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_CONTENT_STRUCTURES,
+			ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_FILE_TYPES
+		};
 	}
 
 	@Override
-	public String[] getObjectDefinitionFolderExternalReferenceCodes() {
-		return ArrayUtil.append(
-			cmsSiteInitializerConfiguration.
-				contentsObjectDefinitionFolderExternalReferenceCodes(),
-			cmsSiteInitializerConfiguration.
-				filesObjectDefinitionFolderExternalReferenceCodes());
-	}
-
-	private String _getPermissionsURL() throws Exception {
-
-		// TODO "modelResourceDescription"
-
-		return PortletURLBuilder.create(
-			PortalUtil.getControlPanelPortletURL(
-				httpServletRequest,
-				"com_liferay_portlet_configuration_web_portlet_" +
-					"PortletConfigurationPortlet",
-				ActionRequest.RENDER_PHASE)
-		).setMVCPath(
-			"/edit_permissions.jsp"
-		).setRedirect(
-			""
-		).setParameter(
-			"modelResource", "{entryClassName}"
-		).setParameter(
-			"resourcePrimKey", "{embedded.id}"
-		).setWindowState(
-			LiferayWindowState.POP_UP
-		).buildString();
+	protected String getCMSSectionFilterString() {
+		return StringPool.BLANK;
 	}
 
 }

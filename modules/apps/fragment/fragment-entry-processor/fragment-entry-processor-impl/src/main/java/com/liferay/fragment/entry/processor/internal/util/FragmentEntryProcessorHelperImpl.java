@@ -185,12 +185,13 @@ public class FragmentEntryProcessorHelperImpl
 			return 0;
 		}
 
+		String className = _portal.fetchClassName(classNameId);
 		InfoItemIdentifier infoItemIdentifier = new ClassPKInfoItemIdentifier(
 			classPK);
 
 		InfoItemObjectProvider<Object> infoItemObjectProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(
-				InfoItemObjectProvider.class, _portal.getClassName(classNameId),
+				InfoItemObjectProvider.class, className,
 				infoItemIdentifier.getInfoItemServiceFilter());
 
 		if (infoItemObjectProvider == null) {
@@ -203,8 +204,7 @@ public class FragmentEntryProcessorHelperImpl
 			return 0;
 		}
 
-		return _getFileEntryId(
-			_portal.getClassName(classNameId), object, fieldName, locale);
+		return _getFileEntryId(className, object, fieldName, locale);
 	}
 
 	@Override
@@ -260,7 +260,7 @@ public class FragmentEntryProcessorHelperImpl
 
 		if (isMapped(editableValueJSONObject)) {
 			String className = _infoSearchClassMapperRegistry.getClassName(
-				_portal.getClassName(
+				_portal.fetchClassName(
 					editableValueJSONObject.getLong("classNameId")));
 			String externalReferenceCode = editableValueJSONObject.getString(
 				"externalReferenceCode");
@@ -442,17 +442,13 @@ public class FragmentEntryProcessorHelperImpl
 			}
 
 			if (JSONUtil.isEmpty(configJSONObject)) {
-				Object firstItem = list.get(0);
+				return _format(list, fragmentEntryProcessorContext.getLocale());
+			}
 
-				Class<?> firstItemClass = firstItem.getClass();
+			String iterationType = configJSONObject.getString("iterationType");
 
-				InfoCollectionTextFormatter<Object>
-					infoCollectionTextFormatter =
-						_getInfoCollectionTextFormatter(
-							firstItemClass.getName());
-
-				return infoCollectionTextFormatter.format(
-					list, fragmentEntryProcessorContext.getLocale());
+			if (Objects.equals(_ITERATION_TYPE_ALL, iterationType)) {
+				return _format(list, fragmentEntryProcessorContext.getLocale());
 			}
 
 			value = _getSpecificIteration(list, configJSONObject);
@@ -651,6 +647,17 @@ public class FragmentEntryProcessorHelperImpl
 	@Override
 	public boolean isMappedDisplayPage(JSONObject jsonObject) {
 		return Validator.isNotNull(jsonObject.get("mappedField"));
+	}
+
+	private String _format(List<Object> list, Locale locale) {
+		Object firstItem = list.get(0);
+
+		Class<?> firstItemClass = firstItem.getClass();
+
+		InfoCollectionTextFormatter<Object> infoCollectionTextFormatter =
+			_getInfoCollectionTextFormatter(firstItemClass.getName());
+
+		return infoCollectionTextFormatter.format(list, locale);
 	}
 
 	private String _getDateValue(
@@ -910,6 +917,8 @@ public class FragmentEntryProcessorHelperImpl
 	private static final InfoCollectionTextFormatter<Object>
 		_INFO_COLLECTION_TEXT_FORMATTER =
 			new CommaSeparatedInfoCollectionTextFormatter();
+
+	private static final String _ITERATION_TYPE_ALL = "all";
 
 	private static final String _ITERATION_TYPE_LAST = "last";
 

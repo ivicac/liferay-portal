@@ -126,7 +126,7 @@ public interface ObjectEntryFolderLocalService
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)
-	public ObjectEntryFolder deleteObjectEntryFolder(
+	public ObjectEntryFolder deleteObjectEntryFolderByExternalReferenceCode(
 			String externalReferenceCode, long groupId, long companyId)
 		throws PortalException;
 
@@ -242,6 +242,11 @@ public interface ObjectEntryFolderLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ObjectEntryFolder getObjectEntryFolder(long objectEntryFolderId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ObjectEntryFolder getObjectEntryFolderByExternalReferenceCode(
+			String externalReferenceCode, long groupId, long companyId)
 		throws PortalException;
 
 	/**

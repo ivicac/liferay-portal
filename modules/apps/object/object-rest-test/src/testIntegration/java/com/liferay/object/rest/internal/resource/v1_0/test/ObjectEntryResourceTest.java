@@ -36,6 +36,7 @@ import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectDefinitionSettingConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectFieldValidationConstants;
@@ -54,9 +55,12 @@ import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.model.ObjectValidationRule;
 import com.liferay.object.rest.dto.v1_0.Folder;
 import com.liferay.object.rest.dto.v1_0.Link;
 import com.liferay.object.rest.dto.v1_0.Scope;
+import com.liferay.object.rest.dto.v1_0.ValidationRequest;
+import com.liferay.object.rest.dto.v1_0.ValidationResponse;
 import com.liferay.object.rest.resource.v1_0.ObjectEntryResource;
 import com.liferay.object.rest.test.util.ObjectEntryTestUtil;
 import com.liferay.object.rest.test.util.ObjectFieldTestUtil;
@@ -107,6 +111,7 @@ import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.security.auth.GuestOrUserUtil;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -120,6 +125,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.ModelPermissionsFactory;
+import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -4171,7 +4177,21 @@ public class ObjectEntryResourceTest {
 		throws Exception {
 
 		_objectEntry1 = ObjectEntryTestUtil.addObjectEntry(
-			_objectDefinition1, _OBJECT_FIELD_NAME_1, _OBJECT_FIELD_VALUE_1);
+			_objectDefinition1,
+			HashMapBuilder.<String, Serializable>put(
+				_OBJECT_FIELD_NAME_1, _OBJECT_FIELD_VALUE_1
+			).put(
+				"externalReferenceCode",
+				() -> {
+					StringBuilder sb = new StringBuilder(
+						RandomTestUtil.randomString());
+
+					sb.setCharAt(4, 'a');
+
+					return sb.toString();
+				}
+			).build());
+
 		_objectEntry2 = ObjectEntryTestUtil.addObjectEntry(
 			_objectDefinition2, _OBJECT_FIELD_NAME_2, _OBJECT_FIELD_VALUE_2);
 
@@ -4226,7 +4246,7 @@ public class ObjectEntryResourceTest {
 
 		String substring = _objectEntry1.getExternalReferenceCode(
 		).substring(
-			0, 3
+			0, 4
 		);
 
 		_assertFilterString(
@@ -4250,7 +4270,7 @@ public class ObjectEntryResourceTest {
 			_escape(
 				String.format(
 					"%s/%s lt '%s'", _objectRelationship1.getName(),
-					objectRelationshipERCObjectFieldName, substring + "ZZZZ")),
+					objectRelationshipERCObjectFieldName, substring + "zzzz")),
 			_objectDefinition1);
 		_assertFilterString(
 			_OBJECT_FIELD_NAME_1, _OBJECT_FIELD_VALUE_1,
@@ -4929,6 +4949,8 @@ public class ObjectEntryResourceTest {
 		ObjectEntry serviceBuilderObjectEntry =
 			_objectEntryLocalService.addObjectEntry(
 				user.getUserId(), 0, objectDefinition.getObjectDefinitionId(),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 				null,
 				HashMapBuilder.<String, Serializable>put(
 					"testField", true
@@ -5502,6 +5524,21 @@ public class ObjectEntryResourceTest {
 
 		_testGetObjectEntriesFilteredBySystemDate("dateCreated");
 		_testGetObjectEntriesFilteredBySystemDate("dateModified");
+
+		Locale locale = LocaleUtil.getDefault();
+
+		try {
+			LocaleUtil.setDefault(
+				LocaleUtil.SPAIN.getLanguage(), LocaleUtil.SPAIN.getCountry(),
+				LocaleUtil.SPAIN.getVariant());
+
+			_testGetObjectEntriesFilteredBySystemDate("dateCreated");
+			_testGetObjectEntriesFilteredBySystemDate("dateModified");
+		}
+		finally {
+			LocaleUtil.setDefault(
+				locale.getLanguage(), locale.getCountry(), locale.getVariant());
+		}
 	}
 
 	@Test
@@ -6571,7 +6608,10 @@ public class ObjectEntryResourceTest {
 			ObjectEntry serviceBuilderObjectEntry =
 				_objectEntryLocalService.addObjectEntry(
 					TestPropsValues.getUserId(), 0,
-					objectDefinition.getObjectDefinitionId(), null,
+					objectDefinition.getObjectDefinitionId(),
+					ObjectEntryFolderConstants.
+						PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+					null,
 					HashMapBuilder.<String, Serializable>put(
 						"authorOfGospel", true
 					).put(
@@ -8723,6 +8763,17 @@ public class ObjectEntryResourceTest {
 		);
 	}
 
+	@FeatureFlags("LPD-37056")
+	@Test
+	public void testPostScopeScopeKeyValidate() throws Exception {
+		_testPostValidate(
+			String.valueOf(TestPropsValues.getGroupId()),
+			_siteScopedObjectDefinition1,
+			_objectFieldLocalService.getObjectField(
+				_siteScopedObjectDefinition1.getObjectDefinitionId(),
+				_OBJECT_FIELD_NAME_1));
+	}
+
 	@Test
 	public void testPostSiteScopedCustomObjectEntryInUserGroup()
 		throws Exception {
@@ -8747,6 +8798,16 @@ public class ObjectEntryResourceTest {
 
 		Assert.assertEquals(
 			_OBJECT_FIELD_VALUE_1, jsonObject.getInt(_OBJECT_FIELD_NAME_1));
+	}
+
+	@FeatureFlags("LPD-37056")
+	@Test
+	public void testPostValidate() throws Exception {
+		_testPostValidate(
+			null, _objectDefinition1,
+			_objectFieldLocalService.getObjectField(
+				_objectDefinition1.getObjectDefinitionId(),
+				_OBJECT_FIELD_NAME_TEXT));
 	}
 
 	@Test
@@ -10382,7 +10443,7 @@ public class ObjectEntryResourceTest {
 		HTTPTestUtil.invokeToJSONObject(
 			null,
 			String.format(
-				"%s/%d/%s/%d", endpoint3, depth1JSONObject2.getLong("id"),
+				"%s/%d/%s/%d", endpoint2, depth1JSONObject2.getLong("id"),
 				_objectRelationship2.getName(),
 				depth2JSONObject3.getLong("id")),
 			Http.Method.PUT);
@@ -10390,94 +10451,94 @@ public class ObjectEntryResourceTest {
 		HTTPTestUtil.invokeToJSONObject(
 			null,
 			String.format(
-				"%s/%d/%s/%d", endpoint3, depth1JSONObject2.getLong("id"),
+				"%s/%d/%s/%d", endpoint2, depth1JSONObject2.getLong("id"),
 				_objectRelationship2.getName(),
 				depth2JSONObject4.getLong("id")),
 			Http.Method.PUT);
 
 		try {
 			_testSortByManyToOneAndOneToManyRelationshipsCustomObjectFields(
-				endpoint1, endpoint3, jsonObject3, jsonObject4, jsonObject1,
-				jsonObject2, depth2JSONObject1, depth2JSONObject2,
+				endpoint1, endpoint3, jsonObject1, jsonObject2, jsonObject3,
+				jsonObject4, depth2JSONObject1, depth2JSONObject2,
 				depth2JSONObject3, depth2JSONObject4,
 				String.format(
 					"%s/%s/%s", _objectRelationship1.getName(),
 					_objectRelationship2.getName(),
 					_OBJECT_FIELD_NAME_BOOLEAN));
 			_testSortByManyToOneAndOneToManyRelationshipsCustomObjectFields(
-				endpoint1, endpoint3, jsonObject3, jsonObject4, jsonObject1,
-				jsonObject2, depth2JSONObject1, depth2JSONObject2,
+				endpoint1, endpoint3, jsonObject1, jsonObject2, jsonObject3,
+				jsonObject4, depth2JSONObject1, depth2JSONObject2,
 				depth2JSONObject3, depth2JSONObject4,
 				String.format(
 					"%s/%s/%s", _objectRelationship1.getName(),
 					_objectRelationship2.getName(), _OBJECT_FIELD_NAME_DATE));
 			_testSortByManyToOneAndOneToManyRelationshipsCustomObjectFields(
-				endpoint1, endpoint3, jsonObject3, jsonObject4, jsonObject1,
-				jsonObject2, depth2JSONObject1, depth2JSONObject2,
+				endpoint1, endpoint3, jsonObject1, jsonObject2, jsonObject3,
+				jsonObject4, depth2JSONObject1, depth2JSONObject2,
 				depth2JSONObject3, depth2JSONObject4,
 				String.format(
 					"%s/%s/%s", _objectRelationship1.getName(),
 					_objectRelationship2.getName(),
 					_OBJECT_FIELD_NAME_DATE_TIME));
 			_testSortByManyToOneAndOneToManyRelationshipsCustomObjectFields(
-				endpoint1, endpoint3, jsonObject3, jsonObject4, jsonObject1,
-				jsonObject2, depth2JSONObject1, depth2JSONObject2,
+				endpoint1, endpoint3, jsonObject1, jsonObject2, jsonObject3,
+				jsonObject4, depth2JSONObject1, depth2JSONObject2,
 				depth2JSONObject3, depth2JSONObject4,
 				String.format(
 					"%s/%s/%s", _objectRelationship1.getName(),
 					_objectRelationship2.getName(),
 					_OBJECT_FIELD_NAME_DECIMAL));
 			_testSortByManyToOneAndOneToManyRelationshipsCustomObjectFields(
-				endpoint1, endpoint3, jsonObject3, jsonObject4, jsonObject1,
-				jsonObject2, depth2JSONObject1, depth2JSONObject2,
+				endpoint1, endpoint3, jsonObject1, jsonObject2, jsonObject3,
+				jsonObject4, depth2JSONObject1, depth2JSONObject2,
 				depth2JSONObject3, depth2JSONObject4,
 				String.format(
 					"%s/%s/%s", _objectRelationship1.getName(),
 					_objectRelationship2.getName(),
 					_OBJECT_FIELD_NAME_INTEGER));
 			_testSortByManyToOneAndOneToManyRelationshipsCustomObjectFields(
-				endpoint1, endpoint3, jsonObject3, jsonObject4, jsonObject1,
-				jsonObject2, depth2JSONObject1, depth2JSONObject2,
+				endpoint1, endpoint3, jsonObject1, jsonObject2, jsonObject3,
+				jsonObject4, depth2JSONObject1, depth2JSONObject2,
 				depth2JSONObject3, depth2JSONObject4,
 				String.format(
 					"%s/%s/%s", _objectRelationship1.getName(),
 					_objectRelationship2.getName(),
 					_OBJECT_FIELD_NAME_LONG_INTEGER));
 			_testSortByManyToOneAndOneToManyRelationshipsCustomObjectFields(
-				endpoint1, endpoint3, jsonObject3, jsonObject4, jsonObject1,
-				jsonObject2, depth2JSONObject1, depth2JSONObject2,
+				endpoint1, endpoint3, jsonObject1, jsonObject2, jsonObject3,
+				jsonObject4, depth2JSONObject1, depth2JSONObject2,
 				depth2JSONObject3, depth2JSONObject4,
 				String.format(
 					"%s/%s/%s", _objectRelationship1.getName(),
 					_objectRelationship2.getName(),
 					_OBJECT_FIELD_NAME_LONG_TEXT));
 			_testSortByManyToOneAndOneToManyRelationshipsCustomObjectFields(
-				endpoint1, endpoint3, jsonObject3, jsonObject4, jsonObject1,
-				jsonObject2, depth2JSONObject1, depth2JSONObject2,
+				endpoint1, endpoint3, jsonObject1, jsonObject2, jsonObject3,
+				jsonObject4, depth2JSONObject1, depth2JSONObject2,
 				depth2JSONObject3, depth2JSONObject4,
 				String.format(
 					"%s/%s/%s", _objectRelationship1.getName(),
 					_objectRelationship2.getName(),
 					_OBJECT_FIELD_NAME_MULTISELECT_PICKLIST));
 			_testSortByManyToOneAndOneToManyRelationshipsCustomObjectFields(
-				endpoint1, endpoint3, jsonObject3, jsonObject4, jsonObject1,
-				jsonObject2, depth2JSONObject1, depth2JSONObject2,
+				endpoint1, endpoint3, jsonObject1, jsonObject2, jsonObject3,
+				jsonObject4, depth2JSONObject1, depth2JSONObject2,
 				depth2JSONObject3, depth2JSONObject4,
 				String.format(
 					"%s/%s/%s", _objectRelationship1.getName(),
 					_objectRelationship2.getName(),
 					_OBJECT_FIELD_NAME_PICKLIST));
 			_testSortByManyToOneAndOneToManyRelationshipsCustomObjectFields(
-				endpoint1, endpoint3, jsonObject3, jsonObject4, jsonObject1,
-				jsonObject2, depth2JSONObject1, depth2JSONObject2,
+				endpoint1, endpoint3, jsonObject1, jsonObject2, jsonObject3,
+				jsonObject4, depth2JSONObject1, depth2JSONObject2,
 				depth2JSONObject3, depth2JSONObject4,
 				String.format(
 					"%s/%s/%s", _objectRelationship1.getName(),
 					_objectRelationship2.getName(),
 					_OBJECT_FIELD_NAME_PRECISION_DECIMAL));
 			_testSortByManyToOneAndOneToManyRelationshipsCustomObjectFields(
-				endpoint1, endpoint3, jsonObject3, jsonObject4, jsonObject1,
-				jsonObject2, depth2JSONObject1, depth2JSONObject2,
+				endpoint1, endpoint3, jsonObject1, jsonObject2, jsonObject3,
+				jsonObject4, depth2JSONObject1, depth2JSONObject2,
 				depth2JSONObject3, depth2JSONObject4,
 				String.format(
 					"%s/%s/%s", _objectRelationship1.getName(),
@@ -10486,8 +10547,8 @@ public class ObjectEntryResourceTest {
 			// Sort by several fields
 
 			_testSortByManyToOneAndOneToManyRelationshipsCustomObjectFields(
-				endpoint1, endpoint3, jsonObject3, jsonObject4, jsonObject1,
-				jsonObject2, depth2JSONObject1, depth2JSONObject2,
+				endpoint1, endpoint3, jsonObject1, jsonObject2, jsonObject3,
+				jsonObject4, depth2JSONObject1, depth2JSONObject2,
 				depth2JSONObject3, depth2JSONObject4,
 				String.format(
 					"%s/%s/%s", _objectRelationship1.getName(),
@@ -13558,6 +13619,27 @@ public class ObjectEntryResourceTest {
 		return Type.MANY_TO_MANY;
 	}
 
+	private ValidationRequest _getValidationRequest(
+		Map<String, Object> values,
+		String... objectValidationRuleExternalReferenceCodes) {
+
+		com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry =
+			new com.liferay.object.rest.dto.v1_0.ObjectEntry();
+
+		objectEntry.setProperties((values != null) ? values : new HashMap<>());
+
+		String[] finalObjectValidationRuleExternalReferenceCodes =
+			objectValidationRuleExternalReferenceCodes;
+
+		return new ValidationRequest() {
+			{
+				setObjectValidationRuleExternalReferenceCodes(
+					() -> finalObjectValidationRuleExternalReferenceCodes);
+				setValues(() -> objectEntry);
+			}
+		};
+	}
+
 	private JSONObject
 			_patchPutByExternalReferenceCodeCustomObjectEntryWithPermissions(
 				Http.Method httpMethod, boolean nestedFields,
@@ -13717,6 +13799,13 @@ public class ObjectEntryResourceTest {
 			});
 
 		objectEntry.setProperties(properties);
+	}
+
+	private void _setUpPermissionThreadLocal(User user) {
+		PrincipalThreadLocal.setName(user.getUserId());
+
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(user));
 	}
 
 	private void _testFilterObjectEntriesByRelatedLocalizedObjectEntries(
@@ -15439,6 +15528,126 @@ public class ObjectEntryResourceTest {
 		}
 	}
 
+	private void _testPostValidate(
+			String scopeKey, ObjectDefinition objectDefinition,
+			ObjectField objectField)
+		throws Exception {
+
+		String errorMessage1 = RandomTestUtil.randomString();
+
+		ObjectValidationRule objectValidationRule =
+			_objectValidationRuleLocalService.addObjectValidationRule(
+				StringUtil.randomString(), TestPropsValues.getUserId(),
+				objectDefinition.getObjectDefinitionId(), true,
+				ObjectValidationRuleConstants.ENGINE_TYPE_DDM,
+				LocalizedMapUtil.getLocalizedMap(errorMessage1),
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				ObjectValidationRuleConstants.OUTPUT_TYPE_FULL_VALIDATION,
+				objectField.getName() + " == \"foo\"", false,
+				Collections.emptyList());
+
+		String errorMessage2 = RandomTestUtil.randomString();
+
+		_objectValidationRuleLocalService.addObjectValidationRule(
+			StringUtil.randomString(), TestPropsValues.getUserId(),
+			objectDefinition.getObjectDefinitionId(), true,
+			ObjectValidationRuleConstants.ENGINE_TYPE_DDM,
+			LocalizedMapUtil.getLocalizedMap(errorMessage2),
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			ObjectValidationRuleConstants.OUTPUT_TYPE_PARTIAL_VALIDATION,
+			"NOT(isInteger(" + objectField.getName() + "))", false,
+			Arrays.asList(
+				new ObjectValidationRuleSettingBuilder(
+				).name(
+					ObjectValidationRuleSettingConstants.
+						NAME_OUTPUT_OBJECT_FIELD_ID
+				).value(
+					String.valueOf(objectField.getObjectFieldId())
+				).build()));
+
+		PermissionChecker originalPermissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+		String originalName = PrincipalThreadLocal.getName();
+
+		try {
+			User user = _addUser("test1", "test1");
+
+			ObjectEntryResource objectEntryResource = _getObjectEntryResource(
+				objectDefinition, TestPropsValues.getUser());
+
+			_resourcePermissionLocalService.removeResourcePermission(
+				TestPropsValues.getCompanyId(), ObjectEntry.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(_objectEntry5.getObjectEntryId()),
+				user.getRoleIds()[0], ActionKeys.ADD_ENTRY);
+
+			_setUpPermissionThreadLocal(user);
+
+			AssertUtils.assertFailure(
+				PrincipalException.MustHavePermission.class,
+				StringBundler.concat(
+					"User ", user.getUserId(),
+					" must have ADD_OBJECT_ENTRY permission for ",
+					objectDefinition.getResourceName(), " ",
+					(scopeKey != null) ? scopeKey : ""),
+				() -> _validate(
+					scopeKey, objectEntryResource,
+					_getValidationRequest(
+						HashMapBuilder.<String, Object>put(
+							objectField.getName(), StringUtil.randomString()
+						).build(),
+						objectValidationRule.getExternalReferenceCode())));
+
+			_setUpPermissionThreadLocal(TestPropsValues.getUser());
+
+			ValidationResponse validationResponse = _validate(
+				scopeKey, objectEntryResource,
+				_getValidationRequest(
+					HashMapBuilder.<String, Object>put(
+						objectField.getName(), StringUtil.randomString()
+					).build(),
+					objectValidationRule.getExternalReferenceCode()));
+
+			Assert.assertEquals(
+				errorMessage1,
+				validationResponse.getValidationErrors()[0].getErrorMessage());
+
+			validationResponse = _validate(
+				scopeKey, objectEntryResource,
+				_getValidationRequest(
+					HashMapBuilder.<String, Object>put(
+						objectField.getName(), "foo"
+					).build(),
+					objectValidationRule.getExternalReferenceCode()));
+
+			Assert.assertTrue(
+				ArrayUtil.isEmpty(validationResponse.getValidationErrors()));
+
+			validationResponse = _validate(
+				scopeKey, objectEntryResource,
+				_getValidationRequest(
+					HashMapBuilder.<String, Object>put(
+						objectField.getName(), RandomTestUtil.randomInt()
+					).build()));
+
+			Assert.assertEquals(
+				errorMessage1,
+				validationResponse.getValidationErrors()[0].getErrorMessage());
+			Assert.assertEquals(
+				errorMessage2,
+				validationResponse.getValidationErrors()[1].getErrorMessage());
+			Assert.assertEquals(
+				objectField.getName(),
+				validationResponse.getValidationErrors()[1].
+					getObjectFieldName());
+		}
+		finally {
+			PermissionThreadLocal.setPermissionChecker(
+				originalPermissionChecker);
+			PrincipalThreadLocal.setName(originalName);
+		}
+	}
+
 	private void _testPutCustomObjectEntryUnlinkNestedCustomObjectEntries(
 			boolean manyToOne)
 		throws Exception {
@@ -15773,13 +15982,13 @@ public class ObjectEntryResourceTest {
 			StringBundler.concat(
 				endpoint, "?sort=",
 				URLCodec.encodeURL(
-					StringUtil.merge(fieldNames, ":desc,") + ":desc,id:asc")),
+					StringUtil.merge(fieldNames, ":desc,") + ":desc,id:desc")),
 			Http.Method.GET);
 
-		_assertItem(0, pageJSONObject, "id", expectedJSONObject3.getLong("id"));
-		_assertItem(1, pageJSONObject, "id", expectedJSONObject4.getLong("id"));
-		_assertItem(2, pageJSONObject, "id", expectedJSONObject1.getLong("id"));
-		_assertItem(3, pageJSONObject, "id", expectedJSONObject2.getLong("id"));
+		_assertItem(0, pageJSONObject, "id", expectedJSONObject4.getLong("id"));
+		_assertItem(1, pageJSONObject, "id", expectedJSONObject3.getLong("id"));
+		_assertItem(2, pageJSONObject, "id", expectedJSONObject2.getLong("id"));
+		_assertItem(3, pageJSONObject, "id", expectedJSONObject1.getLong("id"));
 	}
 
 	private void _testSortByFieldName(
@@ -15864,8 +16073,8 @@ public class ObjectEntryResourceTest {
 				Http.Method.PATCH);
 
 			_testSortByFieldName(
-				endpoint1, expectedJSONObject1, expectedJSONObject2,
-				expectedJSONObject3, expectedJSONObject4, fieldNames);
+				endpoint1, expectedJSONObject3, expectedJSONObject4,
+				expectedJSONObject1, expectedJSONObject2, fieldNames);
 		}
 		finally {
 			HTTPTestUtil.invokeToJSONObject(
@@ -16175,6 +16384,19 @@ public class ObjectEntryResourceTest {
 		fileEntry.setName(fileName);
 
 		return JSONFactoryUtil.createJSONObject(fileEntry.toString());
+	}
+
+	private ValidationResponse _validate(
+			String scopeKey, ObjectEntryResource objectEntryResource,
+			ValidationRequest validationRequest)
+		throws Exception {
+
+		if (scopeKey != null) {
+			return objectEntryResource.postScopeScopeKeyValidate(
+				scopeKey, validationRequest);
+		}
+
+		return objectEntryResource.postValidate(validationRequest);
 	}
 
 	private static final String _ERC_VALUE_1 =

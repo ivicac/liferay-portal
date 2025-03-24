@@ -9,38 +9,49 @@ import fs from 'fs/promises';
 import * as path from 'path';
 import {getComparator} from 'playwright-core/lib/utils';
 
+import {accountSettingsPagesTest} from '../../fixtures/accountSettingsPagesTest';
+import {accountsPagesTest} from '../../fixtures/accountsPagesTest';
+import {applicationsMenuPageTest} from '../../fixtures/applicationsMenuPageTest';
 import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
 import {depotAdminPageTest} from '../../fixtures/depotAdminPageTest';
 import {documentLibraryPagesTest} from '../../fixtures/documentLibraryPages.fixtures';
 import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../fixtures/loginTest';
+import {objectPagesTest} from '../../fixtures/objectPagesTest';
 import {pageEditorPagesTest} from '../../fixtures/pageEditorPagesTest';
 import {pageTemplatesPagesTest} from '../../fixtures/pageTemplatesPagesTest';
 import {productMenuPageTest} from '../../fixtures/productMenuPageTest';
+import {usersAndOrganizationsPagesTest} from '../../fixtures/usersAndOrganizationsPagesTest';
 import {wikiPagesTest} from '../../fixtures/wikiPagesTest';
 import getRandomString from '../../utils/getRandomString';
 import {getTempDir} from '../../utils/temp';
 import {companyExportImportPageTest} from './fixtures/companyExportImportPagesTest';
 import {exportImportPagesTest} from './fixtures/exportImportPagesTest';
 import {stagingPageTest} from './fixtures/stagingPageTest';
+import {openImportFieldset} from './utils/openImportFieldset';
 
 export const test = mergeTests(
+	accountSettingsPagesTest,
+	accountsPagesTest,
+	applicationsMenuPageTest,
 	companyExportImportPageTest,
 	dataApiHelpersTest,
 	depotAdminPageTest,
 	documentLibraryPagesTest,
+	exportImportPagesTest,
 	featureFlagsTest({
 		'LPD-35013': {enabled: true},
 		'LPD-35914': {enabled: false, system: true},
 	}),
-	exportImportPagesTest,
 	isolatedSiteTest,
 	loginTest(),
+	objectPagesTest,
 	pageEditorPagesTest,
 	pageTemplatesPagesTest,
 	productMenuPageTest,
 	stagingPageTest,
+	usersAndOrganizationsPagesTest,
 	wikiPagesTest
 );
 
@@ -356,4 +367,21 @@ test('can see corresponding elements at site level', async ({
 	await expect(
 		exportImportPage.page.getByLabel('Delete Application Data')
 	).toBeVisible();
+
+	await openImportFieldset({
+		name: 'Update Data',
+		page: exportImportPage.page,
+	});
+
+	await expect(
+		exportImportPage.page.getByText(
+			'Mirror: All data and content inside the imported LAR is created as new the first time while maintaining a reference to the source. Subsequent imports from the same source update the entries instead of creating new entries.'
+		)
+	).toBeVisible();
+
+	await expect(
+		exportImportPage.page.getByText('Mirror with overwriting:')
+	).toBeVisible();
+
+	await expect(exportImportPage.page.getByText('Copy as New:')).toBeVisible();
 });

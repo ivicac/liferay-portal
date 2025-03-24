@@ -8,7 +8,6 @@ package com.liferay.headless.admin.user.internal.resource.v1_0;
 import com.liferay.account.constants.AccountActionKeys;
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.constants.AccountListTypeConstants;
-import com.liferay.account.exception.NoSuchGroupException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountGroup;
 import com.liferay.account.service.AccountEntryLocalService;
@@ -227,15 +226,9 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		throws Exception {
 
 		AccountGroup accountGroup =
-			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+			_accountGroupService.getAccountGroupByExternalReferenceCode(
 				accountGroupExternalReferenceCode,
 				contextCompany.getCompanyId());
-
-		if (accountGroup == null) {
-			throw new NoSuchGroupException(
-				"Unable to find account group with external reference code " +
-					accountGroupExternalReferenceCode);
-		}
 
 		return getAccountGroupAccountsPage(
 			accountGroup.getAccountGroupId(), search, filter, pagination,
@@ -599,7 +592,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (accountEntry == null) {
 			return putAccount(0L, account);
@@ -627,13 +620,13 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 			_addressLocalService.addAddress(
 				address.getExternalReferenceCode(), contextUser.getUserId(),
-				AccountEntry.class.getName(), accountId, address.getName(),
-				address.getDescription(), address.getStreet1(),
-				address.getStreet2(), address.getStreet3(), address.getCity(),
-				address.getZip(), address.getRegionId(), address.getCountryId(),
-				address.getListTypeId(), address.isMailing(),
-				address.isPrimary(), postalAddress.getPhoneNumber(),
-				_createServiceContext(account));
+				AccountEntry.class.getName(), accountId, address.getCountryId(),
+				address.getListTypeId(), address.getRegionId(),
+				address.getCity(), address.getDescription(),
+				address.isMailing(), address.getName(), address.isPrimary(),
+				address.getStreet1(), address.getStreet2(),
+				address.getStreet3(), null, address.getZip(),
+				postalAddress.getPhoneNumber(), _createServiceContext(account));
 		}
 	}
 
@@ -997,8 +990,8 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 		AccountEntry accountEntry =
 			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(),
-				account.getParentAccountExternalReferenceCode());
+				account.getParentAccountExternalReferenceCode(),
+				contextCompany.getCompanyId());
 
 		if (accountEntry != null) {
 			return accountEntry.getAccountEntryId();

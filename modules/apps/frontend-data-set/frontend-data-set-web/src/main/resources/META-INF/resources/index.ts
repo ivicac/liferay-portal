@@ -74,6 +74,15 @@ type TDelta = {
 	label: number;
 };
 
+export enum DisplayType {
+	DANGER = 'danger',
+	INFO = 'info',
+	SECONDARY = 'secondary',
+	SUCCESS = 'success',
+	UNSTYLED = 'unstyled',
+	WARNING = 'warning',
+}
+
 export interface IInlineEditingSettings {
 	alwaysOn: boolean;
 	defaultBodyContent: object;
@@ -98,6 +107,7 @@ export interface IItemsActions {
 	href?: string;
 	icon?: string;
 	id?: string | number;
+	isVisible?: (item: any) => boolean;
 	items?: IItemsActions[];
 	label?: string;
 	method?: string;
@@ -128,6 +138,12 @@ export interface IItemActionsData {
 	status?: ModalStatus;
 	successMessage?: string;
 	title?: string;
+	visibilityFilters?: IItemActionsDataFilter[];
+}
+
+export interface IItemActionsDataFilter {
+	key: string;
+	value: boolean | number | string;
 }
 
 export interface IQuickActions extends IBaseActions {
@@ -156,9 +172,28 @@ export interface ITableSchema {
 	fields: Array<IField>;
 }
 
+export interface IBaseCardLabelSchema {
+	value: string;
+}
+
+export interface IStaticCardLabelSchema extends IBaseCardLabelSchema {
+	displayType: DisplayType;
+	displayTypeKey?: never;
+	displayTypeValues?: never;
+}
+
+export interface IDynamicCardLabelSchema extends IBaseCardLabelSchema {
+	displayType?: never;
+	displayTypeKey: string;
+	displayTypeValues: Record<string, DisplayType>;
+}
+
+export type ICardLabelSchema = IStaticCardLabelSchema | IDynamicCardLabelSchema;
+
 export interface ICardSchema {
 	description: string;
 	image?: string;
+	labels?: ICardLabelSchema[];
 	link?: string;
 	sticker?: string;
 	symbol: string;

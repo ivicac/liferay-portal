@@ -206,6 +206,16 @@ public class ProductSpecificationSerDes {
 			sb.append(_toJSON(productSpecification.getValue()));
 		}
 
+		if (productSpecification.getVisible() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"visible\": ");
+
+			sb.append(productSpecification.getVisible());
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -345,6 +355,14 @@ public class ProductSpecificationSerDes {
 			map.put("value", String.valueOf(productSpecification.getValue()));
 		}
 
+		if (productSpecification.getVisible() == null) {
+			map.put("visible", null);
+		}
+		else {
+			map.put(
+				"visible", String.valueOf(productSpecification.getVisible()));
+		}
+
 		return map;
 	}
 
@@ -409,6 +427,9 @@ public class ProductSpecificationSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "value")) {
 				return true;
+			}
+			else if (Objects.equals(jsonParserFieldName, "visible")) {
+				return false;
 			}
 
 			return false;
@@ -504,6 +525,12 @@ public class ProductSpecificationSerDes {
 						(Map<String, String>)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "visible")) {
+				if (jsonParserFieldValue != null) {
+					productSpecification.setVisible(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
 		}
 
 	}
@@ -549,6 +576,10 @@ public class ProductSpecificationSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

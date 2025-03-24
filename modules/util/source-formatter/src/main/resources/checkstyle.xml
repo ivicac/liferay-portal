@@ -685,8 +685,10 @@
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Perform several checks on `*OSGiCommands` classes." />
 			<property name="enabled" value="false" />
-			<message key="command.function.missing" value="OSGi command &quot;{0}&quot; is missing a method that implements it" />
+			<message key="class.name.incorrect" value="Name of class implementing &quot;OSGiCommands&quot; should be the value of &quot;osgi.command.scope&quot; property with &quot;OSGiCommands&quot;" />
+			<message key="implemented.command.function.missing" value="Missing a public method for implementing &quot;{0}&quot;" />
 			<message key="osgi.reference.avoid" value="OSGi references to &quot;*OSGiCommands&quot; classes are not allowed" />
+			<message key="public.method.name.incorrect" value="Name of public method in *OSGiCommands class should be the value of &quot;osgi.command.function&quot; property" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.OSGiResourceBuilderCheck">
 			<property name="category" value="Styling" />
@@ -873,6 +875,11 @@
 			<property name="description" value="Finds missing LiferayUnitTestRule." />
 			<message key="test.rule.missing" value="Missing test rule &quot;LiferayUnitTestRule&quot;" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.TextBlockCheck">
+			<property name="category" value="Styling" />
+			<property name="description" value="Finds usage of text block." />
+			<message key="text.block.avoid" value="Do not use text block" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ThreadContextClassLoaderCheck">
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Checks usage of `Thread.setContextClassLoader`." />
@@ -1022,7 +1029,8 @@
 			<property name="description" value="Checks that variable names follow naming conventions." />
 			<property name="enforceTypeNames" value="" />
 			<message key="variable.incorrect.count" value="Rename variable &quot;{0}&quot; to &quot;{1}&quot; (and increment counts for other variables &quot;{0}*&quot;)" />
-			<message key="variable.incorrect.ending" value="Name of variable with type &quot;{0}&quot; should end with &quot;{1}&quot;" />
+			<message key="variable.incorrect.ending.1" value="Name of variable with type &quot;{0}&quot; should end with &quot;{1}&quot;" />
+			<message key="variable.incorrect.ending.2" value="Name of variable assigned by &quot;{0}&quot; should end with &quot;{1}&quot;" />
 			<message key="variable.name.incorrect.for.statement" value="Use format &quot;curVariableName&quot; for variable &quot;{0}&quot;" />
 			<message key="variable.rename" value="Rename variable &quot;{0}&quot; to &quot;{1}&quot;" />
 			<message key="variable.typo" value="Typo in variable &quot;{0}&quot;, expected variable name &quot;{1}&quot;" />

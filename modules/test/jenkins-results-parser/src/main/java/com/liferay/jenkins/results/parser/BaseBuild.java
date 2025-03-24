@@ -98,11 +98,7 @@ public abstract class BaseBuild implements Build {
 
 		BaseBuild baseBuild = (BaseBuild)object;
 
-		if (Objects.equals(getBuildURL(), baseBuild.getBuildURL())) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getBuildURL(), baseBuild.getBuildURL());
 	}
 
 	@Override
@@ -1452,7 +1448,7 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public boolean hasMaximumInvocationCount() {
-		if (_invocations.size() >= _MAXIMUM_INVOCATION_COUNT) {
+		if (_invocations.size() >= _getMaximumInvocationCount()) {
 			return true;
 		}
 
@@ -1486,11 +1482,7 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public boolean isFailing() {
-		if (!Objects.equals(getResult(), "SUCCESS")) {
-			return true;
-		}
-
-		return false;
+		return !Objects.equals(getResult(), "SUCCESS");
 	}
 
 	@Override
@@ -3147,6 +3139,24 @@ public abstract class BaseBuild implements Build {
 		_archive(null, false, "testReport/api/json");
 	}
 
+	private int _getMaximumInvocationCount() {
+		try {
+			Properties properties =
+				JenkinsResultsParserUtil.getBuildProperties();
+
+			String propertyName = "reinvoke.rule.max.invocation.count";
+
+			if (properties.containsKey(propertyName)) {
+				return Integer.parseInt(properties.getProperty(propertyName));
+			}
+
+			return _MAXIMUM_INVOCATION_COUNT;
+		}
+		catch (IOException ioException) {
+			return _MAXIMUM_INVOCATION_COUNT;
+		}
+	}
+
 	private List<Element> _getStopWatchRecordTableRowElements(
 		StopWatchRecord stopWatchRecord) {
 
@@ -3313,11 +3323,7 @@ public abstract class BaseBuild implements Build {
 			return false;
 		}
 
-		if (oldValue.equals(newValue)) {
-			return false;
-		}
-
-		return true;
+		return !oldValue.equals(newValue);
 	}
 
 	private void _setBuildURL(String buildURL) {

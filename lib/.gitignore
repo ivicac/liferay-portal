@@ -64,7 +64,7 @@
 /development/osgi-service-component.jar
 /development/osgi-service-log.jar
 /development/p6spy.jar
-/development/portletmvc4spring-test.jar
+/development/portlet.jar
 /development/postgresql.jar
 /development/qdox.jar
 /development/reflections.jar
@@ -116,7 +116,6 @@
 /portal/log4j-api.jar
 /portal/log4j-core.jar
 /portal/persistence.jar
-/portal/portlet.jar
 /portal/simplecaptcha.jar
 /portal/slf4j-api.jar
 /portal/soap-api.jar

@@ -198,6 +198,22 @@ public class ProductSpecificationFragmentRenderer implements FragmentRenderer {
 						fragmentRendererContext.getFragmentEntryLink(),
 						"valueElementType")));
 
+			if (cpDefinitionSpecificationOptionValue != null) {
+				CPSpecificationOption cpSpecificationOption =
+					cpDefinitionSpecificationOptionValue.
+						getCPSpecificationOption();
+
+				httpServletRequest.setAttribute(
+					"liferay-commerce:product-specification:visible",
+					cpDefinitionSpecificationOptionValue.isVisible() &&
+					cpSpecificationOption.isVisible());
+			}
+			else {
+				httpServletRequest.setAttribute(
+					"liferay-commerce:product-specification:visible",
+					Boolean.FALSE);
+			}
+
 			requestDispatcher.include(httpServletRequest, httpServletResponse);
 		}
 		catch (Exception exception) {

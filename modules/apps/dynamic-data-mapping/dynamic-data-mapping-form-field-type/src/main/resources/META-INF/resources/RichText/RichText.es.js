@@ -8,7 +8,7 @@ import {useConfig} from 'data-engine-js-components-web';
 import {
 	CKEditor5ClassicEditor,
 	ClassicEditor,
-	advancedClassicEditorConfig,
+	EClassicEditorConfigPreset,
 } from 'frontend-editor-ckeditor-web';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
@@ -271,7 +271,12 @@ const RichText = ({
 						<CKEditor5ClassicEditor
 							className="w-100"
 							config={{
-								...advancedClassicEditorConfig,
+								filebrowserImageBrowseUrl:
+									editorConfig.filebrowserImageBrowseUrl,
+								filebrowserVideoBrowseUrl:
+									editorConfig.filebrowserVideoBrowseUrl,
+								itemSelectorEventName: `${name}selectItem`,
+								preset: EClassicEditorConfigPreset.ADVANCED,
 							}}
 							data={
 								currentValue

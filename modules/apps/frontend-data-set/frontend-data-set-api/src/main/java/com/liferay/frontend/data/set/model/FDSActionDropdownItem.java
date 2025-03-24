@@ -7,6 +7,9 @@ package com.liferay.frontend.data.set.model;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author Marco Leo
  */
@@ -54,6 +57,42 @@ public class FDSActionDropdownItem extends DropdownItem {
 		setType(type);
 	}
 
+	public FDSActionDropdownItem(
+		String confirmationMessage, String confirmationMessageType,
+		String errorMessage, String href, String icon, String id, String label,
+		String method, String modalSize, String permissionKey,
+		String requestBody, String successMessage, String target, String title,
+		String type, String[] visibilityFilters) {
+
+		this(
+			href, icon, id, label, method, permissionKey, target,
+			visibilityFilters);
+
+		setConfirmationMessage(confirmationMessage);
+		setConfirmationMessageType(confirmationMessageType);
+		setErrorMessage(errorMessage);
+		setModalSize(modalSize);
+		setRequestBody(requestBody);
+		setRequestBody(requestBody);
+		setSuccessMessage(successMessage);
+		setTitle(title);
+		setType(type);
+	}
+
+	public FDSActionDropdownItem(
+		String href, String icon, String id, String label, String method,
+		String permissionKey, String target, String[] visibilityFilters) {
+
+		setHref(href);
+		setIcon(icon);
+		setId(id);
+		setLabel(label);
+		setMethod(method);
+		setPermissionKey(permissionKey);
+		setTarget(target);
+		setVisibilityFilters(visibilityFilters);
+	}
+
 	public void setConfirmationMessage(String confirmationMessage) {
 		putData("confirmationMessage", confirmationMessage);
 	}
@@ -96,6 +135,23 @@ public class FDSActionDropdownItem extends DropdownItem {
 
 	public void setType(String type) {
 		putData("type", type);
+	}
+
+	public void setVisibilityFilters(String... visibilityFilters) {
+		if ((visibilityFilters.length % 2) != 0) {
+			throw new IllegalArgumentException(
+				"Visibility filters length is not an even number");
+		}
+
+		Map<String, String> map = new HashMap<>();
+
+		for (int i = 0; i < visibilityFilters.length; i += 2) {
+			map.put(
+				String.valueOf(visibilityFilters[i]),
+				String.valueOf(visibilityFilters[i + 1]));
+		}
+
+		putData("visibilityFilters", map);
 	}
 
 }

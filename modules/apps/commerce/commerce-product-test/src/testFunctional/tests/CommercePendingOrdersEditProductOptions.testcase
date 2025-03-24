@@ -199,6 +199,10 @@ definition {
 				productSku = "WHITE",
 				productTotalPrice = "$ 50.00");
 
+			Click(
+				key_cellContent = "Bundled Product",
+				locator1 = "CommerceEntry#BUNDLE_PRODUCT_EXPAND_BUTTON");
+
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "30.00",
 				productName = "Brake Rotors",
@@ -538,7 +542,7 @@ definition {
 			for (var productName : list "Wheel Seal - Front,Brake Fluid,Bundled Product") {
 				Click(
 					key_value = ${productName},
-					locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+					locator1 = "CommerceEntry#ORDERS_ENTRY_BODY_VERTICAL_ELLIPSIS");
 
 				AssertElementNotPresent(
 					key_menuItem = "Edit",

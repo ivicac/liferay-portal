@@ -5,13 +5,16 @@
 
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
-import {useId} from 'frontend-js-components-web';
+import classNames from 'classnames';
+import {FieldFeedback, useId} from 'frontend-js-components-web';
 import React, {useState} from 'react';
 
 export default function ERCInput({
+	disabled,
 	onValueChange,
 	value: initialValue,
 }: {
+	disabled?: boolean;
 	onValueChange: (value: string) => void;
 	value: string;
 }) {
@@ -20,7 +23,7 @@ export default function ERCInput({
 	const [value, setValue] = useState(initialValue);
 
 	return (
-		<ClayForm.Group>
+		<ClayForm.Group className={classNames({'has-error': !value})}>
 			<label htmlFor={id}>
 				{Liferay.Language.get('erc')}
 
@@ -42,12 +45,22 @@ export default function ERCInput({
 			</label>
 
 			<ClayInput
+				disabled={disabled}
 				id={id}
 				onBlur={() => onValueChange(value)}
 				onChange={(event) => setValue(event.target.value)}
+				required
 				type="text"
 				value={value}
 			/>
+
+			{!value ? (
+				<FieldFeedback
+					errorMessage={Liferay.Language.get(
+						'this-field-is-required'
+					)}
+				/>
+			) : null}
 		</ClayForm.Group>
 	);
 }

@@ -35,38 +35,6 @@
 		display: flex;
 		height: 289px;
 		padding: 16px;
-		position: relative;
-	}
-
-	.app-type-label {
-		border-radius: 2px 2px 8px 8px;
-		font-size: 11px;
-		font-weight: bold;
-		height: 20px;
-		line-height: 20;
-		position: absolute;
-		right: 24px;
-		top: -8px;
-	}
-
-	.app-type-label-cloud {
-		background-color: #D1EEDC;
-		color: #0E7835;
-	}
-
-	.app-type-label-cx {
-		background-color: #FFE6C6;
-		color: #9D4C00;
-	}
-
-	.app-type-label-dxp {
-		background-color: #D1ECFA;
-		color: #166E9E;
-	}
-
-	.app-type-label-fragment {
-		background-color: #DCD7E9;
-		color: #503690;
 	}
 
 	.banner__product-tag {
@@ -124,13 +92,6 @@
 	}
 </style>
 
-<#assign appTypeClasses = {
-	"Client Extension": "app-type-label-cx",
-	"Cloud App": "app-type-label-cloud",
-	"DXP App": "app-type-label-dxp",
-	"Fragment": "app-type-label-fragment"
-} />
-
 <#if searchContainer?has_content>
 	<div class="color-neutral-3 d-md-block d-none pb-4 pt-2">
 		<strong class="color-black">
@@ -145,13 +106,8 @@
 </#if>
 
 <#assign
-	channel = restClient.get("/headless-commerce-delivery-catalog/v1.0/channels?accountId=-1&filter=name eq 'Marketplace Channel' and siteGroupId eq '${scopeGroupId}'")
-	productThumbnail1 = "/o/commerce-media/default/?groupId=${scopeGroupId}"
+	commerceContext = renderRequest.getAttribute("COMMERCE_CONTEXT")
 />
-
-<#if channel?has_content>
-	<#assign channelId = channel.items[0].id />
-</#if>
 
 <div class="adt-apps-search-results">
 	<div class="cards-container pb-6">
@@ -159,13 +115,17 @@
 			<#list entries as entry>
 				<#if entry?has_content>
 					<#assign
+						accountEntryId = commerceContext.getAccountEntry().getAccountEntryId()
+						channelId = commerceContext.getCommerceChannelId()
+						friendlyURL = cpContentHelper.getFriendlyURL(entry, themeDisplay)
 						portalURL = portalUtil.getLayoutURL(themeDisplay)
-						productId = entry.getClassPK() + 1
-						product = restClient.get("/headless-commerce-delivery-catalog/v1.0/channels/"+ channelId +"/products/"+ productId +"?accountId=-1&images.accountId=-1&nestedFields=productSpecifications,categories,images")
-						productImage = (product.images![])?filter(item -> item.tags?seq_contains("app icon"))![]
+						productId = entry.getCProductId()
+						productName = entry.getName()
 						remainingCategoriesText = []
-					/>
 
+						product = restClient.get("/headless-commerce-delivery-catalog/v1.0/channels/"+ channelId +"/products/"+ productId +"?accountId=-1&images.accountId=-1&nestedFields=productSpecifications,categories,images")
+						productImage = cpContentHelper.getDefaultImageFileURL(accountEntryId, entry.getCPDefinitionId())
+					/>
 					<#if product.categories?has_content && product.productSpecifications?has_content>
 						<#assign
 							productCategories = product.categories?filter(productCategory -> productCategory.vocabulary?replace(" ", "-") == "marketplace-app-category")![]
@@ -174,70 +134,16 @@
 						/>
 					</#if>
 
-					<#if product.name?has_content>
-						<#assign productName = product.name />
-						<#else>
-							<#assign productName = "" />
-					</#if>
-
 					<#if product.description?has_content>
 						<#assign productDescription = stringUtil.shorten(htmlUtil.stripHtml(product.description!""), 150, "...") />
-						<#else>
-							<#assign productDescription = "" />
-					</#if>
-
-					<#if product.urls?has_content>
-						<#assign productURL = portalURL?replace("home", "p") + "/" + product.urls.en_US />
-						<#else>
-							<#assign productURL = "" />
-					</#if>
-
-					<#if productImage?has_content>
-						<#assign productThumbnail = productImage[0].src?split("/o") />
-						<#if productThumbnail?has_content && productThumbnail?size gte 2>
-							<#assign productThumbnail1 = "/o/${productThumbnail[1]}" !"" />
-						</#if>
-
 					<#else>
-						<#if product.urlImage?has_content>
-							<#assign productThumbnail = product.urlImage?split("/o") />
-							<#if productThumbnail?has_content && productThumbnail?size gte 2>
-								<#assign productThumbnail1 = "/o/${productThumbnail[1]}" !"" />
-							</#if>
-						</#if>
+						<#assign productDescription = "" />
 					</#if>
 
-					<a class="app-search-results-card bg-white border-radius-medium d-flex flex-column mb-0 text-dark text-decoration-none" href=${productURL}>
+					<a class="app-search-results-card bg-white border-radius-medium d-flex flex-column mb-0 text-dark text-decoration-none" href=${friendlyURL}>
 						<div class="align-items-center card-image-title-container d-flex">
-							<#if product.productSpecifications?has_content>
-								<#assign
-									appType = ""
-									productType = product.productSpecifications?filter(item -> stringUtil.equals(item.specificationKey, "type"))
-								/>
-
-								<#list productType as type>
-									<#if type.value?has_content>
-										<#if stringUtil.equals(type.value, "dxp")>
-											<#assign appType = "DXP App" />
-										<#elseif stringUtil.equals(type.value, "cloud")>
-											<#assign appType = "Cloud App" />
-										<#elseif stringUtil.equals(type.value, "fragment")>
-											<#assign appType = "Fragment" />
-										<#elseif stringUtil.equals(type.value, "client-extension")>
-											<#assign appType = "Client Extension" />
-										</#if>
-									</#if>
-								</#list>
-
-								<#if appType?has_content>
-									<div class="app-type-label ${appTypeClasses[appType]!} align-items-center d-flex justify-content-center px-2">
-										${appType}
-									</div>
-								</#if>
-							</#if>
-
 							<div class="image-container mr-2 rounded">
-								<img alt="${productName}" class="app-search-image" src="${productThumbnail1}" />
+								<img alt="${productName}" class="app-search-image" src="${productImage}" />
 							</div>
 
 							<div>
@@ -247,6 +153,7 @@
 
 								<#if productSpecifications?has_content>
 									<#assign productDeveloperName = productSpecifications?filter(item -> item.specificationKey == "developer-name") />
+
 									<#list productDeveloperName as developerNameItem>
 										<#if developerNameItem.value?has_content>
 											<#assign developerName = developerNameItem.value />
@@ -270,6 +177,7 @@
 							<div class="d-flex flex-column">
 								<#if productSpecifications?has_content>
 									<#assign productPriceModels = productSpecifications?filter(item -> item.specificationKey == "price-model") />
+
 									<#list productPriceModels as productPriceModel>
 										<#if productPriceModel.value?has_content>
 											<#assign priceModel = productPriceModel.value />
@@ -299,6 +207,7 @@
 										<span class="banner__product-tag rounded py-1 px-2 mr-2" title="${principalCategory.name}">
 											${principalCategory.name}
 										</span>
+
 										<#if categoriesListSize?has_content && remainingCategoriesText?has_content>
 											<span class="banner__product-tag rounded py-1 px-2" title="${remainingCategoriesText?join('\n')}">
 												+ ${categoriesListSize}

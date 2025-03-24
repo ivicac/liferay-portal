@@ -5,14 +5,14 @@
 
 package com.liferay.style.book.web.internal.display.context;
 
+import com.liferay.frontend.token.definition.FrontendTokenDefinition;
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
-import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -22,6 +22,7 @@ import com.liferay.style.book.constants.StyleBookActionKeys;
 import com.liferay.style.book.constants.StyleBookPortletKeys;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
+import com.liferay.style.book.util.StyleBookUtil;
 import com.liferay.style.book.util.comparator.StyleBookEntryCreateDateComparator;
 import com.liferay.style.book.util.comparator.StyleBookEntryNameComparator;
 import com.liferay.style.book.web.internal.security.permissions.resource.StyleBookPermission;
@@ -40,10 +41,12 @@ import javax.servlet.http.HttpServletRequest;
 public class StyleBookDisplayContext {
 
 	public StyleBookDisplayContext(
+		FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
 		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse) {
 
+		_frontendTokenDefinitionRegistry = frontendTokenDefinitionRegistry;
 		_httpServletRequest = httpServletRequest;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
@@ -116,9 +119,20 @@ public class StyleBookDisplayContext {
 
 			if (start == 0) {
 				end -= 1;
-				styleBookEntries.add(
-					_getStyleFromThemeStyleBookEntry(
-						themeDisplay.getScopeGroupId()));
+
+				if (FeatureFlagManagerUtil.isEnabled(
+						themeDisplay.getCompanyId(), "LPD-30204")) {
+
+					styleBookEntries.addAll(
+						_getStyleFromThemeStyleBookEntries(
+							themeDisplay.getScopeGroupId()));
+				}
+				else {
+					styleBookEntries.add(
+						StyleBookUtil.getStyleFromThemeStyleBookEntry(
+							themeDisplay.getLayout(),
+							themeDisplay.getLocale()));
+				}
 			}
 			else {
 				start -= 1;
@@ -203,40 +217,34 @@ public class StyleBookDisplayContext {
 		return orderByComparator;
 	}
 
-	private StyleBookEntry _getStyleFromThemeStyleBookEntry(long groupId) {
-		StyleBookEntry styleFromThemeStyleBookEntry =
-			StyleBookEntryLocalServiceUtil.create();
+	private List<StyleBookEntry> _getStyleFromThemeStyleBookEntries(
+		long groupId) {
 
-		styleFromThemeStyleBookEntry.setHeadId(-1);
-		styleFromThemeStyleBookEntry.setStyleBookEntryId(0);
-		styleFromThemeStyleBookEntry.setGroupId(groupId);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
-		StyleBookEntry defaultStyleBookEntry =
-			StyleBookEntryLocalServiceUtil.fetchDefaultStyleBookEntry(groupId);
+		List<StyleBookEntry> styleFromThemeStyleBookEntries = new ArrayList<>();
 
-		if (defaultStyleBookEntry == null) {
-			styleFromThemeStyleBookEntry.setDefaultStyleBookEntry(true);
+		for (FrontendTokenDefinition frontendTokenDefinition :
+				_frontendTokenDefinitionRegistry.getFrontendTokenDefinitions(
+					themeDisplay.getCompanyId())) {
+
+			styleFromThemeStyleBookEntries.add(
+				StyleBookUtil.getStyleFromThemeStyleBookEntry(
+					frontendTokenDefinition, groupId,
+					themeDisplay.getLocale()));
 		}
 
-		styleFromThemeStyleBookEntry.setName(
-			LanguageUtil.get(_httpServletRequest, "styles-from-theme"));
-
-		LayoutSet layoutSet = LayoutSetLocalServiceUtil.fetchLayoutSet(
-			groupId, false);
-
-		styleFromThemeStyleBookEntry.setThemeId(layoutSet.getThemeId());
-
-		return styleFromThemeStyleBookEntry;
+		return styleFromThemeStyleBookEntries;
 	}
 
 	private boolean _isSearch() {
-		if (Validator.isNotNull(_getKeywords())) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(_getKeywords());
 	}
 
+	private final FrontendTokenDefinitionRegistry
+		_frontendTokenDefinitionRegistry;
 	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private final LiferayPortletRequest _liferayPortletRequest;

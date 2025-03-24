@@ -6,9 +6,11 @@
 package com.liferay.object.service.impl;
 
 import com.liferay.object.constants.ObjectEntryFolderConstants;
+import com.liferay.object.entry.folder.util.ObjectEntryFolderThreadLocal;
 import com.liferay.object.exception.DuplicateObjectEntryFolderExternalReferenceCodeException;
 import com.liferay.object.exception.ObjectEntryFolderNameException;
 import com.liferay.object.exception.ObjectEntryFolderScopeException;
+import com.liferay.object.exception.RequiredObjectEntryFolderException;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectEntryFolder;
 import com.liferay.object.service.ObjectEntryLocalService;
@@ -28,6 +30,7 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
@@ -121,6 +124,19 @@ public class ObjectEntryFolderLocalServiceImpl
 			ObjectEntryFolder objectEntryFolder)
 		throws PortalException {
 
+		if (!ObjectEntryFolderThreadLocal.
+				isForceDeleteSystemObjectEntryFolder() &&
+			StringUtil.startsWith(
+				objectEntryFolder.getExternalReferenceCode(),
+				ObjectEntryFolderConstants.
+					EXTERNAL_REFERENCE_CODE_PREFIX_SYSTEM_OBJECT_ENTRY_FOLDER)) {
+
+			throw new RequiredObjectEntryFolderException(
+				"System object entry folder " +
+					objectEntryFolder.getExternalReferenceCode() +
+						" cannot be deleted");
+		}
+
 		// Object entries
 
 		ActionableDynamicQuery actionableDynamicQuery =
@@ -180,7 +196,7 @@ public class ObjectEntryFolderLocalServiceImpl
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
-	public ObjectEntryFolder deleteObjectEntryFolder(
+	public ObjectEntryFolder deleteObjectEntryFolderByExternalReferenceCode(
 			String externalReferenceCode, long groupId, long companyId)
 		throws PortalException {
 
@@ -190,6 +206,15 @@ public class ObjectEntryFolderLocalServiceImpl
 
 		return objectEntryFolderLocalService.deleteObjectEntryFolder(
 			objectEntryFolder);
+	}
+
+	@Override
+	public ObjectEntryFolder getObjectEntryFolderByExternalReferenceCode(
+			String externalReferenceCode, long groupId, long companyId)
+		throws PortalException {
+
+		return objectEntryFolderPersistence.findByERC_G_C(
+			externalReferenceCode, groupId, companyId);
 	}
 
 	@Override
@@ -305,7 +330,7 @@ public class ObjectEntryFolderLocalServiceImpl
 			throw new ObjectEntryFolderScopeException(
 				StringBundler.concat(
 					"Group ID ", groupId,
-					" does not match parent folder group ID ",
+					" does not match parent object entry folder group ID ",
 					objectEntryFolder.getGroupId()));
 		}
 	}

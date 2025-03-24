@@ -126,6 +126,13 @@ public class StyleBookEntryLocalServiceWrapper
 		return _styleBookEntryLocalService.deletePersistedModel(persistedModel);
 	}
 
+	@Override
+	public void deleteStyleBookEntries(long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_styleBookEntryLocalService.deleteStyleBookEntries(groupId);
+	}
+
 	/**
 	 * Deletes the style book entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
@@ -285,8 +292,11 @@ public class StyleBookEntryLocalServiceWrapper
 	}
 
 	@Override
-	public StyleBookEntry fetchDefaultStyleBookEntry(long groupId) {
-		return _styleBookEntryLocalService.fetchDefaultStyleBookEntry(groupId);
+	public StyleBookEntry fetchDefaultStyleBookEntry(
+		long groupId, String themeId) {
+
+		return _styleBookEntryLocalService.fetchDefaultStyleBookEntry(
+			groupId, themeId);
 	}
 
 	@Override
@@ -429,6 +439,14 @@ public class StyleBookEntryLocalServiceWrapper
 
 		return _styleBookEntryLocalService.getStyleBookEntries(
 			groupId, start, end, orderByComparator);
+	}
+
+	@Override
+	public java.util.List<StyleBookEntry> getStyleBookEntries(
+		long groupId, String themeId) {
+
+		return _styleBookEntryLocalService.getStyleBookEntries(
+			groupId, themeId);
 	}
 
 	@Override

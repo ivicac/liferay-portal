@@ -25,7 +25,6 @@ import com.liferay.portal.test.rule.Inject;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -63,16 +62,7 @@ public class ListTypeDefinitionResourceTest
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(), true,
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				serviceContext);
-	}
-
-	@Ignore
-	@Override
-	@Test
-	public void testGetSpecificationIdListTypeDefinitionsPage()
-		throws Exception {
-
-		super.testGetSpecificationIdListTypeDefinitionsPage();
+				true, serviceContext);
 	}
 
 	@Override
@@ -109,12 +99,16 @@ public class ListTypeDefinitionResourceTest
 	}
 
 	@Override
+	protected String[] getAdditionalAssertFieldNames() {
+		return new String[] {"name"};
+	}
+
+	@Override
 	protected ListTypeDefinition
 			testDeleteSpecificationListTypeDefinition_addListTypeDefinition()
 		throws Exception {
 
-		return testPostSpecificationIdListTypeDefinition_addListTypeDefinition(
-			randomListTypeDefinition());
+		return _addListTypeDefinition(randomListTypeDefinition());
 	}
 
 	@Override
@@ -127,8 +121,48 @@ public class ListTypeDefinitionResourceTest
 
 	@Override
 	protected ListTypeDefinition
+			testGetSpecificationIdListTypeDefinitionsPage_addListTypeDefinition(
+				Long id, ListTypeDefinition listTypeDefinition)
+		throws Exception {
+
+		return listTypeDefinitionResource.postSpecificationIdListTypeDefinition(
+			id, listTypeDefinition);
+	}
+
+	@Override
+	protected Long testGetSpecificationIdListTypeDefinitionsPage_getId()
+		throws Exception {
+
+		return _cpSpecificationOption.getCPSpecificationOptionId();
+	}
+
+	@Override
+	protected ListTypeDefinition
+			testGraphQLListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		return _addListTypeDefinition(randomListTypeDefinition());
+	}
+
+	@Override
+	protected ListTypeDefinition
 			testPostSpecificationIdListTypeDefinition_addListTypeDefinition(
 				ListTypeDefinition listTypeDefinition)
+		throws Exception {
+
+		return _addListTypeDefinition(listTypeDefinition);
+	}
+
+	@Override
+	protected ListTypeDefinition
+			testPostSpecificationListTypeDefinition_addListTypeDefinition()
+		throws Exception {
+
+		return _addListTypeDefinition(randomListTypeDefinition());
+	}
+
+	private ListTypeDefinition _addListTypeDefinition(
+			ListTypeDefinition listTypeDefinition)
 		throws Exception {
 
 		return listTypeDefinitionResource.postSpecificationIdListTypeDefinition(

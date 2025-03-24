@@ -123,15 +123,34 @@ export class WebContentDisplayPage {
 		await this.configurationOption.click();
 	}
 
-	async addWebContentWithDisplay(webContentName?: string) {
+	async addWebContentWithDisplay(
+		options: {pageType?: 'content' | 'widget'; webContentName?: string} = {
+			pageType: 'content',
+			webContentName: '',
+		}
+	) {
 		await this.webContentDisplay.waitFor({state: 'visible'});
 		await this.webContentDisplayContent.hover();
 		await this.webContentDisplayContent.click();
 
-		await this.page
-			.locator('[id*="JournalContentPortlet"]')
-			.getByRole('button', {name: 'Options'})
-			.click();
+		const {pageType, webContentName} = options;
+
+		if (pageType === 'widget') {
+			await this.page
+				.locator('[id*="JournalContentPortlet"]')
+				.getByRole('button', {name: 'Options'})
+				.click();
+		}
+		else {
+			await this.page
+				.locator('#wrapper')
+				.getByText('Web Content Display')
+				.last()
+				.locator('..')
+				.getByRole('button', {name: 'Options'})
+				.click();
+		}
+
 		await this.configurationOption.click();
 
 		await this.page

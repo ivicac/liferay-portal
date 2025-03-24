@@ -304,7 +304,7 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		);
 	}
 
-	async getCurrenciesPage(search: string) {
+	async getCurrenciesPage(search = '') {
 		return this.apiHelpers.get(
 			`${this.apiHelpers.baseUrl}${this.basePath}/currencies?search=${search}`
 		);
@@ -798,7 +798,9 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 		facetable: boolean = true,
 		priority: number = 0,
 		specificationTitle: string = 'Specification' + getRandomInt(),
-		optionCategory?: DataObject
+		optionCategory?: DataObject,
+		visible?: boolean,
+		listTypeDefinitionIds?: number[]
 	) {
 		let postSpecification;
 
@@ -809,11 +811,13 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 					data: {
 						facetable,
 						key: specificationTitle,
+						listTypeDefinitionIds,
 						optionCategory,
 						priority,
 						title: {
 							en_US: specificationTitle,
 						},
+						visible,
 					},
 				}
 			);
@@ -829,6 +833,7 @@ export class HeadlessCommerceAdminCatalogApiHelper {
 						title: {
 							en_US: specificationTitle,
 						},
+						visible,
 					},
 				}
 			);

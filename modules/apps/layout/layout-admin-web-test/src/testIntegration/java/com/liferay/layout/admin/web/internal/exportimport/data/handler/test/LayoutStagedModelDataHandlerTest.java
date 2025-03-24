@@ -809,7 +809,7 @@ public class LayoutStagedModelDataHandlerTest
 					"data-lfr-editable-id=\"link-1\" data-lfr-editable-type=" +
 						"\"link\">textLink1</a></div>",
 				StringPool.BLANK, false, StringPool.BLANK, null, 0, false,
-				FragmentConstants.TYPE_COMPONENT, null,
+				false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, serviceContext);
 
 		FragmentEntryLink fragmentEntryLink =
@@ -1624,7 +1624,7 @@ public class LayoutStagedModelDataHandlerTest
 				"<h1 data-lfr-editable-id=\"element-text\" " +
 					"data-lfr-editable-type=\"text\">Heading Example</h1>",
 				StringPool.BLANK, false, StringPool.BLANK, null, 0, false,
-				FragmentConstants.TYPE_COMPONENT, null,
+				false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, serviceContext);
 
 		Layout draftLayout = layout.fetchDraftLayout();

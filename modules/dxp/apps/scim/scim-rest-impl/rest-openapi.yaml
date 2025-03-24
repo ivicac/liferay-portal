@@ -1,5 +1,93 @@
 components:
     schemas:
+        Attribute:
+            properties:
+                canonicalValues:
+                    description:
+                        A collection of suggested canonical values that MAY be used (e.g., "work" and "home").
+                    items:
+                        type: string
+                    type: array
+                caseExact:
+                    description:
+                        A Boolean value that specifies whether or not a string attribute is case sensitive
+                    type: boolean
+                description:
+                    description:
+                        The attribute's human-readable description.  When
+                        applicable, service providers MUST specify the description
+                    type: string
+                multiValued:
+                    description:
+                        A Boolean value indicating the attribute's plurality.
+                    type: boolean
+                mutability:
+                    description:
+                        A single keyword indicating the circumstances under which the value of the attribute can be
+                        (re)defined.
+                    enum: [readOnly, readWrite, immutable, writeOnly]
+                    type: string
+                name:
+                    description:
+                        The attribute's name.
+                    type: string
+                referenceTypes:
+                    description:
+                        A multi-valued array of JSON strings that indicate the SCIM resource types that may be
+                        referenced
+                    items:
+                        type: string
+                    type: array
+                required:
+                    description:
+                        A Boolean value that specifies whether or not the attribute is required.
+                    type: boolean
+                returned:
+                    description:
+                        A single keyword that indicates when an attribute and associated values are returned in response
+                        to a GET request or in response to a PUT, POST, or PATCH request.
+                    enum: [always, never, default, request]
+                    type: string
+                subAttributes:
+                    items:
+                        $ref: "#/components/schemas/Attribute"
+                    type: array
+                type:
+                    description:
+                        The attribute's data type.  Valid values are "string", "boolean", "decimal", "integer",
+                        "dateTime", "reference", and "complex".
+                    enum: [string, boolean, decimal, integer, dateTime, reference, complex]
+                    type: string
+                uniqueness:
+                    description:
+                        A single keyword value that specifies how the service provider enforces uniqueness of attribute
+                        values.
+                    enum: [none, server, global]
+                    type: string
+            type: object
+        AuthenticationScheme:
+            description:
+                The authentication schemes supported by the service provider.
+            properties:
+                description:
+                    readOnly: true
+                    type: string
+                documentationUri:
+                    readOnly: true
+                    type: string
+                name:
+                    readOnly: true
+                    type: string
+                primary:
+                    readOnly: true
+                    type: boolean
+                specUri:
+                    readOnly: true
+                    type: string
+                type:
+                    readOnly: true
+                    type: string
+            type: object
         BaseScim:
             description:
                 Each SCIM resource (Users, Groups, etc.) includes the following common attributes.
@@ -22,6 +110,15 @@ components:
                     items:
                         type: string
                     type: array
+            type: object
+        Filter:
+            properties:
+                maxResults:
+                    readOnly: true
+                    type: integer
+                supported:
+                    readOnly: true
+                    type: boolean
             type: object
         Group:
             allOf:
@@ -172,6 +269,8 @@ components:
                         A multi-valued list of complex objects containing the requested resources.
                     oneOf:
                         - $ref: "#/components/schemas/Group"
+                        - $ref: "#/components/schemas/ResourceType"
+                        - $ref: "#/components/schemas/Schema"
                         - $ref: "#/components/schemas/User"
                     type: object
                 itemsPerPage:
@@ -186,6 +285,138 @@ components:
                     description:
                         The total number of results returned by the list or query operation.
                     type: integer
+            type: object
+        ResourceType:
+            properties:
+                description:
+                    description:
+                        The resource type's human-readable description.
+                    type: string
+                endpoint:
+                    description:
+                        The resource type's HTTP-addressable endpoint relative to the Base URL of the service provider.
+                    type: string
+                id:
+                    description:
+                        The resource type's server unique id.
+                    readOnly: true
+                    type: string
+                meta:
+                    $ref: "#/components/schemas/Meta"
+                name:
+                    description:
+                        The resource type name.
+                    type: string
+                schema:
+                    description:
+                        The resource type's primary/base schema URI.
+                    type: string
+                schemas:
+                    description:
+                        A list of URIs of the resource type's schema extensions
+                    items:
+                        allOf:
+                            - properties:
+                                  required:
+                                      description:
+                                          A Boolean value that specifies whether or not the schema extension is required
+                                          for the resource type.
+                                      type: boolean
+                                  schema:
+                                      description:
+                                          The resource type's primary/base schema URI.
+                                      type: string
+                        type: object
+                    type: array
+            type: object
+        Schema:
+            properties:
+                attributes:
+                    description:
+                        A complex type that defines service provider attributes and their qualities.
+                    items:
+                        $ref: "#/components/schemas/Attribute"
+                    type: array
+                description:
+                    description:
+                        The schema's human-readable description.
+                    type: string
+                id:
+                    description:
+                        The unique URI of the schema.
+                    readOnly: true
+                    type: string
+                meta:
+                    $ref: "#/components/schemas/Meta"
+                name:
+                    description:
+                        The schema's human-readable name.
+                    type: string
+                schemas:
+                    description:
+                        "A list of strings that MUST contain the value 'urn:ietf:params:scim:schemas:core:2.0:Schema'."
+                    example: ["urn:ietf:params:scim:schemas:core:2.0:Schema"]
+                    items:
+                        type: string
+                    type: array
+            type: object
+        ServiceProviderConfig:
+            properties:
+                authenticationSchemes:
+                    items:
+                        $ref: "#/components/schemas/AuthenticationScheme"
+                    type: array
+                bulk:
+                    properties:
+                        maxOperations:
+                            readOnly: true
+                            type: integer
+                        maxPayloadSize:
+                            readOnly: true
+                            type: integer
+                        supported:
+                            readOnly: true
+                            type: boolean
+                    type: object
+                changePassword:
+                    properties:
+                        supported:
+                            readOnly: true
+                            type: boolean
+                    type: object
+                documentationUri:
+                    readOnly: true
+                    type: string
+                etag:
+                    properties:
+                        supported:
+                            readOnly: true
+                            type: boolean
+                    type: object
+                filter:
+                    $ref: "#/components/schemas/Filter"
+                meta:
+                    $ref: "#/components/schemas/Meta"
+                patch:
+                    properties:
+                        supported:
+                            readOnly: true
+                            type: boolean
+                    type: object
+                schemas:
+                    items:
+                        enum: ["urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig"]
+                        readOnly: true
+                        type: string
+                    type: array
+                sort:
+                    $ref: "#/components/schemas/Sort"
+            type: object
+        Sort:
+            properties:
+                supported:
+                    readOnly: true
+                    type: boolean
             type: object
         User:
             allOf:
@@ -386,6 +617,10 @@ paths:
                   schema:
                       type: integer
                 - in: query
+                  name: excludedAttributes
+                  schema:
+                      type: string
+                - in: query
                   name: filter
                   schema:
                       type: string
@@ -475,6 +710,10 @@ paths:
                   required: true
                   schema:
                       type: string
+                - in: query
+                  name: excludedAttributes
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -535,6 +774,109 @@ paths:
                     description:
                         The Group was successfully updated.
             tags: ["Group"]
+    /v2/ResourceTypes:
+        get:
+            description:
+                To discover the types of resources available on a SCIM service provider.
+            operationId: getV2ResourceTypes
+            responses:
+                200:
+                    content:
+                        application/scim+json:
+                            schema:
+                                oneOf:
+                                    - format: binary
+                                      type: string
+                                    - $ref: "#/components/schemas/QueryResponse"
+                    description:
+                        The list of Resource Types.
+            tags: ["ResourceTypes"]
+    /v2/ResourceTypes/{id}:
+        get:
+            operationId: getV2ResourceTypeById
+            parameters:
+                - in: path
+                  description:
+                      Resource type defines the endpoints.
+                  name: id
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/scim+json:
+                            schema:
+                                oneOf:
+                                    - format: binary
+                                      type: string
+                                    - $ref: "#/components/schemas/ResourceType"
+                    description:
+                        The requested resource types.
+                404:
+                    description:
+                        ResourceTypes not found.
+            tags: ["ResourceTypes"]
+    /v2/Schemas:
+        get:
+            description:
+                Lists schemas.
+            operationId: getV2Schemas
+            responses:
+                200:
+                    content:
+                        application/scim+json:
+                            schema:
+                                oneOf:
+                                    - format: binary
+                                      type: string
+                                    - $ref: "#/components/schemas/QueryResponse"
+                    description:
+                        The list of Schemas.
+            tags: ["Schema"]
+    /v2/Schemas/{id}:
+        get:
+            operationId: getV2SchemaById
+            parameters:
+                - in: path
+                  description:
+                      The schema's unique identifier.
+                  name: id
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/scim+json:
+                            schema:
+                                oneOf:
+                                    - format: binary
+                                      type: string
+                                    - $ref: "#/components/schemas/Schema"
+                    description:
+                        The requested schema.
+                404:
+                    description:
+                        Schema not found.
+            tags: ["Schema"]
+    /v2/ServiceProviderConfig:
+        get:
+            description:
+                Gives serviceProviderConfig info.
+            operationId: getV2ServiceProviderConfig
+            responses:
+                200:
+                    content:
+                        application/scim+json:
+                            schema:
+                                oneOf:
+                                    - format: binary
+                                      type: string
+                                    - $ref: "#/components/schemas/ServiceProviderConfig"
+                    description:
+                        The ServiceProviderConfig info.
+            tags: ["ServiceProviderConfig"]
     /v2/Users:
         get:
             description:

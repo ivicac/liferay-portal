@@ -10,6 +10,7 @@ import {getTempDir} from '../../../utils/temp';
 
 export class ExportImportPage {
 	readonly continueButton: Locator;
+	readonly deletionsLabel: Locator;
 	readonly downloadButton: Locator;
 	readonly exportButton: Locator;
 	readonly exportPermissionsButton: Locator;
@@ -21,9 +22,13 @@ export class ExportImportPage {
 	readonly page: Page;
 	readonly productMenuPage: ProductMenuPage;
 	readonly title: Locator;
+	readonly useCurrentUserAsAuthorCheckbox: Locator;
 
 	constructor(page: Page) {
 		this.continueButton = page.getByRole('button', {name: 'Continue'});
+		this.deletionsLabel = page
+			.getByLabel('Deletions', {exact: true})
+			.locator('label');
 		this.downloadButton = page.getByRole('button', {name: 'Download'});
 		this.exportButton = page.getByRole('button', {name: 'Export'});
 		this.exportPermissionsButton = page.getByLabel('Export Permissions');
@@ -35,6 +40,9 @@ export class ExportImportPage {
 		this.page = page;
 		this.productMenuPage = new ProductMenuPage(page);
 		this.title = page.getByPlaceholder('Enter the name of the process');
+		this.useCurrentUserAsAuthorCheckbox = page.getByLabel(
+			'Use the Current User as Author: Assign the current user as the author of all'
+		);
 	}
 
 	async createNewExportProcess(title: string) {

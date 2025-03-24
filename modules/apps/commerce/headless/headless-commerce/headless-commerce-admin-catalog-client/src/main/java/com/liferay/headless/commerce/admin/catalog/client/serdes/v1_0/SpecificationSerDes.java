@@ -166,6 +166,16 @@ public class SpecificationSerDes {
 			sb.append(_toJSON(specification.getTitle()));
 		}
 
+		if (specification.getVisible() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"visible\": ");
+
+			sb.append(specification.getVisible());
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -264,6 +274,13 @@ public class SpecificationSerDes {
 			map.put("title", String.valueOf(specification.getTitle()));
 		}
 
+		if (specification.getVisible() == null) {
+			map.put("visible", null);
+		}
+		else {
+			map.put("visible", String.valueOf(specification.getVisible()));
+		}
+
 		return map;
 	}
 
@@ -317,6 +334,9 @@ public class SpecificationSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "title")) {
 				return true;
+			}
+			else if (Objects.equals(jsonParserFieldName, "visible")) {
+				return false;
 			}
 
 			return false;
@@ -392,6 +412,11 @@ public class SpecificationSerDes {
 						(Map<String, String>)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "visible")) {
+				if (jsonParserFieldValue != null) {
+					specification.setVisible((Boolean)jsonParserFieldValue);
+				}
+			}
 		}
 
 	}
@@ -437,6 +462,10 @@ public class SpecificationSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

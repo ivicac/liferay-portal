@@ -34,25 +34,25 @@ public class ObjectEntryServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.object.service.impl.ObjectEntryServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static ObjectEntry addObjectEntry(
-			long groupId, long objectDefinitionId, String defaultLanguageId,
-			Map<String, Serializable> values,
+			long groupId, long objectDefinitionId, long objectEntryFolderId,
+			String defaultLanguageId, Map<String, Serializable> values,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addObjectEntry(
-			groupId, objectDefinitionId, defaultLanguageId, values,
-			serviceContext);
+			groupId, objectDefinitionId, objectEntryFolderId, defaultLanguageId,
+			values, serviceContext);
 	}
 
 	public static ObjectEntry addOrUpdateObjectEntry(
 			String externalReferenceCode, long groupId, long objectDefinitionId,
-			Map<String, Serializable> values,
+			long objectEntryFolderId, Map<String, Serializable> values,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addOrUpdateObjectEntry(
-			externalReferenceCode, groupId, objectDefinitionId, values,
-			serviceContext);
+			externalReferenceCode, groupId, objectDefinitionId,
+			objectEntryFolderId, values, serviceContext);
 	}
 
 	public static void checkModelResourcePermission(
@@ -208,6 +208,15 @@ public class ObjectEntryServiceUtil {
 
 		return getService().updateObjectEntry(
 			objectEntryId, values, serviceContext);
+	}
+
+	public static void validate(
+			long groupId, ObjectEntry objectEntry,
+			List<String> objectValidationRuleExternalReferenceCodes)
+		throws PortalException {
+
+		getService().validate(
+			groupId, objectEntry, objectValidationRuleExternalReferenceCodes);
 	}
 
 	public static ObjectEntryService getService() {

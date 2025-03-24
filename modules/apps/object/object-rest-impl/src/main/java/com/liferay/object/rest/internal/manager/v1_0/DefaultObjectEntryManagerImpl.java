@@ -10,6 +10,7 @@ import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.object.action.engine.ObjectActionEngine;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
@@ -47,6 +48,7 @@ import com.liferay.object.rest.manager.v1_0.util.ObjectEntryManagerUtil;
 import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryService;
+import com.liferay.object.service.ObjectEntryVersionService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.ObjectRelationshipService;
 import com.liferay.object.system.SystemObjectDefinitionManager;
@@ -164,6 +166,8 @@ public class DefaultObjectEntryManagerImpl
 			_objectEntryService.addObjectEntry(
 				getGroupId(objectDefinition, scopeKey),
 				objectDefinition.getObjectDefinitionId(),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 				objectEntry.getDefaultLanguageId(),
 				_toObjectValues(
 					dtoConverterContext.getLocale(), objectDefinition,
@@ -585,6 +589,39 @@ public class DefaultObjectEntryManagerImpl
 	}
 
 	@Override
+	public ObjectEntry getObjectEntryByVersion(
+			DTOConverterContext dtoConverterContext, Long objectEntryId,
+			Integer version)
+		throws Exception {
+
+		com.liferay.object.model.ObjectEntry serviceBuilderObjectEntry =
+			_objectEntryService.getObjectEntry(objectEntryId);
+
+		dtoConverterContext.setAttribute(
+			"objectEntryVersion",
+			_objectEntryVersionService.getObjectEntryVersion(
+				objectEntryId, version));
+
+		return _objectEntryDTOConverter.toDTO(
+			dtoConverterContext, serviceBuilderObjectEntry);
+	}
+
+	@Override
+	public ObjectEntry getObjectEntryByVersion(
+			DTOConverterContext dtoConverterContext,
+			String externalReferenceCode, ObjectDefinition objectDefinition,
+			Integer version)
+		throws Exception {
+
+		ObjectEntry objectEntry = getObjectEntry(
+			objectDefinition.getCompanyId(), dtoConverterContext,
+			externalReferenceCode, objectDefinition, null);
+
+		return getObjectEntryByVersion(
+			dtoConverterContext, objectEntry.getId(), version);
+	}
+
+	@Override
 	public Page<ObjectEntry> getObjectEntryRelatedObjectEntries(
 			DTOConverterContext dtoConverterContext,
 			ObjectDefinition objectDefinition, Long objectEntryId,
@@ -726,6 +763,49 @@ public class DefaultObjectEntryManagerImpl
 	}
 
 	@Override
+	public Page<ObjectEntry> getVersionedObjectEntries(
+			DTOConverterContext dtoConverterContext, long objectEntryId,
+			Pagination pagination)
+		throws Exception {
+
+		com.liferay.object.model.ObjectEntry serviceBuilderObjectEntry =
+			objectEntryLocalService.getObjectEntry(objectEntryId);
+
+		return Page.of(
+			TransformUtil.transform(
+				_objectEntryVersionService.getObjectEntryVersions(
+					objectEntryId, _getStartPosition(pagination),
+					_getEndPosition(pagination)),
+				objectEntryVersion -> {
+					dtoConverterContext.setAttribute(
+						"objectEntryVersion", objectEntryVersion);
+
+					return _objectEntryDTOConverter.toDTO(
+						dtoConverterContext, serviceBuilderObjectEntry);
+				}),
+			pagination,
+			_objectEntryVersionService.getObjectEntryVersionsCount(
+				objectEntryId));
+	}
+
+	@Override
+	public Page<ObjectEntry> getVersionedObjectEntries(
+			DTOConverterContext dtoConverterContext,
+			String externalReferenceCode, ObjectDefinition objectDefinition,
+			Pagination pagination)
+		throws Exception {
+
+		com.liferay.object.model.ObjectEntry serviceBuilderObjectEntry =
+			objectEntryLocalService.getObjectEntry(
+				externalReferenceCode,
+				objectDefinition.getObjectDefinitionId());
+
+		return getVersionedObjectEntries(
+			dtoConverterContext, serviceBuilderObjectEntry.getObjectEntryId(),
+			pagination);
+	}
+
+	@Override
 	public ObjectEntry partialUpdateObjectEntry(
 			DTOConverterContext dtoConverterContext,
 			ObjectDefinition objectDefinition, long objectEntryId,
@@ -800,6 +880,8 @@ public class DefaultObjectEntryManagerImpl
 			_objectEntryService.addOrUpdateObjectEntry(
 				externalReferenceCode, getGroupId(objectDefinition, scopeKey),
 				objectDefinition.getObjectDefinitionId(),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
 				_toObjectValues(
 					dtoConverterContext.getLocale(), objectDefinition,
 					objectEntry, scopeKey, serviceContext),
@@ -811,6 +893,31 @@ public class DefaultObjectEntryManagerImpl
 				dtoConverterContext, objectDefinition, objectEntry,
 				_getObjectRelationships(objectDefinition, objectEntry),
 				serviceBuilderObjectEntry, scopeKey));
+	}
+
+	@Override
+	public void validateObjectEntry(
+			DTOConverterContext dtoConverterContext,
+			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
+			List<String> objectValidationRuleExternalReferenceCodes,
+			String scopeKey)
+		throws Exception {
+
+		com.liferay.object.model.ObjectEntry serviceBuilderObjectEntry =
+			objectEntryLocalService.createObjectEntry(0L);
+
+		serviceBuilderObjectEntry.setObjectDefinitionId(
+			objectDefinition.getObjectDefinitionId());
+		serviceBuilderObjectEntry.setValues(
+			_toObjectValues(
+				dtoConverterContext.getLocale(), objectDefinition, objectEntry,
+				scopeKey,
+				_createServiceContext(
+					dtoConverterContext, objectDefinition, objectEntry)));
+
+		_objectEntryService.validate(
+			getGroupId(objectDefinition, scopeKey), serviceBuilderObjectEntry,
+			objectValidationRuleExternalReferenceCodes);
 	}
 
 	private Map<String, String> _addAction(
@@ -1918,6 +2025,9 @@ public class DefaultObjectEntryManagerImpl
 
 	@Reference
 	private ObjectEntryService _objectEntryService;
+
+	@Reference
+	private ObjectEntryVersionService _objectEntryVersionService;
 
 	@Reference
 	private ObjectFieldBusinessTypeRegistry _objectFieldBusinessTypeRegistry;
