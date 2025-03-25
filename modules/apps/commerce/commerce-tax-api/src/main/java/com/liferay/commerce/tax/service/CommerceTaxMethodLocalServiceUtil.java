@@ -55,14 +55,14 @@ public class CommerceTaxMethodLocalServiceUtil {
 	}
 
 	public static CommerceTaxMethod addCommerceTaxMethod(
-			long userId, long groupId, Map<java.util.Locale, String> nameMap,
+			long groupId, long userId, boolean active,
 			Map<java.util.Locale, String> descriptionMap, String engineKey,
-			boolean percentage, boolean active)
+			Map<java.util.Locale, String> nameMap, boolean percentage)
 		throws PortalException {
 
 		return getService().addCommerceTaxMethod(
-			userId, groupId, nameMap, descriptionMap, engineKey, percentage,
-			active);
+			groupId, userId, active, descriptionMap, engineKey, nameMap,
+			percentage);
 	}
 
 	/**
@@ -359,13 +359,13 @@ public class CommerceTaxMethodLocalServiceUtil {
 	}
 
 	public static CommerceTaxMethod updateCommerceTaxMethod(
-			long commerceTaxMethodId, Map<java.util.Locale, String> nameMap,
-			Map<java.util.Locale, String> descriptionMap, boolean percentage,
-			boolean active)
+			long commerceTaxMethodId, boolean active,
+			Map<java.util.Locale, String> descriptionMap,
+			Map<java.util.Locale, String> nameMap, boolean percentage)
 		throws PortalException {
 
 		return getService().updateCommerceTaxMethod(
-			commerceTaxMethodId, nameMap, descriptionMap, percentage, active);
+			commerceTaxMethodId, active, descriptionMap, nameMap, percentage);
 	}
 
 	public static CommerceTaxMethodLocalService getService() {

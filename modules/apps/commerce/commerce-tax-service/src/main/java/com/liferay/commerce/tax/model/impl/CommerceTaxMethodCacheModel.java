@@ -87,16 +87,16 @@ public class CommerceTaxMethodCacheModel
 		sb.append(createDate);
 		sb.append(", modifiedDate=");
 		sb.append(modifiedDate);
-		sb.append(", name=");
-		sb.append(name);
+		sb.append(", active=");
+		sb.append(active);
 		sb.append(", description=");
 		sb.append(description);
 		sb.append(", engineKey=");
 		sb.append(engineKey);
+		sb.append(", name=");
+		sb.append(name);
 		sb.append(", percentage=");
 		sb.append(percentage);
-		sb.append(", active=");
-		sb.append(active);
 		sb.append(", typeSettings=");
 		sb.append(typeSettings);
 		sb.append("}");
@@ -136,12 +136,7 @@ public class CommerceTaxMethodCacheModel
 			commerceTaxMethodImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
-		if (name == null) {
-			commerceTaxMethodImpl.setName("");
-		}
-		else {
-			commerceTaxMethodImpl.setName(name);
-		}
+		commerceTaxMethodImpl.setActive(active);
 
 		if (description == null) {
 			commerceTaxMethodImpl.setDescription("");
@@ -157,8 +152,14 @@ public class CommerceTaxMethodCacheModel
 			commerceTaxMethodImpl.setEngineKey(engineKey);
 		}
 
+		if (name == null) {
+			commerceTaxMethodImpl.setName("");
+		}
+		else {
+			commerceTaxMethodImpl.setName(name);
+		}
+
 		commerceTaxMethodImpl.setPercentage(percentage);
-		commerceTaxMethodImpl.setActive(active);
 
 		if (typeSettings == null) {
 			commerceTaxMethodImpl.setTypeSettings("");
@@ -188,13 +189,13 @@ public class CommerceTaxMethodCacheModel
 		userName = objectInput.readUTF();
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
-		name = objectInput.readUTF();
-		description = objectInput.readUTF();
-		engineKey = objectInput.readUTF();
-
-		percentage = objectInput.readBoolean();
 
 		active = objectInput.readBoolean();
+		description = objectInput.readUTF();
+		engineKey = objectInput.readUTF();
+		name = objectInput.readUTF();
+
+		percentage = objectInput.readBoolean();
 		typeSettings = (String)objectInput.readObject();
 	}
 
@@ -220,12 +221,7 @@ public class CommerceTaxMethodCacheModel
 		objectOutput.writeLong(createDate);
 		objectOutput.writeLong(modifiedDate);
 
-		if (name == null) {
-			objectOutput.writeUTF("");
-		}
-		else {
-			objectOutput.writeUTF(name);
-		}
+		objectOutput.writeBoolean(active);
 
 		if (description == null) {
 			objectOutput.writeUTF("");
@@ -241,9 +237,14 @@ public class CommerceTaxMethodCacheModel
 			objectOutput.writeUTF(engineKey);
 		}
 
-		objectOutput.writeBoolean(percentage);
+		if (name == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(name);
+		}
 
-		objectOutput.writeBoolean(active);
+		objectOutput.writeBoolean(percentage);
 
 		if (typeSettings == null) {
 			objectOutput.writeObject("");
@@ -261,11 +262,11 @@ public class CommerceTaxMethodCacheModel
 	public String userName;
 	public long createDate;
 	public long modifiedDate;
-	public String name;
+	public boolean active;
 	public String description;
 	public String engineKey;
+	public String name;
 	public boolean percentage;
-	public boolean active;
 	public String typeSettings;
 
 }

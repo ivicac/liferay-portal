@@ -130,15 +130,15 @@ public class CommerceTaxMethodPersistenceTest {
 
 		newCommerceTaxMethod.setModifiedDate(RandomTestUtil.nextDate());
 
-		newCommerceTaxMethod.setName(RandomTestUtil.randomString());
+		newCommerceTaxMethod.setActive(RandomTestUtil.randomBoolean());
 
 		newCommerceTaxMethod.setDescription(RandomTestUtil.randomString());
 
 		newCommerceTaxMethod.setEngineKey(RandomTestUtil.randomString());
 
-		newCommerceTaxMethod.setPercentage(RandomTestUtil.randomBoolean());
+		newCommerceTaxMethod.setName(RandomTestUtil.randomString());
 
-		newCommerceTaxMethod.setActive(RandomTestUtil.randomBoolean());
+		newCommerceTaxMethod.setPercentage(RandomTestUtil.randomBoolean());
 
 		newCommerceTaxMethod.setTypeSettings(RandomTestUtil.randomString());
 
@@ -172,8 +172,8 @@ public class CommerceTaxMethodPersistenceTest {
 			Time.getShortTimestamp(existingCommerceTaxMethod.getModifiedDate()),
 			Time.getShortTimestamp(newCommerceTaxMethod.getModifiedDate()));
 		Assert.assertEquals(
-			existingCommerceTaxMethod.getName(),
-			newCommerceTaxMethod.getName());
+			existingCommerceTaxMethod.isActive(),
+			newCommerceTaxMethod.isActive());
 		Assert.assertEquals(
 			existingCommerceTaxMethod.getDescription(),
 			newCommerceTaxMethod.getDescription());
@@ -181,11 +181,11 @@ public class CommerceTaxMethodPersistenceTest {
 			existingCommerceTaxMethod.getEngineKey(),
 			newCommerceTaxMethod.getEngineKey());
 		Assert.assertEquals(
+			existingCommerceTaxMethod.getName(),
+			newCommerceTaxMethod.getName());
+		Assert.assertEquals(
 			existingCommerceTaxMethod.isPercentage(),
 			newCommerceTaxMethod.isPercentage());
-		Assert.assertEquals(
-			existingCommerceTaxMethod.isActive(),
-			newCommerceTaxMethod.isActive());
 		Assert.assertEquals(
 			existingCommerceTaxMethod.getTypeSettings(),
 			newCommerceTaxMethod.getTypeSettings());
@@ -199,20 +199,20 @@ public class CommerceTaxMethodPersistenceTest {
 	}
 
 	@Test
+	public void testCountByG_A() throws Exception {
+		_persistence.countByG_A(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
+
+		_persistence.countByG_A(0L, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
 	public void testCountByG_E() throws Exception {
 		_persistence.countByG_E(RandomTestUtil.nextLong(), "");
 
 		_persistence.countByG_E(0L, "null");
 
 		_persistence.countByG_E(0L, (String)null);
-	}
-
-	@Test
-	public void testCountByG_A() throws Exception {
-		_persistence.countByG_A(
-			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
-
-		_persistence.countByG_A(0L, RandomTestUtil.randomBoolean());
 	}
 
 	@Test
@@ -242,9 +242,9 @@ public class CommerceTaxMethodPersistenceTest {
 		return OrderByComparatorFactoryUtil.create(
 			"CommerceTaxMethod", "mvccVersion", true, "commerceTaxMethodId",
 			true, "groupId", true, "companyId", true, "userId", true,
-			"userName", true, "createDate", true, "modifiedDate", true, "name",
-			true, "description", true, "engineKey", true, "percentage", true,
-			"active", true);
+			"userName", true, "createDate", true, "modifiedDate", true,
+			"active", true, "description", true, "engineKey", true, "name",
+			true, "percentage", true);
 	}
 
 	@Test
@@ -551,15 +551,15 @@ public class CommerceTaxMethodPersistenceTest {
 
 		commerceTaxMethod.setModifiedDate(RandomTestUtil.nextDate());
 
-		commerceTaxMethod.setName(RandomTestUtil.randomString());
+		commerceTaxMethod.setActive(RandomTestUtil.randomBoolean());
 
 		commerceTaxMethod.setDescription(RandomTestUtil.randomString());
 
 		commerceTaxMethod.setEngineKey(RandomTestUtil.randomString());
 
-		commerceTaxMethod.setPercentage(RandomTestUtil.randomBoolean());
+		commerceTaxMethod.setName(RandomTestUtil.randomString());
 
-		commerceTaxMethod.setActive(RandomTestUtil.randomBoolean());
+		commerceTaxMethod.setPercentage(RandomTestUtil.randomBoolean());
 
 		commerceTaxMethod.setTypeSettings(RandomTestUtil.randomString());
 

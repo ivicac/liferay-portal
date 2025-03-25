@@ -45,19 +45,19 @@ public class CommerceTaxMethodTable extends BaseTable<CommerceTaxMethodTable> {
 	public final Column<CommerceTaxMethodTable, Date> modifiedDate =
 		createColumn(
 			"modifiedDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
-	public final Column<CommerceTaxMethodTable, String> name = createColumn(
-		"name", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<CommerceTaxMethodTable, Boolean> active = createColumn(
+		"active_", Boolean.class, Types.BOOLEAN, Column.FLAG_DEFAULT);
 	public final Column<CommerceTaxMethodTable, String> description =
 		createColumn(
 			"description", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<CommerceTaxMethodTable, String> engineKey =
 		createColumn(
 			"engineKey", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<CommerceTaxMethodTable, String> name = createColumn(
+		"name", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<CommerceTaxMethodTable, Boolean> percentage =
 		createColumn(
 			"percentage", Boolean.class, Types.BOOLEAN, Column.FLAG_DEFAULT);
-	public final Column<CommerceTaxMethodTable, Boolean> active = createColumn(
-		"active_", Boolean.class, Types.BOOLEAN, Column.FLAG_DEFAULT);
 	public final Column<CommerceTaxMethodTable, Clob> typeSettings =
 		createColumn(
 			"typeSettings", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);

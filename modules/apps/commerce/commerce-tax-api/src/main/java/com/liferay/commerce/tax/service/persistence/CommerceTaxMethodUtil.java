@@ -281,69 +281,6 @@ public class CommerceTaxMethodUtil {
 	}
 
 	/**
-	 * Returns the commerce tax method where groupId = &#63; and engineKey = &#63; or throws a <code>NoSuchTaxMethodException</code> if it could not be found.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the matching commerce tax method
-	 * @throws NoSuchTaxMethodException if a matching commerce tax method could not be found
-	 */
-	public static CommerceTaxMethod findByG_E(long groupId, String engineKey)
-		throws com.liferay.commerce.tax.exception.NoSuchTaxMethodException {
-
-		return getPersistence().findByG_E(groupId, engineKey);
-	}
-
-	/**
-	 * Returns the commerce tax method where groupId = &#63; and engineKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the matching commerce tax method, or <code>null</code> if a matching commerce tax method could not be found
-	 */
-	public static CommerceTaxMethod fetchByG_E(long groupId, String engineKey) {
-		return getPersistence().fetchByG_E(groupId, engineKey);
-	}
-
-	/**
-	 * Returns the commerce tax method where groupId = &#63; and engineKey = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the matching commerce tax method, or <code>null</code> if a matching commerce tax method could not be found
-	 */
-	public static CommerceTaxMethod fetchByG_E(
-		long groupId, String engineKey, boolean useFinderCache) {
-
-		return getPersistence().fetchByG_E(groupId, engineKey, useFinderCache);
-	}
-
-	/**
-	 * Removes the commerce tax method where groupId = &#63; and engineKey = &#63; from the database.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the commerce tax method that was removed
-	 */
-	public static CommerceTaxMethod removeByG_E(long groupId, String engineKey)
-		throws com.liferay.commerce.tax.exception.NoSuchTaxMethodException {
-
-		return getPersistence().removeByG_E(groupId, engineKey);
-	}
-
-	/**
-	 * Returns the number of commerce tax methods where groupId = &#63; and engineKey = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the number of matching commerce tax methods
-	 */
-	public static int countByG_E(long groupId, String engineKey) {
-		return getPersistence().countByG_E(groupId, engineKey);
-	}
-
-	/**
 	 * Returns all the commerce tax methods where groupId = &#63; and active = &#63;.
 	 *
 	 * @param groupId the group ID
@@ -527,6 +464,69 @@ public class CommerceTaxMethodUtil {
 	 */
 	public static int countByG_A(long groupId, boolean active) {
 		return getPersistence().countByG_A(groupId, active);
+	}
+
+	/**
+	 * Returns the commerce tax method where groupId = &#63; and engineKey = &#63; or throws a <code>NoSuchTaxMethodException</code> if it could not be found.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @return the matching commerce tax method
+	 * @throws NoSuchTaxMethodException if a matching commerce tax method could not be found
+	 */
+	public static CommerceTaxMethod findByG_E(long groupId, String engineKey)
+		throws com.liferay.commerce.tax.exception.NoSuchTaxMethodException {
+
+		return getPersistence().findByG_E(groupId, engineKey);
+	}
+
+	/**
+	 * Returns the commerce tax method where groupId = &#63; and engineKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @return the matching commerce tax method, or <code>null</code> if a matching commerce tax method could not be found
+	 */
+	public static CommerceTaxMethod fetchByG_E(long groupId, String engineKey) {
+		return getPersistence().fetchByG_E(groupId, engineKey);
+	}
+
+	/**
+	 * Returns the commerce tax method where groupId = &#63; and engineKey = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching commerce tax method, or <code>null</code> if a matching commerce tax method could not be found
+	 */
+	public static CommerceTaxMethod fetchByG_E(
+		long groupId, String engineKey, boolean useFinderCache) {
+
+		return getPersistence().fetchByG_E(groupId, engineKey, useFinderCache);
+	}
+
+	/**
+	 * Removes the commerce tax method where groupId = &#63; and engineKey = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @return the commerce tax method that was removed
+	 */
+	public static CommerceTaxMethod removeByG_E(long groupId, String engineKey)
+		throws com.liferay.commerce.tax.exception.NoSuchTaxMethodException {
+
+		return getPersistence().removeByG_E(groupId, engineKey);
+	}
+
+	/**
+	 * Returns the number of commerce tax methods where groupId = &#63; and engineKey = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @return the number of matching commerce tax methods
+	 */
+	public static int countByG_E(long groupId, String engineKey) {
+		return getPersistence().countByG_E(groupId, engineKey);
 	}
 
 	/**

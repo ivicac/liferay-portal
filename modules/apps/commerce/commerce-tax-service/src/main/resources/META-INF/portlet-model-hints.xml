@@ -24,13 +24,13 @@
 		<field name="userName" type="String" />
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
+		<field name="active" type="boolean" />
+		<field localized="true" name="description" type="String" />
+		<field name="engineKey" type="String" />
 		<field localized="true" name="name" type="String">
 			<validator name="required" />
 		</field>
-		<field localized="true" name="description" type="String" />
-		<field name="engineKey" type="String" />
 		<field name="percentage" type="boolean" />
-		<field name="active" type="boolean" />
 		<field name="typeSettings" type="String">
 			<hint-collection name="CLOB" />
 		</field>

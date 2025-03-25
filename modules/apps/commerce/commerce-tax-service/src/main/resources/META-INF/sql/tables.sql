@@ -22,10 +22,10 @@ create table CommerceTaxMethod (
 	userName VARCHAR(75) null,
 	createDate DATE null,
 	modifiedDate DATE null,
-	name STRING null,
+	active_ BOOLEAN,
 	description STRING null,
 	engineKey VARCHAR(75) null,
+	name STRING null,
 	percentage BOOLEAN,
-	active_ BOOLEAN,
 	typeSettings TEXT null
 );

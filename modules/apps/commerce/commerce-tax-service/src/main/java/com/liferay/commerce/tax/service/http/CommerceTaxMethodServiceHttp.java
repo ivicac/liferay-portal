@@ -43,10 +43,11 @@ public class CommerceTaxMethodServiceHttp {
 
 	public static com.liferay.commerce.tax.model.CommerceTaxMethod
 			addCommerceTaxMethod(
-				HttpPrincipal httpPrincipal, long groupId,
-				java.util.Map<java.util.Locale, String> nameMap,
+				HttpPrincipal httpPrincipal, long groupId, boolean active,
 				java.util.Map<java.util.Locale, String> descriptionMap,
-				String engineKey, boolean percentage, boolean active)
+				String engineKey,
+				java.util.Map<java.util.Locale, String> nameMap,
+				boolean percentage)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -55,8 +56,8 @@ public class CommerceTaxMethodServiceHttp {
 				_addCommerceTaxMethodParameterTypes0);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, nameMap, descriptionMap, engineKey,
-				percentage, active);
+				methodKey, groupId, active, descriptionMap, engineKey, nameMap,
+				percentage);
 
 			Object returnObj = null;
 
@@ -463,9 +464,10 @@ public class CommerceTaxMethodServiceHttp {
 	public static com.liferay.commerce.tax.model.CommerceTaxMethod
 			updateCommerceTaxMethod(
 				HttpPrincipal httpPrincipal, long commerceTaxMethodId,
-				java.util.Map<java.util.Locale, String> nameMap,
+				boolean active,
 				java.util.Map<java.util.Locale, String> descriptionMap,
-				boolean percentage, boolean active)
+				java.util.Map<java.util.Locale, String> nameMap,
+				boolean percentage)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -474,8 +476,8 @@ public class CommerceTaxMethodServiceHttp {
 				_updateCommerceTaxMethodParameterTypes10);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, commerceTaxMethodId, nameMap, descriptionMap,
-				percentage, active);
+				methodKey, commerceTaxMethodId, active, descriptionMap, nameMap,
+				percentage);
 
 			Object returnObj = null;
 
@@ -510,8 +512,8 @@ public class CommerceTaxMethodServiceHttp {
 
 	private static final Class<?>[] _addCommerceTaxMethodParameterTypes0 =
 		new Class[] {
-			long.class, java.util.Map.class, java.util.Map.class, String.class,
-			boolean.class, boolean.class
+			long.class, boolean.class, java.util.Map.class, String.class,
+			java.util.Map.class, boolean.class
 		};
 	private static final Class<?>[] _addCommerceTaxMethodParameterTypes1 =
 		new Class[] {
@@ -538,7 +540,7 @@ public class CommerceTaxMethodServiceHttp {
 		new Class[] {com.liferay.commerce.tax.model.CommerceTaxMethod.class};
 	private static final Class<?>[] _updateCommerceTaxMethodParameterTypes10 =
 		new Class[] {
-			long.class, java.util.Map.class, java.util.Map.class, boolean.class,
+			long.class, boolean.class, java.util.Map.class, java.util.Map.class,
 			boolean.class
 		};
 

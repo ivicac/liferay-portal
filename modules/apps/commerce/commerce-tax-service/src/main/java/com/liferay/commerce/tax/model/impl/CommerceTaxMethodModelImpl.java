@@ -74,9 +74,9 @@ public class CommerceTaxMethodModelImpl
 		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
-		{"name", Types.VARCHAR}, {"description", Types.VARCHAR},
-		{"engineKey", Types.VARCHAR}, {"percentage", Types.BOOLEAN},
-		{"active_", Types.BOOLEAN}, {"typeSettings", Types.CLOB}
+		{"active_", Types.BOOLEAN}, {"description", Types.VARCHAR},
+		{"engineKey", Types.VARCHAR}, {"name", Types.VARCHAR},
+		{"percentage", Types.BOOLEAN}, {"typeSettings", Types.CLOB}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -91,16 +91,16 @@ public class CommerceTaxMethodModelImpl
 		TABLE_COLUMNS_MAP.put("userName", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("createDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
-		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("active_", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("description", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("engineKey", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("percentage", Types.BOOLEAN);
-		TABLE_COLUMNS_MAP.put("active_", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("typeSettings", Types.CLOB);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CommerceTaxMethod (mvccVersion LONG default 0 not null,commerceTaxMethodId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,name STRING null,description STRING null,engineKey VARCHAR(75) null,percentage BOOLEAN,active_ BOOLEAN,typeSettings TEXT null)";
+		"create table CommerceTaxMethod (mvccVersion LONG default 0 not null,commerceTaxMethodId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,active_ BOOLEAN,description STRING null,engineKey VARCHAR(75) null,name STRING null,percentage BOOLEAN,typeSettings TEXT null)";
 
 	public static final String TABLE_SQL_DROP = "drop table CommerceTaxMethod";
 
@@ -268,15 +268,15 @@ public class CommerceTaxMethodModelImpl
 				"createDate", CommerceTaxMethod::getCreateDate);
 			attributeGetterFunctions.put(
 				"modifiedDate", CommerceTaxMethod::getModifiedDate);
-			attributeGetterFunctions.put("name", CommerceTaxMethod::getName);
+			attributeGetterFunctions.put(
+				"active", CommerceTaxMethod::getActive);
 			attributeGetterFunctions.put(
 				"description", CommerceTaxMethod::getDescription);
 			attributeGetterFunctions.put(
 				"engineKey", CommerceTaxMethod::getEngineKey);
+			attributeGetterFunctions.put("name", CommerceTaxMethod::getName);
 			attributeGetterFunctions.put(
 				"percentage", CommerceTaxMethod::getPercentage);
-			attributeGetterFunctions.put(
-				"active", CommerceTaxMethod::getActive);
 			attributeGetterFunctions.put(
 				"typeSettings", CommerceTaxMethod::getTypeSettings);
 
@@ -330,9 +330,9 @@ public class CommerceTaxMethodModelImpl
 				(BiConsumer<CommerceTaxMethod, Date>)
 					CommerceTaxMethod::setModifiedDate);
 			attributeSetterBiConsumers.put(
-				"name",
-				(BiConsumer<CommerceTaxMethod, String>)
-					CommerceTaxMethod::setName);
+				"active",
+				(BiConsumer<CommerceTaxMethod, Boolean>)
+					CommerceTaxMethod::setActive);
 			attributeSetterBiConsumers.put(
 				"description",
 				(BiConsumer<CommerceTaxMethod, String>)
@@ -342,13 +342,13 @@ public class CommerceTaxMethodModelImpl
 				(BiConsumer<CommerceTaxMethod, String>)
 					CommerceTaxMethod::setEngineKey);
 			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<CommerceTaxMethod, String>)
+					CommerceTaxMethod::setName);
+			attributeSetterBiConsumers.put(
 				"percentage",
 				(BiConsumer<CommerceTaxMethod, Boolean>)
 					CommerceTaxMethod::setPercentage);
-			attributeSetterBiConsumers.put(
-				"active",
-				(BiConsumer<CommerceTaxMethod, Boolean>)
-					CommerceTaxMethod::setActive);
 			attributeSetterBiConsumers.put(
 				"typeSettings",
 				(BiConsumer<CommerceTaxMethod, String>)
@@ -518,109 +518,33 @@ public class CommerceTaxMethodModelImpl
 
 	@JSON
 	@Override
-	public String getName() {
-		if (_name == null) {
-			return "";
-		}
-		else {
-			return _name;
-		}
-	}
-
-	@Override
-	public String getName(Locale locale) {
-		String languageId = LocaleUtil.toLanguageId(locale);
-
-		return getName(languageId);
-	}
-
-	@Override
-	public String getName(Locale locale, boolean useDefault) {
-		String languageId = LocaleUtil.toLanguageId(locale);
-
-		return getName(languageId, useDefault);
-	}
-
-	@Override
-	public String getName(String languageId) {
-		return LocalizationUtil.getLocalization(getName(), languageId);
-	}
-
-	@Override
-	public String getName(String languageId, boolean useDefault) {
-		return LocalizationUtil.getLocalization(
-			getName(), languageId, useDefault);
-	}
-
-	@Override
-	public String getNameCurrentLanguageId() {
-		return _nameCurrentLanguageId;
+	public boolean getActive() {
+		return _active;
 	}
 
 	@JSON
 	@Override
-	public String getNameCurrentValue() {
-		Locale locale = getLocale(_nameCurrentLanguageId);
-
-		return getName(locale);
+	public boolean isActive() {
+		return _active;
 	}
 
 	@Override
-	public Map<Locale, String> getNameMap() {
-		return LocalizationUtil.getLocalizationMap(getName());
-	}
-
-	@Override
-	public void setName(String name) {
+	public void setActive(boolean active) {
 		if (_columnOriginalValues == Collections.EMPTY_MAP) {
 			_setColumnOriginalValues();
 		}
 
-		_name = name;
+		_active = active;
 	}
 
-	@Override
-	public void setName(String name, Locale locale) {
-		setName(name, locale, LocaleUtil.getSiteDefault());
-	}
-
-	@Override
-	public void setName(String name, Locale locale, Locale defaultLocale) {
-		String languageId = LocaleUtil.toLanguageId(locale);
-		String defaultLanguageId = LocaleUtil.toLanguageId(defaultLocale);
-
-		if (Validator.isNotNull(name)) {
-			setName(
-				LocalizationUtil.updateLocalization(
-					getName(), "Name", name, languageId, defaultLanguageId));
-		}
-		else {
-			setName(
-				LocalizationUtil.removeLocalization(
-					getName(), "Name", languageId));
-		}
-	}
-
-	@Override
-	public void setNameCurrentLanguageId(String languageId) {
-		_nameCurrentLanguageId = languageId;
-	}
-
-	@Override
-	public void setNameMap(Map<Locale, String> nameMap) {
-		setNameMap(nameMap, LocaleUtil.getSiteDefault());
-	}
-
-	@Override
-	public void setNameMap(Map<Locale, String> nameMap, Locale defaultLocale) {
-		if (nameMap == null) {
-			return;
-		}
-
-		setName(
-			LocalizationUtil.updateLocalization(
-				nameMap, getName(), "Name",
-				LocaleUtil.toLanguageId(defaultLocale)));
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public boolean getOriginalActive() {
+		return GetterUtil.getBoolean(
+			this.<Boolean>getColumnOriginalValue("active_"));
 	}
 
 	@JSON
@@ -766,6 +690,113 @@ public class CommerceTaxMethodModelImpl
 
 	@JSON
 	@Override
+	public String getName() {
+		if (_name == null) {
+			return "";
+		}
+		else {
+			return _name;
+		}
+	}
+
+	@Override
+	public String getName(Locale locale) {
+		String languageId = LocaleUtil.toLanguageId(locale);
+
+		return getName(languageId);
+	}
+
+	@Override
+	public String getName(Locale locale, boolean useDefault) {
+		String languageId = LocaleUtil.toLanguageId(locale);
+
+		return getName(languageId, useDefault);
+	}
+
+	@Override
+	public String getName(String languageId) {
+		return LocalizationUtil.getLocalization(getName(), languageId);
+	}
+
+	@Override
+	public String getName(String languageId, boolean useDefault) {
+		return LocalizationUtil.getLocalization(
+			getName(), languageId, useDefault);
+	}
+
+	@Override
+	public String getNameCurrentLanguageId() {
+		return _nameCurrentLanguageId;
+	}
+
+	@JSON
+	@Override
+	public String getNameCurrentValue() {
+		Locale locale = getLocale(_nameCurrentLanguageId);
+
+		return getName(locale);
+	}
+
+	@Override
+	public Map<Locale, String> getNameMap() {
+		return LocalizationUtil.getLocalizationMap(getName());
+	}
+
+	@Override
+	public void setName(String name) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_name = name;
+	}
+
+	@Override
+	public void setName(String name, Locale locale) {
+		setName(name, locale, LocaleUtil.getSiteDefault());
+	}
+
+	@Override
+	public void setName(String name, Locale locale, Locale defaultLocale) {
+		String languageId = LocaleUtil.toLanguageId(locale);
+		String defaultLanguageId = LocaleUtil.toLanguageId(defaultLocale);
+
+		if (Validator.isNotNull(name)) {
+			setName(
+				LocalizationUtil.updateLocalization(
+					getName(), "Name", name, languageId, defaultLanguageId));
+		}
+		else {
+			setName(
+				LocalizationUtil.removeLocalization(
+					getName(), "Name", languageId));
+		}
+	}
+
+	@Override
+	public void setNameCurrentLanguageId(String languageId) {
+		_nameCurrentLanguageId = languageId;
+	}
+
+	@Override
+	public void setNameMap(Map<Locale, String> nameMap) {
+		setNameMap(nameMap, LocaleUtil.getSiteDefault());
+	}
+
+	@Override
+	public void setNameMap(Map<Locale, String> nameMap, Locale defaultLocale) {
+		if (nameMap == null) {
+			return;
+		}
+
+		setName(
+			LocalizationUtil.updateLocalization(
+				nameMap, getName(), "Name",
+				LocaleUtil.toLanguageId(defaultLocale)));
+	}
+
+	@JSON
+	@Override
 	public boolean getPercentage() {
 		return _percentage;
 	}
@@ -783,37 +814,6 @@ public class CommerceTaxMethodModelImpl
 		}
 
 		_percentage = percentage;
-	}
-
-	@JSON
-	@Override
-	public boolean getActive() {
-		return _active;
-	}
-
-	@JSON
-	@Override
-	public boolean isActive() {
-		return _active;
-	}
-
-	@Override
-	public void setActive(boolean active) {
-		if (_columnOriginalValues == Collections.EMPTY_MAP) {
-			_setColumnOriginalValues();
-		}
-
-		_active = active;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getColumnOriginalValue(String)}
-	 */
-	@Deprecated
-	public boolean getOriginalActive() {
-		return GetterUtil.getBoolean(
-			this.<Boolean>getColumnOriginalValue("active_"));
 	}
 
 	@JSON
@@ -877,9 +877,9 @@ public class CommerceTaxMethodModelImpl
 	public String[] getAvailableLanguageIds() {
 		Set<String> availableLanguageIds = new TreeSet<String>();
 
-		Map<Locale, String> nameMap = getNameMap();
+		Map<Locale, String> descriptionMap = getDescriptionMap();
 
-		for (Map.Entry<Locale, String> entry : nameMap.entrySet()) {
+		for (Map.Entry<Locale, String> entry : descriptionMap.entrySet()) {
 			Locale locale = entry.getKey();
 			String value = entry.getValue();
 
@@ -888,9 +888,9 @@ public class CommerceTaxMethodModelImpl
 			}
 		}
 
-		Map<Locale, String> descriptionMap = getDescriptionMap();
+		Map<Locale, String> nameMap = getNameMap();
 
-		for (Map.Entry<Locale, String> entry : descriptionMap.entrySet()) {
+		for (Map.Entry<Locale, String> entry : nameMap.entrySet()) {
 			Locale locale = entry.getKey();
 			String value = entry.getValue();
 
@@ -905,7 +905,7 @@ public class CommerceTaxMethodModelImpl
 
 	@Override
 	public String getDefaultLanguageId() {
-		String xml = getName();
+		String xml = getDescription();
 
 		if (xml == null) {
 			return "";
@@ -940,15 +940,6 @@ public class CommerceTaxMethodModelImpl
 
 		String modelDefaultLanguageId = getDefaultLanguageId();
 
-		String name = getName(defaultLocale);
-
-		if (Validator.isNull(name)) {
-			setName(getName(modelDefaultLanguageId), defaultLocale);
-		}
-		else {
-			setName(getName(defaultLocale), defaultLocale, defaultLocale);
-		}
-
 		String description = getDescription(defaultLocale);
 
 		if (Validator.isNull(description)) {
@@ -958,6 +949,15 @@ public class CommerceTaxMethodModelImpl
 		else {
 			setDescription(
 				getDescription(defaultLocale), defaultLocale, defaultLocale);
+		}
+
+		String name = getName(defaultLocale);
+
+		if (Validator.isNull(name)) {
+			setName(getName(modelDefaultLanguageId), defaultLocale);
+		}
+		else {
+			setName(getName(defaultLocale), defaultLocale, defaultLocale);
 		}
 	}
 
@@ -989,11 +989,11 @@ public class CommerceTaxMethodModelImpl
 		commerceTaxMethodImpl.setUserName(getUserName());
 		commerceTaxMethodImpl.setCreateDate(getCreateDate());
 		commerceTaxMethodImpl.setModifiedDate(getModifiedDate());
-		commerceTaxMethodImpl.setName(getName());
+		commerceTaxMethodImpl.setActive(isActive());
 		commerceTaxMethodImpl.setDescription(getDescription());
 		commerceTaxMethodImpl.setEngineKey(getEngineKey());
+		commerceTaxMethodImpl.setName(getName());
 		commerceTaxMethodImpl.setPercentage(isPercentage());
-		commerceTaxMethodImpl.setActive(isActive());
 		commerceTaxMethodImpl.setTypeSettings(getTypeSettings());
 
 		commerceTaxMethodImpl.resetOriginalValues();
@@ -1022,16 +1022,16 @@ public class CommerceTaxMethodModelImpl
 			this.<Date>getColumnOriginalValue("createDate"));
 		commerceTaxMethodImpl.setModifiedDate(
 			this.<Date>getColumnOriginalValue("modifiedDate"));
-		commerceTaxMethodImpl.setName(
-			this.<String>getColumnOriginalValue("name"));
+		commerceTaxMethodImpl.setActive(
+			this.<Boolean>getColumnOriginalValue("active_"));
 		commerceTaxMethodImpl.setDescription(
 			this.<String>getColumnOriginalValue("description"));
 		commerceTaxMethodImpl.setEngineKey(
 			this.<String>getColumnOriginalValue("engineKey"));
+		commerceTaxMethodImpl.setName(
+			this.<String>getColumnOriginalValue("name"));
 		commerceTaxMethodImpl.setPercentage(
 			this.<Boolean>getColumnOriginalValue("percentage"));
-		commerceTaxMethodImpl.setActive(
-			this.<Boolean>getColumnOriginalValue("active_"));
 		commerceTaxMethodImpl.setTypeSettings(
 			this.<String>getColumnOriginalValue("typeSettings"));
 
@@ -1150,13 +1150,7 @@ public class CommerceTaxMethodModelImpl
 			commerceTaxMethodCacheModel.modifiedDate = Long.MIN_VALUE;
 		}
 
-		commerceTaxMethodCacheModel.name = getName();
-
-		String name = commerceTaxMethodCacheModel.name;
-
-		if ((name != null) && (name.length() == 0)) {
-			commerceTaxMethodCacheModel.name = null;
-		}
+		commerceTaxMethodCacheModel.active = isActive();
 
 		commerceTaxMethodCacheModel.description = getDescription();
 
@@ -1174,9 +1168,15 @@ public class CommerceTaxMethodModelImpl
 			commerceTaxMethodCacheModel.engineKey = null;
 		}
 
-		commerceTaxMethodCacheModel.percentage = isPercentage();
+		commerceTaxMethodCacheModel.name = getName();
 
-		commerceTaxMethodCacheModel.active = isActive();
+		String name = commerceTaxMethodCacheModel.name;
+
+		if ((name != null) && (name.length() == 0)) {
+			commerceTaxMethodCacheModel.name = null;
+		}
+
+		commerceTaxMethodCacheModel.percentage = isPercentage();
 
 		commerceTaxMethodCacheModel.typeSettings = getTypeSettings();
 
@@ -1257,13 +1257,13 @@ public class CommerceTaxMethodModelImpl
 	private Date _createDate;
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
-	private String _name;
-	private String _nameCurrentLanguageId;
+	private boolean _active;
 	private String _description;
 	private String _descriptionCurrentLanguageId;
 	private String _engineKey;
+	private String _name;
+	private String _nameCurrentLanguageId;
 	private boolean _percentage;
-	private boolean _active;
 	private String _typeSettings;
 
 	public <T> T getColumnValue(String columnName) {
@@ -1304,11 +1304,11 @@ public class CommerceTaxMethodModelImpl
 		_columnOriginalValues.put("userName", _userName);
 		_columnOriginalValues.put("createDate", _createDate);
 		_columnOriginalValues.put("modifiedDate", _modifiedDate);
-		_columnOriginalValues.put("name", _name);
+		_columnOriginalValues.put("active_", _active);
 		_columnOriginalValues.put("description", _description);
 		_columnOriginalValues.put("engineKey", _engineKey);
+		_columnOriginalValues.put("name", _name);
 		_columnOriginalValues.put("percentage", _percentage);
-		_columnOriginalValues.put("active_", _active);
 		_columnOriginalValues.put("typeSettings", _typeSettings);
 	}
 
@@ -1349,15 +1349,15 @@ public class CommerceTaxMethodModelImpl
 
 		columnBitmasks.put("modifiedDate", 128L);
 
-		columnBitmasks.put("name", 256L);
+		columnBitmasks.put("active_", 256L);
 
 		columnBitmasks.put("description", 512L);
 
 		columnBitmasks.put("engineKey", 1024L);
 
-		columnBitmasks.put("percentage", 2048L);
+		columnBitmasks.put("name", 2048L);
 
-		columnBitmasks.put("active_", 4096L);
+		columnBitmasks.put("percentage", 4096L);
 
 		columnBitmasks.put("typeSettings", 8192L);
 

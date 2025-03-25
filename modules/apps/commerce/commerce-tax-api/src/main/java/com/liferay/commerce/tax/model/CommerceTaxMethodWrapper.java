@@ -41,11 +41,11 @@ public class CommerceTaxMethodWrapper
 		attributes.put("userName", getUserName());
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
-		attributes.put("name", getName());
+		attributes.put("active", isActive());
 		attributes.put("description", getDescription());
 		attributes.put("engineKey", getEngineKey());
+		attributes.put("name", getName());
 		attributes.put("percentage", isPercentage());
-		attributes.put("active", isActive());
 		attributes.put("typeSettings", getTypeSettings());
 
 		return attributes;
@@ -101,10 +101,10 @@ public class CommerceTaxMethodWrapper
 			setModifiedDate(modifiedDate);
 		}
 
-		String name = (String)attributes.get("name");
+		Boolean active = (Boolean)attributes.get("active");
 
-		if (name != null) {
-			setName(name);
+		if (active != null) {
+			setActive(active);
 		}
 
 		String description = (String)attributes.get("description");
@@ -119,16 +119,16 @@ public class CommerceTaxMethodWrapper
 			setEngineKey(engineKey);
 		}
 
+		String name = (String)attributes.get("name");
+
+		if (name != null) {
+			setName(name);
+		}
+
 		Boolean percentage = (Boolean)attributes.get("percentage");
 
 		if (percentage != null) {
 			setPercentage(percentage);
-		}
-
-		Boolean active = (Boolean)attributes.get("active");
-
-		if (active != null) {
-			setActive(active);
 		}
 
 		String typeSettings = (String)attributes.get("typeSettings");

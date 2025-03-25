@@ -585,204 +585,6 @@ public class CommerceTaxMethodPersistenceImpl
 	private static final String _FINDER_COLUMN_GROUPID_GROUPID_2 =
 		"commerceTaxMethod.groupId = ?";
 
-	private FinderPath _finderPathFetchByG_E;
-
-	/**
-	 * Returns the commerce tax method where groupId = &#63; and engineKey = &#63; or throws a <code>NoSuchTaxMethodException</code> if it could not be found.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the matching commerce tax method
-	 * @throws NoSuchTaxMethodException if a matching commerce tax method could not be found
-	 */
-	@Override
-	public CommerceTaxMethod findByG_E(long groupId, String engineKey)
-		throws NoSuchTaxMethodException {
-
-		CommerceTaxMethod commerceTaxMethod = fetchByG_E(groupId, engineKey);
-
-		if (commerceTaxMethod == null) {
-			StringBundler sb = new StringBundler(6);
-
-			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			sb.append("groupId=");
-			sb.append(groupId);
-
-			sb.append(", engineKey=");
-			sb.append(engineKey);
-
-			sb.append("}");
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(sb.toString());
-			}
-
-			throw new NoSuchTaxMethodException(sb.toString());
-		}
-
-		return commerceTaxMethod;
-	}
-
-	/**
-	 * Returns the commerce tax method where groupId = &#63; and engineKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the matching commerce tax method, or <code>null</code> if a matching commerce tax method could not be found
-	 */
-	@Override
-	public CommerceTaxMethod fetchByG_E(long groupId, String engineKey) {
-		return fetchByG_E(groupId, engineKey, true);
-	}
-
-	/**
-	 * Returns the commerce tax method where groupId = &#63; and engineKey = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the matching commerce tax method, or <code>null</code> if a matching commerce tax method could not be found
-	 */
-	@Override
-	public CommerceTaxMethod fetchByG_E(
-		long groupId, String engineKey, boolean useFinderCache) {
-
-		engineKey = Objects.toString(engineKey, "");
-
-		Object[] finderArgs = null;
-
-		if (useFinderCache) {
-			finderArgs = new Object[] {groupId, engineKey};
-		}
-
-		Object result = null;
-
-		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByG_E, finderArgs, this);
-		}
-
-		if (result instanceof CommerceTaxMethod) {
-			CommerceTaxMethod commerceTaxMethod = (CommerceTaxMethod)result;
-
-			if ((groupId != commerceTaxMethod.getGroupId()) ||
-				!Objects.equals(engineKey, commerceTaxMethod.getEngineKey())) {
-
-				result = null;
-			}
-		}
-
-		if (result == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_SQL_SELECT_COMMERCETAXMETHOD_WHERE);
-
-			sb.append(_FINDER_COLUMN_G_E_GROUPID_2);
-
-			boolean bindEngineKey = false;
-
-			if (engineKey.isEmpty()) {
-				sb.append(_FINDER_COLUMN_G_E_ENGINEKEY_3);
-			}
-			else {
-				bindEngineKey = true;
-
-				sb.append(_FINDER_COLUMN_G_E_ENGINEKEY_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(groupId);
-
-				if (bindEngineKey) {
-					queryPos.add(engineKey);
-				}
-
-				List<CommerceTaxMethod> list = query.list();
-
-				if (list.isEmpty()) {
-					if (useFinderCache) {
-						finderCache.putResult(
-							_finderPathFetchByG_E, finderArgs, list);
-					}
-				}
-				else {
-					CommerceTaxMethod commerceTaxMethod = list.get(0);
-
-					result = commerceTaxMethod;
-
-					cacheResult(commerceTaxMethod);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		if (result instanceof List<?>) {
-			return null;
-		}
-		else {
-			return (CommerceTaxMethod)result;
-		}
-	}
-
-	/**
-	 * Removes the commerce tax method where groupId = &#63; and engineKey = &#63; from the database.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the commerce tax method that was removed
-	 */
-	@Override
-	public CommerceTaxMethod removeByG_E(long groupId, String engineKey)
-		throws NoSuchTaxMethodException {
-
-		CommerceTaxMethod commerceTaxMethod = findByG_E(groupId, engineKey);
-
-		return remove(commerceTaxMethod);
-	}
-
-	/**
-	 * Returns the number of commerce tax methods where groupId = &#63; and engineKey = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param engineKey the engine key
-	 * @return the number of matching commerce tax methods
-	 */
-	@Override
-	public int countByG_E(long groupId, String engineKey) {
-		CommerceTaxMethod commerceTaxMethod = fetchByG_E(groupId, engineKey);
-
-		if (commerceTaxMethod == null) {
-			return 0;
-		}
-
-		return 1;
-	}
-
-	private static final String _FINDER_COLUMN_G_E_GROUPID_2 =
-		"commerceTaxMethod.groupId = ? AND ";
-
-	private static final String _FINDER_COLUMN_G_E_ENGINEKEY_2 =
-		"commerceTaxMethod.engineKey = ?";
-
-	private static final String _FINDER_COLUMN_G_E_ENGINEKEY_3 =
-		"(commerceTaxMethod.engineKey IS NULL OR commerceTaxMethod.engineKey = '')";
-
 	private FinderPath _finderPathWithPaginationFindByG_A;
 	private FinderPath _finderPathWithoutPaginationFindByG_A;
 	private FinderPath _finderPathCountByG_A;
@@ -1322,6 +1124,204 @@ public class CommerceTaxMethodPersistenceImpl
 
 	private static final String _FINDER_COLUMN_G_A_ACTIVE_2 =
 		"commerceTaxMethod.active = ?";
+
+	private FinderPath _finderPathFetchByG_E;
+
+	/**
+	 * Returns the commerce tax method where groupId = &#63; and engineKey = &#63; or throws a <code>NoSuchTaxMethodException</code> if it could not be found.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @return the matching commerce tax method
+	 * @throws NoSuchTaxMethodException if a matching commerce tax method could not be found
+	 */
+	@Override
+	public CommerceTaxMethod findByG_E(long groupId, String engineKey)
+		throws NoSuchTaxMethodException {
+
+		CommerceTaxMethod commerceTaxMethod = fetchByG_E(groupId, engineKey);
+
+		if (commerceTaxMethod == null) {
+			StringBundler sb = new StringBundler(6);
+
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			sb.append("groupId=");
+			sb.append(groupId);
+
+			sb.append(", engineKey=");
+			sb.append(engineKey);
+
+			sb.append("}");
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(sb.toString());
+			}
+
+			throw new NoSuchTaxMethodException(sb.toString());
+		}
+
+		return commerceTaxMethod;
+	}
+
+	/**
+	 * Returns the commerce tax method where groupId = &#63; and engineKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @return the matching commerce tax method, or <code>null</code> if a matching commerce tax method could not be found
+	 */
+	@Override
+	public CommerceTaxMethod fetchByG_E(long groupId, String engineKey) {
+		return fetchByG_E(groupId, engineKey, true);
+	}
+
+	/**
+	 * Returns the commerce tax method where groupId = &#63; and engineKey = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching commerce tax method, or <code>null</code> if a matching commerce tax method could not be found
+	 */
+	@Override
+	public CommerceTaxMethod fetchByG_E(
+		long groupId, String engineKey, boolean useFinderCache) {
+
+		engineKey = Objects.toString(engineKey, "");
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache) {
+			finderArgs = new Object[] {groupId, engineKey};
+		}
+
+		Object result = null;
+
+		if (useFinderCache) {
+			result = finderCache.getResult(
+				_finderPathFetchByG_E, finderArgs, this);
+		}
+
+		if (result instanceof CommerceTaxMethod) {
+			CommerceTaxMethod commerceTaxMethod = (CommerceTaxMethod)result;
+
+			if ((groupId != commerceTaxMethod.getGroupId()) ||
+				!Objects.equals(engineKey, commerceTaxMethod.getEngineKey())) {
+
+				result = null;
+			}
+		}
+
+		if (result == null) {
+			StringBundler sb = new StringBundler(4);
+
+			sb.append(_SQL_SELECT_COMMERCETAXMETHOD_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_E_GROUPID_2);
+
+			boolean bindEngineKey = false;
+
+			if (engineKey.isEmpty()) {
+				sb.append(_FINDER_COLUMN_G_E_ENGINEKEY_3);
+			}
+			else {
+				bindEngineKey = true;
+
+				sb.append(_FINDER_COLUMN_G_E_ENGINEKEY_2);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				if (bindEngineKey) {
+					queryPos.add(engineKey);
+				}
+
+				List<CommerceTaxMethod> list = query.list();
+
+				if (list.isEmpty()) {
+					if (useFinderCache) {
+						finderCache.putResult(
+							_finderPathFetchByG_E, finderArgs, list);
+					}
+				}
+				else {
+					CommerceTaxMethod commerceTaxMethod = list.get(0);
+
+					result = commerceTaxMethod;
+
+					cacheResult(commerceTaxMethod);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		if (result instanceof List<?>) {
+			return null;
+		}
+		else {
+			return (CommerceTaxMethod)result;
+		}
+	}
+
+	/**
+	 * Removes the commerce tax method where groupId = &#63; and engineKey = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @return the commerce tax method that was removed
+	 */
+	@Override
+	public CommerceTaxMethod removeByG_E(long groupId, String engineKey)
+		throws NoSuchTaxMethodException {
+
+		CommerceTaxMethod commerceTaxMethod = findByG_E(groupId, engineKey);
+
+		return remove(commerceTaxMethod);
+	}
+
+	/**
+	 * Returns the number of commerce tax methods where groupId = &#63; and engineKey = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param engineKey the engine key
+	 * @return the number of matching commerce tax methods
+	 */
+	@Override
+	public int countByG_E(long groupId, String engineKey) {
+		CommerceTaxMethod commerceTaxMethod = fetchByG_E(groupId, engineKey);
+
+		if (commerceTaxMethod == null) {
+			return 0;
+		}
+
+		return 1;
+	}
+
+	private static final String _FINDER_COLUMN_G_E_GROUPID_2 =
+		"commerceTaxMethod.groupId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_E_ENGINEKEY_2 =
+		"commerceTaxMethod.engineKey = ?";
+
+	private static final String _FINDER_COLUMN_G_E_ENGINEKEY_3 =
+		"(commerceTaxMethod.engineKey IS NULL OR commerceTaxMethod.engineKey = '')";
 
 	public CommerceTaxMethodPersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
@@ -1925,11 +1925,6 @@ public class CommerceTaxMethodPersistenceImpl
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			false);
 
-		_finderPathFetchByG_E = new FinderPath(
-			FINDER_CLASS_NAME_ENTITY, "fetchByG_E",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"groupId", "engineKey"}, true);
-
 		_finderPathWithPaginationFindByG_A = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_A",
 			new String[] {
@@ -1948,6 +1943,11 @@ public class CommerceTaxMethodPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_A",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"groupId", "active_"}, false);
+
+		_finderPathFetchByG_E = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByG_E",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"groupId", "engineKey"}, true);
 
 		CommerceTaxMethodUtil.setPersistence(this);
 	}

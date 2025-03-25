@@ -32,13 +32,13 @@ public class CommerceTaxMethodServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.commerce.tax.service.impl.CommerceTaxMethodServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static CommerceTaxMethod addCommerceTaxMethod(
-			long groupId, Map<java.util.Locale, String> nameMap,
+			long groupId, boolean active,
 			Map<java.util.Locale, String> descriptionMap, String engineKey,
-			boolean percentage, boolean active)
+			Map<java.util.Locale, String> nameMap, boolean percentage)
 		throws PortalException {
 
 		return getService().addCommerceTaxMethod(
-			groupId, nameMap, descriptionMap, engineKey, percentage, active);
+			groupId, active, descriptionMap, engineKey, nameMap, percentage);
 	}
 
 	/**
@@ -122,13 +122,13 @@ public class CommerceTaxMethodServiceUtil {
 	}
 
 	public static CommerceTaxMethod updateCommerceTaxMethod(
-			long commerceTaxMethodId, Map<java.util.Locale, String> nameMap,
-			Map<java.util.Locale, String> descriptionMap, boolean percentage,
-			boolean active)
+			long commerceTaxMethodId, boolean active,
+			Map<java.util.Locale, String> descriptionMap,
+			Map<java.util.Locale, String> nameMap, boolean percentage)
 		throws PortalException {
 
 		return getService().updateCommerceTaxMethod(
-			commerceTaxMethodId, nameMap, descriptionMap, percentage, active);
+			commerceTaxMethodId, active, descriptionMap, nameMap, percentage);
 	}
 
 	public static CommerceTaxMethodService getService() {
