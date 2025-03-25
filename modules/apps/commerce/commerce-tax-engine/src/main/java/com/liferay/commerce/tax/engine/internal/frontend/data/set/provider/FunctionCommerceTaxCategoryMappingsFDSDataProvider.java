@@ -68,10 +68,10 @@ public class FunctionCommerceTaxCategoryMappingsFDSDataProvider
 						commerceTaxCategoryMapping.getCPTaxCategoryId());
 
 				return new TaxCategoryMapping(
-					commerceTaxCategoryMapping.getExternalReferenceCode(),
-					cpTaxCategory.getName(themeDisplay.getLanguageId()),
 					commerceTaxCategoryMapping.
-						getCommerceTaxCategoryMappingId());
+						getCommerceTaxCategoryMappingId(),
+					commerceTaxCategoryMapping.getExternalReferenceCode(),
+					cpTaxCategory.getName(themeDisplay.getLanguageId()));
 			});
 	}
 
