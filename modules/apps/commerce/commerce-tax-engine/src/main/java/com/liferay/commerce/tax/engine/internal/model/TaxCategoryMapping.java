@@ -11,11 +11,16 @@ package com.liferay.commerce.tax.engine.internal.model;
 public class TaxCategoryMapping {
 
 	public TaxCategoryMapping(
-		String externalReferenceCode, String name, long taxCategoryMappingId) {
+		long commerceTaxCategoryMappingId, String externalReferenceCode,
+		String name) {
 
+		_commerceTaxCategoryMappingId = commerceTaxCategoryMappingId;
 		_externalReferenceCode = externalReferenceCode;
 		_name = name;
-		_taxCategoryMappingId = taxCategoryMappingId;
+	}
+
+	public long getCommerceTaxCategoryMappingId() {
+		return _commerceTaxCategoryMappingId;
 	}
 
 	public String getExternalReferenceCode() {
@@ -26,12 +31,8 @@ public class TaxCategoryMapping {
 		return _name;
 	}
 
-	public long getTaxCategoryMappingId() {
-		return _taxCategoryMappingId;
-	}
-
+	private final long _commerceTaxCategoryMappingId;
 	private final String _externalReferenceCode;
 	private final String _name;
-	private final long _taxCategoryMappingId;
 
 }

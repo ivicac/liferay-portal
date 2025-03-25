@@ -67,7 +67,7 @@ public class FunctionCommerceTaxCategoryMappingFDSActionProvider
 				dropdownItem.setHref(
 					_getTaxCategoryMappingEditURL(
 						httpServletRequest,
-						taxCategoryMapping.getTaxCategoryMappingId()));
+						taxCategoryMapping.getCommerceTaxCategoryMappingId()));
 				dropdownItem.setLabel(
 					_language.get(httpServletRequest, "edit"));
 				dropdownItem.setTarget("sidePanel");
@@ -80,7 +80,7 @@ public class FunctionCommerceTaxCategoryMappingFDSActionProvider
 				dropdownItem.setHref(
 					_getTaxCategoryMappingDeleteURL(
 						httpServletRequest,
-						taxCategoryMapping.getTaxCategoryMappingId()));
+						taxCategoryMapping.getCommerceTaxCategoryMappingId()));
 				dropdownItem.setLabel(
 					_language.get(httpServletRequest, "delete"));
 			}
