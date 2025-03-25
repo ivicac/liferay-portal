@@ -101,10 +101,10 @@ public class EditCommerceTaxCategoryMappingMVCActionCommand
 	private void _updateCommerceTaxCategoryMapping(ActionRequest actionRequest)
 		throws Exception {
 
-		long commerceTaxCategoryMappingId = ParamUtil.getLong(
-			actionRequest, "commerceTaxCategoryMappingId");
 		String externalReferenceCode = ParamUtil.getString(
 			actionRequest, "externalReferenceCode");
+		long commerceTaxCategoryMappingId = ParamUtil.getLong(
+			actionRequest, "commerceTaxCategoryMappingId");
 
 		if (commerceTaxCategoryMappingId > 0) {
 			_commerceTaxCategoryMappingService.updateExternalReferenceCode(
@@ -121,9 +121,8 @@ public class EditCommerceTaxCategoryMappingMVCActionCommand
 					commerceTaxMethodId);
 
 			_commerceTaxCategoryMappingService.addCommerceTaxCategoryMapping(
-				commerceTaxMethod.getGroupId(),
-				commerceTaxMethod.getCommerceTaxMethodId(), cpTaxCategoryId,
-				externalReferenceCode);
+				externalReferenceCode, commerceTaxMethod.getGroupId(),
+				commerceTaxMethod.getCommerceTaxMethodId(), cpTaxCategoryId);
 		}
 	}
 
