@@ -107,14 +107,14 @@ public class EditCommerceTaxMethodMVCActionCommand
 				actionRequest, "commerceTaxMethodEngineKey");
 
 			commerceTaxMethod = _commerceTaxMethodService.addCommerceTaxMethod(
-				commerceChannel.getGroupId(), nameMap, descriptionMap,
-				commerceTaxMethodEngineKey, percentage, active);
+				commerceChannel.getGroupId(), active, descriptionMap,
+				commerceTaxMethodEngineKey, nameMap, percentage);
 		}
 		else {
 			commerceTaxMethod =
 				_commerceTaxMethodService.updateCommerceTaxMethod(
-					commerceTaxMethodId, nameMap, descriptionMap, percentage,
-					active);
+					commerceTaxMethodId, active, descriptionMap, nameMap,
+					percentage);
 		}
 
 		return commerceTaxMethod;

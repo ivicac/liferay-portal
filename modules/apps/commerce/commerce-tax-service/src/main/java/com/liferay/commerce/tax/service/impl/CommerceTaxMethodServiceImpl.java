@@ -45,8 +45,8 @@ public class CommerceTaxMethodServiceImpl
 		_checkCommerceChannel(groupId);
 
 		return commerceTaxMethodLocalService.addCommerceTaxMethod(
-			getUserId(), groupId, nameMap, descriptionMap, engineKey,
-			percentage, active);
+			groupId, getUserId(), active, descriptionMap, engineKey, nameMap,
+			percentage);
 	}
 
 	/**
@@ -61,8 +61,8 @@ public class CommerceTaxMethodServiceImpl
 		throws PortalException {
 
 		return commerceTaxMethodService.addCommerceTaxMethod(
-			serviceContext.getScopeGroupId(), nameMap, descriptionMap,
-			engineKey, percentage, active);
+			serviceContext.getScopeGroupId(), active, descriptionMap, engineKey,
+			nameMap, percentage);
 	}
 
 	@Override
@@ -176,8 +176,8 @@ public class CommerceTaxMethodServiceImpl
 		_checkCommerceChannel(commerceTaxMethod.getGroupId());
 
 		return commerceTaxMethodLocalService.updateCommerceTaxMethod(
-			commerceTaxMethod.getCommerceTaxMethodId(), nameMap, descriptionMap,
-			percentage, active);
+			commerceTaxMethod.getCommerceTaxMethodId(), active, descriptionMap,
+			nameMap, percentage);
 	}
 
 	private void _checkCommerceChannel(long groupId) throws PortalException {

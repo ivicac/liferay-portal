@@ -33,10 +33,9 @@ public class CommerceTaxTestUtil {
 		String commerceTaxMethodEngineKey = "by-address";
 
 		return CommerceTaxMethodLocalServiceUtil.addCommerceTaxMethod(
-			userId, commerceChannelGroupId,
-			RandomTestUtil.randomLocaleStringMap(),
+			commerceChannelGroupId, userId, true,
 			RandomTestUtil.randomLocaleStringMap(), commerceTaxMethodEngineKey,
-			percentage, true);
+			RandomTestUtil.randomLocaleStringMap(), percentage);
 	}
 
 	public static long addTaxCategoryId(long groupId) throws PortalException {

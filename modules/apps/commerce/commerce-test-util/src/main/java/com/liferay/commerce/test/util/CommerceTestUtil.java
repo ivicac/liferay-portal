@@ -260,8 +260,8 @@ public class CommerceTestUtil {
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
 		addCommerceTaxFixedRate(
-			userId, commerceOrder.getGroupId(),
-			cpDefinition.getCPTaxCategoryId(), false, true);
+			commerceOrder.getGroupId(), userId, true,
+			cpDefinition.getCPTaxCategoryId(), false);
 
 		return CommerceOrderLocalServiceUtil.updateCommerceOrder(commerceOrder);
 	}
@@ -502,18 +502,18 @@ public class CommerceTestUtil {
 	}
 
 	public static CommerceTaxFixedRate addCommerceTaxFixedRate(
-			long userId, long groupId, long cpTaxCategoryId, boolean percentage,
-			boolean active)
+			long groupId, long userId, boolean active, long cpTaxCategoryId,
+			boolean percentage)
 		throws PortalException {
 
 		CommerceTaxMethod commerceTaxMethod =
 			CommerceTaxMethodLocalServiceUtil.addCommerceTaxMethod(
-				userId, groupId, RandomTestUtil.randomLocaleStringMap(),
-				RandomTestUtil.randomLocaleStringMap(), "fixed-tax", percentage,
-				active);
+				groupId, userId, active, RandomTestUtil.randomLocaleStringMap(),
+				"fixed-tax", RandomTestUtil.randomLocaleStringMap(),
+				percentage);
 
 		return CommerceTaxFixedRateLocalServiceUtil.addCommerceTaxFixedRate(
-			userId, commerceTaxMethod.getGroupId(),
+			commerceTaxMethod.getGroupId(), userId,
 			commerceTaxMethod.getCommerceTaxMethodId(), cpTaxCategoryId,
 			RandomTestUtil.randomDouble());
 	}

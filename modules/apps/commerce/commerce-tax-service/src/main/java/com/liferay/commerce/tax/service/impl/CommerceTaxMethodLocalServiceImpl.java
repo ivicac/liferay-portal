@@ -55,11 +55,11 @@ public class CommerceTaxMethodLocalServiceImpl
 		commerceTaxMethod.setCompanyId(user.getCompanyId());
 		commerceTaxMethod.setUserId(user.getUserId());
 		commerceTaxMethod.setUserName(user.getFullName());
-		commerceTaxMethod.setNameMap(nameMap);
+		commerceTaxMethod.setActive(active);
 		commerceTaxMethod.setDescriptionMap(descriptionMap);
 		commerceTaxMethod.setEngineKey(engineKey);
+		commerceTaxMethod.setNameMap(nameMap);
 		commerceTaxMethod.setPercentage(percentage);
-		commerceTaxMethod.setActive(active);
 
 		return commerceTaxMethodPersistence.update(commerceTaxMethod);
 	}
@@ -77,7 +77,7 @@ public class CommerceTaxMethodLocalServiceImpl
 
 		return commerceTaxMethodLocalService.addCommerceTaxMethod(
 			serviceContext.getScopeGroupId(), serviceContext.getUserId(),
-			nameMap, descriptionMap, engineKey, percentage, active);
+			active, descriptionMap, engineKey, nameMap, percentage);
 	}
 
 	@Override
@@ -139,10 +139,10 @@ public class CommerceTaxMethodLocalServiceImpl
 
 		_validate(nameMap, commerceTaxMethod.getEngineKey());
 
-		commerceTaxMethod.setNameMap(nameMap);
-		commerceTaxMethod.setDescriptionMap(descriptionMap);
-		commerceTaxMethod.setPercentage(percentage);
 		commerceTaxMethod.setActive(active);
+		commerceTaxMethod.setDescriptionMap(descriptionMap);
+		commerceTaxMethod.setNameMap(nameMap);
+		commerceTaxMethod.setPercentage(percentage);
 
 		return commerceTaxMethodPersistence.update(commerceTaxMethod);
 	}
