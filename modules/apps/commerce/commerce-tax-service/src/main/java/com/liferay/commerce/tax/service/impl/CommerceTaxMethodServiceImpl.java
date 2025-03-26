@@ -38,9 +38,8 @@ public class CommerceTaxMethodServiceImpl
 
 	@Override
 	public CommerceTaxMethod addCommerceTaxMethod(
-			long groupId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, String engineKey,
-			boolean percentage, boolean active)
+			long groupId, boolean active, Map<Locale, String> descriptionMap,
+			String engineKey, Map<Locale, String> nameMap, boolean percentage)
 		throws PortalException {
 
 		_checkCommerceChannel(groupId);
@@ -165,9 +164,9 @@ public class CommerceTaxMethodServiceImpl
 
 	@Override
 	public CommerceTaxMethod updateCommerceTaxMethod(
-			long commerceTaxMethodId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, boolean percentage,
-			boolean active)
+			long commerceTaxMethodId, boolean active,
+			Map<Locale, String> descriptionMap, Map<Locale, String> nameMap,
+			boolean percentage)
 		throws PortalException {
 
 		CommerceTaxMethod commerceTaxMethod =

@@ -37,9 +37,9 @@ public class CommerceTaxMethodLocalServiceImpl
 
 	@Override
 	public CommerceTaxMethod addCommerceTaxMethod(
-			long userId, long groupId, Map<Locale, String> nameMap,
+			long groupId, long userId, boolean active,
 			Map<Locale, String> descriptionMap, String engineKey,
-			boolean percentage, boolean active)
+			Map<Locale, String> nameMap, boolean percentage)
 		throws PortalException {
 
 		User user = _userLocalService.getUser(userId);
@@ -76,7 +76,7 @@ public class CommerceTaxMethodLocalServiceImpl
 		throws PortalException {
 
 		return commerceTaxMethodLocalService.addCommerceTaxMethod(
-			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
+			serviceContext.getScopeGroupId(), serviceContext.getUserId(),
 			nameMap, descriptionMap, engineKey, percentage, active);
 	}
 
@@ -129,9 +129,9 @@ public class CommerceTaxMethodLocalServiceImpl
 
 	@Override
 	public CommerceTaxMethod updateCommerceTaxMethod(
-			long commerceTaxMethodId, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, boolean percentage,
-			boolean active)
+			long commerceTaxMethodId, boolean active,
+			Map<Locale, String> descriptionMap, Map<Locale, String> nameMap,
+			boolean percentage)
 		throws PortalException {
 
 		CommerceTaxMethod commerceTaxMethod =
