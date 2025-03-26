@@ -57,11 +57,11 @@
 
 		<!-- Other fields -->
 
-		<column localized="true" name="name" type="String" />
+		<column name="active" type="boolean" />
 		<column localized="true" name="description" type="String" />
 		<column name="engineKey" type="String" />
+		<column localized="true" name="name" type="String" />
 		<column name="percentage" type="boolean" />
-		<column name="active" type="boolean" />
 		<column name="typeSettings" type="String" />
 
 		<!-- Order -->
@@ -75,13 +75,13 @@
 		<finder name="GroupId" return-type="Collection">
 			<finder-column name="groupId" />
 		</finder>
-		<finder name="G_E" return-type="CommerceTaxMethod" unique="true">
-			<finder-column name="groupId" />
-			<finder-column name="engineKey" />
-		</finder>
 		<finder name="G_A" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="active" />
+		</finder>
+		<finder name="G_E" return-type="CommerceTaxMethod" unique="true">
+			<finder-column name="groupId" />
+			<finder-column name="engineKey" />
 		</finder>
 	</entity>
 	<exceptions>
