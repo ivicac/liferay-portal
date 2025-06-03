@@ -126,7 +126,9 @@
 		<field name="classPK" type="long" />
 		<field name="CPConfigurationListId" type="long" />
 		<field name="CPTaxCategoryId" type="long" />
-		<field name="allowedOrderQuantities" type="String" />
+		<field name="allowedOrderQuantities" type="String">
+			<sanitize content-type="text/html" modes="ALL" />
+		</field>
 		<field name="backOrders" type="boolean" />
 		<field name="commerceAvailabilityEstimateId" type="long" />
 		<field name="CPDefinitionInventoryEngine" type="String" />
