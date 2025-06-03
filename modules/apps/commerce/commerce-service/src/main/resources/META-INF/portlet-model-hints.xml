@@ -471,7 +471,9 @@
 		<field name="maxOrderQuantity" type="BigDecimal">
 			<validator name="number" />
 		</field>
-		<field name="allowedOrderQuantities" type="String" />
+		<field name="allowedOrderQuantities" type="String">
+			<sanitize content-type="text/html" modes="ALL" />
+		</field>
 		<field name="multipleOrderQuantity" type="BigDecimal">
 			<validator name="number" />
 		</field>
