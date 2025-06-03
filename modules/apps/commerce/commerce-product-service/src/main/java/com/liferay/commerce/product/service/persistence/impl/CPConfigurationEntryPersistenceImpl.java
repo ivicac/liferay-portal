@@ -4495,6 +4495,34 @@ public class CPConfigurationEntryPersistenceImpl
 			}
 		}
 
+		long userId = GetterUtil.getLong(PrincipalThreadLocal.getName());
+
+		if (userId > 0) {
+			long companyId = cpConfigurationEntry.getCompanyId();
+
+			long groupId = cpConfigurationEntry.getGroupId();
+
+			long CPConfigurationEntryId = 0;
+
+			if (!isNew) {
+				CPConfigurationEntryId = cpConfigurationEntry.getPrimaryKey();
+			}
+
+			try {
+				cpConfigurationEntry.setAllowedOrderQuantities(
+					SanitizerUtil.sanitize(
+						companyId, groupId, userId,
+						CPConfigurationEntry.class.getName(),
+						CPConfigurationEntryId, ContentTypes.TEXT_HTML,
+						Sanitizer.MODE_ALL,
+						cpConfigurationEntry.getAllowedOrderQuantities(),
+						null));
+			}
+			catch (SanitizerException sanitizerException) {
+				throw new SystemException(sanitizerException);
+			}
+		}
+
 		Session session = null;
 
 		try {
