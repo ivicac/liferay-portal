@@ -363,6 +363,44 @@ public class CPConfigurationEntryLocalServiceTest {
 	}
 
 	@Test
+	public void testCPConfigurationEntrySanitization() throws Exception {
+		frutillaRule.scenario(
+			"Add Product Configuration Entry"
+		).given(
+			"There is a Commerce Catalog and a configuration"
+		).when(
+			"A Configuration Entry is added or updated"
+		).then(
+			"The Configuration Entry is created or updated and sanitized"
+		);
+
+		CPConfigurationEntry cpConfigurationEntry =
+			_cpConfigurationEntryLocalService.addCPConfigurationEntry(
+				RandomTestUtil.randomString(), _user.getUserId(),
+				_cpConfigurationList.getGroupId(),
+				_portal.getClassNameId(CPDefinition.class),
+				_cpDefinition.getCPDefinitionId(),
+				_cpConfigurationList.getCPConfigurationListId(), 0,
+				"<div onclick=\"alert('test')\"></div>", true, 0, "cpde", 1.0,
+				true, true, true, 1.0, "lowstoc", BigDecimal.TEN,
+				BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE, true, true, 1.0,
+				true, true, true, 1.0, 1.0);
+
+		Assert.assertEquals(
+			"<div></div>", cpConfigurationEntry.getAllowedOrderQuantities());
+
+		cpConfigurationEntry.setAllowedOrderQuantities(
+			"<div onclick=\"alert('test')\"></div>");
+
+		cpConfigurationEntry =
+			_cpConfigurationEntryLocalService.updateCPConfigurationEntry(
+				cpConfigurationEntry);
+
+		Assert.assertEquals(
+			"<div></div>", cpConfigurationEntry.getAllowedOrderQuantities());
+	}
+
+	@Test
 	public void testForceDeleteCPConfigurationEntry() throws Exception {
 		CPConfigurationEntry cpConfigurationEntry =
 			_cpConfigurationEntryLocalService.addCPConfigurationEntry(
