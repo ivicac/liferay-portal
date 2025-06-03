@@ -1,0 +1,118 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2024 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.commerce.service.test;
+
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.commerce.constants.CPDefinitionInventoryConstants;
+import com.liferay.commerce.model.CPDefinitionInventory;
+import com.liferay.commerce.product.model.CPDefinition;
+import com.liferay.commerce.product.model.CommerceCatalog;
+import com.liferay.commerce.product.service.CommerceCatalogService;
+import com.liferay.commerce.product.test.util.CPTestUtil;
+import com.liferay.commerce.service.CPDefinitionInventoryLocalService;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+
+import java.math.BigDecimal;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+/**
+ * @author João Cordeiro
+ */
+@RunWith(Arquillian.class)
+public class CPDefinitionInventoryLocalServiceTest {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
+
+	@Before
+	public void setUp() throws Exception {
+		_group = GroupTestUtil.addGroup();
+
+		_user = UserTestUtil.addUser();
+
+		_commerceCatalog = _commerceCatalogService.addCommerceCatalog(
+			RandomTestUtil.randomString(),
+			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			RandomTestUtil.randomString(), "USD", "en_US",
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), _user.getUserId()));
+
+		_cpDefinition = CPTestUtil.addCPDefinition(
+			_commerceCatalog.getGroupId());
+	}
+
+	@Test
+	public void testCPDefinitionInventorySanitization() throws Exception {
+		CPDefinitionInventory cpDefinitionInventory =
+			_cpDefinitionInventoryLocalService.
+				fetchCPDefinitionInventoryByCPDefinitionId(
+					_cpDefinition.getCPDefinitionId());
+
+		if (cpDefinitionInventory != null) {
+			_cpDefinitionInventoryLocalService.deleteCPDefinitionInventory(
+				cpDefinitionInventory);
+		}
+
+		cpDefinitionInventory =
+			_cpDefinitionInventoryLocalService.addCPDefinitionInventory(
+				_user.getUserId(), _cpDefinition.getCPDefinitionId(), "default",
+				"default", false, false, BigDecimal.ONE, false,
+				CPDefinitionInventoryConstants.DEFAULT_MIN_ORDER_QUANTITY,
+				CPDefinitionInventoryConstants.DEFAULT_MAX_ORDER_QUANTITY,
+				"<div onclick=\"alert('test')\"></div>", BigDecimal.ONE);
+
+		Assert.assertEquals(
+			"<div></div>", cpDefinitionInventory.getAllowedOrderQuantities());
+
+		cpDefinitionInventory.setAllowedOrderQuantities(
+			"<div onclick=\"alert('test')\"></div>");
+
+		cpDefinitionInventory =
+			_cpDefinitionInventoryLocalService.updateCPDefinitionInventory(
+				cpDefinitionInventory);
+
+		Assert.assertEquals(
+			"<div></div>", cpDefinitionInventory.getAllowedOrderQuantities());
+	}
+
+	private CommerceCatalog _commerceCatalog;
+
+	@Inject
+	private CommerceCatalogService _commerceCatalogService;
+
+	private CPDefinition _cpDefinition;
+
+	@Inject
+	private CPDefinitionInventoryLocalService
+		_cpDefinitionInventoryLocalService;
+
+	@DeleteAfterTestRun
+	private Group _group;
+
+	private User _user;
+
+}
