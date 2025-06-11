@@ -33,7 +33,7 @@ public class CPConfigurationEntryImpl extends CPConfigurationEntryBaseImpl {
 		}
 
 		allowedOrderQuantitiesString = allowedOrderQuantitiesString.replaceAll(
-			" *(, *)|(\\. *)|( +)", StringPool.COMMA);
+			" *( +)", StringPool.COMMA);
 
 		int[] allowedOrderQuantities = StringUtil.split(
 			allowedOrderQuantitiesString, 0);
