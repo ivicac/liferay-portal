@@ -6,12 +6,15 @@
 package com.liferay.commerce.product.service.impl;
 
 import com.liferay.commerce.product.constants.CPConfigurationEntrySettingConstants;
+import com.liferay.commerce.product.exception.CPConfigurationEntryAllowedOrderQuantitiesException;
 import com.liferay.commerce.product.exception.RequiredCPConfigurationEntryException;
 import com.liferay.commerce.product.model.CPConfigurationEntry;
 import com.liferay.commerce.product.model.CPConfigurationEntrySetting;
 import com.liferay.commerce.product.model.CPConfigurationList;
 import com.liferay.commerce.product.model.CPDefinition;
+import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CPConfigurationEntrySettingLocalService;
+import com.liferay.commerce.product.service.CommerceCatalogLocalServiceUtil;
 import com.liferay.commerce.product.service.base.CPConfigurationEntryLocalServiceBaseImpl;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
@@ -31,11 +34,16 @@ import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.math.BigDecimal;
 
+import java.text.DecimalFormatSymbols;
+
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -82,6 +90,10 @@ public class CPConfigurationEntryLocalServiceImpl
 		cpConfigurationEntry.setClassPK(classPK);
 		cpConfigurationEntry.setCPConfigurationListId(cpConfigurationListId);
 		cpConfigurationEntry.setCPTaxCategoryId(cpTaxCategoryId);
+
+		_validateAllowedOrderQuantities(
+			allowedOrderQuantities, cpConfigurationEntry.getGroupId());
+
 		cpConfigurationEntry.setAllowedOrderQuantities(allowedOrderQuantities);
 		cpConfigurationEntry.setBackOrders(backOrders);
 		cpConfigurationEntry.setCommerceAvailabilityEstimateId(
@@ -354,6 +366,10 @@ public class CPConfigurationEntryLocalServiceImpl
 
 		cpConfigurationEntry.setExternalReferenceCode(externalReferenceCode);
 		cpConfigurationEntry.setCPTaxCategoryId(cpTaxCategoryId);
+
+		_validateAllowedOrderQuantities(
+			allowedOrderQuantities, cpConfigurationEntry.getGroupId());
+
 		cpConfigurationEntry.setAllowedOrderQuantities(allowedOrderQuantities);
 		cpConfigurationEntry.setBackOrders(backOrders);
 		cpConfigurationEntry.setCommerceAvailabilityEstimateId(
@@ -455,6 +471,46 @@ public class CPConfigurationEntryLocalServiceImpl
 			CPDefinition.class);
 
 		indexer.reindex(CPDefinition.class.getName(), cpDefinitionId);
+	}
+
+	private void _validateAllowedOrderQuantities(
+			String allowedOrderQuantities, long groupId)
+		throws PortalException {
+
+		if (Validator.isNull(allowedOrderQuantities)) {
+			return;
+		}
+
+		CommerceCatalog commerceCatalog =
+			CommerceCatalogLocalServiceUtil.fetchCommerceCatalogByGroupId(
+				groupId);
+
+		DecimalFormatSymbols symbols = new DecimalFormatSymbols(
+			LocaleUtil.fromLanguageId(
+				commerceCatalog.getCatalogDefaultLanguageId()));
+
+		char groupingSeparator = symbols.getGroupingSeparator();
+		char decimalSeparator = symbols.getDecimalSeparator();
+
+		StringBundler sb = new StringBundler(9);
+
+		sb.append("^(?:\\d{1,3}(?:");
+		sb.append(groupingSeparator);
+		sb.append("\\d{3})*|\\d+)\\");
+		sb.append(decimalSeparator);
+		sb.append("\\d{2}(?:\\s+(?:\\d{1,3}(?:");
+		sb.append(groupingSeparator);
+		sb.append("\\d{3})*|\\d+)\\");
+		sb.append(decimalSeparator);
+		sb.append("\\d{2})*$");
+
+		Pattern pattern = Pattern.compile(sb.toString());
+
+		Matcher matcher = pattern.matcher(allowedOrderQuantities);
+
+		if (!matcher.matches()) {
+			throw new CPConfigurationEntryAllowedOrderQuantitiesException();
+		}
 	}
 
 	@Reference
