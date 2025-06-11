@@ -5,13 +5,17 @@
 
 package com.liferay.commerce.service.impl;
 
+import com.liferay.commerce.exception.CPDefinitionInventoryAllowedOrderQuantitiesException;
 import com.liferay.commerce.exception.CPDefinitionInventoryMaxOrderQuantityException;
 import com.liferay.commerce.exception.CPDefinitionInventoryMinOrderQuantityException;
 import com.liferay.commerce.exception.CPDefinitionInventoryMultipleOrderQuantityException;
 import com.liferay.commerce.model.CPDefinitionInventory;
 import com.liferay.commerce.product.model.CPDefinition;
+import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
+import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.service.base.CPDefinitionInventoryLocalServiceBaseImpl;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -20,9 +24,16 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.math.BigDecimal;
+
+import java.text.DecimalFormatSymbols;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -81,6 +92,10 @@ public class CPDefinitionInventoryLocalServiceImpl
 		cpDefinitionInventory.setBackOrders(backOrders);
 		cpDefinitionInventory.setMinOrderQuantity(minOrderQuantity);
 		cpDefinitionInventory.setMaxOrderQuantity(maxOrderQuantity);
+
+		_validateAllowedOrderQuantities(
+			allowedOrderQuantities, cpDefinitionInventory.getGroupId());
+
 		cpDefinitionInventory.setAllowedOrderQuantities(allowedOrderQuantities);
 		cpDefinitionInventory.setMultipleOrderQuantity(multipleOrderQuantity);
 
@@ -207,10 +222,53 @@ public class CPDefinitionInventoryLocalServiceImpl
 		cpDefinitionInventory.setBackOrders(backOrders);
 		cpDefinitionInventory.setMinOrderQuantity(minOrderQuantity);
 		cpDefinitionInventory.setMaxOrderQuantity(maxOrderQuantity);
+
+		_validateAllowedOrderQuantities(
+			allowedOrderQuantities, cpDefinitionInventory.getGroupId());
+
 		cpDefinitionInventory.setAllowedOrderQuantities(allowedOrderQuantities);
 		cpDefinitionInventory.setMultipleOrderQuantity(multipleOrderQuantity);
 
 		return cpDefinitionInventoryPersistence.update(cpDefinitionInventory);
+	}
+
+	private void _validateAllowedOrderQuantities(
+			String allowedOrderQuantities, long groupId)
+		throws PortalException {
+
+		if (Validator.isNull(allowedOrderQuantities)) {
+			return;
+		}
+
+		CommerceCatalog commerceCatalog =
+			_commerceCatalogLocalService.fetchCommerceCatalogByGroupId(groupId);
+
+		DecimalFormatSymbols symbols = new DecimalFormatSymbols(
+			LocaleUtil.fromLanguageId(
+				commerceCatalog.getCatalogDefaultLanguageId()));
+
+		char groupingSeparator = symbols.getGroupingSeparator();
+		char decimalSeparator = symbols.getDecimalSeparator();
+
+		StringBundler sb = new StringBundler(9);
+
+		sb.append("^(?:\\d{1,3}(?:");
+		sb.append(groupingSeparator);
+		sb.append("\\d{3})*|\\d+)\\");
+		sb.append(decimalSeparator);
+		sb.append("\\d{2}(?:\\s+(?:\\d{1,3}(?:");
+		sb.append(groupingSeparator);
+		sb.append("\\d{3})*|\\d+)\\");
+		sb.append(decimalSeparator);
+		sb.append("\\d{2})*$");
+
+		Pattern pattern = Pattern.compile(sb.toString());
+
+		Matcher matcher = pattern.matcher(allowedOrderQuantities);
+
+		if (!matcher.matches()) {
+			throw new CPDefinitionInventoryAllowedOrderQuantitiesException();
+		}
 	}
 
 	private void _validateOrderQuantity(
@@ -235,6 +293,9 @@ public class CPDefinitionInventoryLocalServiceImpl
 				"Multiple order quantity must be greater than 0");
 		}
 	}
+
+	@Reference
+	private CommerceCatalogLocalService _commerceCatalogLocalService;
 
 	@Reference
 	private CPDefinitionLocalService _cpDefinitionLocalService;
