@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="7e2939d" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.7.0">
+  <bpmn:process id="Process_0jmfn3y" name="Associate new User woth Account &#10;in Liferay using Liferay User API" isExecutable="true">
+    <bpmn:userTask id="Activity_00dt63w" name="Account Manager Review&#10;">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+        <zeebe:assignmentDefinition candidateGroups="=[&#34;Account Managers&#34;]" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0emcdvr</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ld7694</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Activity_141oqa4" name="Create new Account in Liferay using Liferay Account API" zeebe:modelerTemplate="cddb82b6-1f10-447e-a582-a18d246dd516" zeebe:modelerTemplateVersion="1746862718880" zeebe:modelerTemplateIcon="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDk2IDk2Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6IzBiNWZmZjt9PC9zdHlsZT48L2RlZnM+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNzEsMjFIMjVjLTIuMjA5MiwwLTQsMS43OTA4LTQsNHY0NmMwLDIuMjA5MSwxLjc5MDgsNCw0LDRoNDZjMi4yMDksMCw0LTEuNzkwOSw0LTRWMjVjMC0yLjIwOTItMS43OTEtNC00LTRaTTM3LDU2YzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0xMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMTBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0xMCwzMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMjBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0wLTEwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMTAsMzBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0wLTEwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0yMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTEwLDMwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0xMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMTBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2WiIvPjwvc3ZnPg==">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="oauth-client-credentials-flow" target="authentication.type" />
+          <zeebe:input source="https://liferay.ngrok.dev/o/oauth2/token" target="authentication.oauthTokenEndpoint" />
+          <zeebe:input source="id-a9eb913a-71e2-89c6-cb51-b9362c5a37" target="authentication.clientId" />
+          <zeebe:input source="secret-ddfdae2d-60d8-fa1f-9b14-c31ee36c6ce" target="authentication.clientSecret" />
+          <zeebe:input source="credentialsBody" target="authentication.clientAuthentication" />
+          <zeebe:input source="other" target="type" />
+          <zeebe:input source="https://liferay.ngrok.dev/o/headless-admin-user" target="baseUrl" />
+          <zeebe:input source="/v1.0/accounts" target="path" />
+          <zeebe:input source="POST" target="method" />
+          <zeebe:input source="=baseUrl + path" target="url" />
+          <zeebe:input source="=false" target="storeResponse" />
+          <zeebe:input source="=20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="=20" target="readTimeoutInSeconds" />
+          <zeebe:input source="={&#10;  &#34;description&#34;: accountDescription,&#10;  &#34;externalReferenceCode&#34;: accountExternalReferenceCode,&#10;  &#34;name&#34;: accountName&#10;}" target="body" />
+          <zeebe:input source="=false" target="ignoreNullValues" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultExpression" value="={&#10;  &#34;accountExternalReferenceCode&#34;: response.body.externalReferenceCode&#10;}" />
+          <zeebe:header key="retryBackoff" value="PT0S" />
+        </zeebe:taskHeaders>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_191j3x2</bpmn:incoming>
+      <bpmn:outgoing>Flow_0zhpkbi</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Activity_084mv1m" name="Create new User in Liferay using Liferay User API" zeebe:modelerTemplate="cddb82b6-1f10-447e-a582-a18d246dd516" zeebe:modelerTemplateVersion="1746862718880" zeebe:modelerTemplateIcon="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDk2IDk2Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6IzBiNWZmZjt9PC9zdHlsZT48L2RlZnM+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNzEsMjFIMjVjLTIuMjA5MiwwLTQsMS43OTA4LTQsNHY0NmMwLDIuMjA5MSwxLjc5MDgsNCw0LDRoNDZjMi4yMDksMCw0LTEuNzkwOSw0LTRWMjVjMC0yLjIwOTItMS43OTEtNC00LTRaTTM3LDU2YzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0xMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMTBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0xMCwzMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMjBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0wLTEwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMTAsMzBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0wLTEwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0yMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTEwLDMwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0xMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMTBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2WiIvPjwvc3ZnPg==">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="oauth-client-credentials-flow" target="authentication.type" />
+          <zeebe:input source="https://liferay.ngrok.dev/o/oauth2/token" target="authentication.oauthTokenEndpoint" />
+          <zeebe:input source="id-a9eb913a-71e2-89c6-cb51-b9362c5a37" target="authentication.clientId" />
+          <zeebe:input source="secret-ddfdae2d-60d8-fa1f-9b14-c31ee36c6ce" target="authentication.clientSecret" />
+          <zeebe:input source="credentialsBody" target="authentication.clientAuthentication" />
+          <zeebe:input source="other" target="type" />
+          <zeebe:input source="https://liferay.ngrok.dev/o/headless-admin-user" target="baseUrl" />
+          <zeebe:input source="/v1.0/user-accounts" target="path" />
+          <zeebe:input source="POST" target="method" />
+          <zeebe:input source="=baseUrl + path" target="url" />
+          <zeebe:input source="=false" target="storeResponse" />
+          <zeebe:input source="=20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="=20" target="readTimeoutInSeconds" />
+          <zeebe:input source="={&#10;  &#34;alternateName&#34;: userFirstName,&#10;  &#34;emailAddress&#34;: userEmailAddress,&#10;  &#34;familyName&#34;: userLastName,&#10;  &#34;givenName&#34;: userFirstName&#10;}" target="body" />
+          <zeebe:input source="=false" target="ignoreNullValues" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultExpression" value="={&#10;  &#34;userExternalReferenceCode&#34; : response.body.externalReferenceCode&#10;}" />
+          <zeebe:header key="retryBackoff" value="PT0S" />
+        </zeebe:taskHeaders>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0zhpkbi</bpmn:incoming>
+      <bpmn:incoming>Flow_1ld7694</bpmn:incoming>
+      <bpmn:outgoing>Flow_1lf6crf</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0emcdvr" sourceRef="Gateway_0ks178f" targetRef="Activity_00dt63w">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=accountStatus = 200</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0fsqyma" sourceRef="Activity_1lsuhzi" targetRef="Gateway_0ks178f" />
+    <bpmn:sequenceFlow id="Flow_0kjkft2" sourceRef="StartEvent_1" targetRef="Activity_1lsuhzi" />
+    <bpmn:sequenceFlow id="Flow_0lm3jr7" sourceRef="Gateway_0ks178f" targetRef="Activity_008diyh">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=accountStatus != 200</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0zhpkbi" sourceRef="Activity_141oqa4" targetRef="Activity_084mv1m" />
+    <bpmn:sequenceFlow id="Flow_191j3x2" sourceRef="Activity_008diyh" targetRef="Activity_141oqa4" />
+    <bpmn:sequenceFlow id="Flow_1ld7694" sourceRef="Activity_00dt63w" targetRef="Activity_084mv1m" />
+    <bpmn:exclusiveGateway id="Gateway_0ks178f">
+      <bpmn:incoming>Flow_0fsqyma</bpmn:incoming>
+      <bpmn:incoming>Flow_0danqf7</bpmn:incoming>
+      <bpmn:outgoing>Flow_0emcdvr</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0lm3jr7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Activity_1lsuhzi" name="Get Account in Liferay using Liferay Account API" zeebe:modelerTemplate="cddb82b6-1f10-447e-a582-a18d246dd516" zeebe:modelerTemplateVersion="1746862718880" zeebe:modelerTemplateIcon="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDk2IDk2Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6IzBiNWZmZjt9PC9zdHlsZT48L2RlZnM+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNzEsMjFIMjVjLTIuMjA5MiwwLTQsMS43OTA4LTQsNHY0NmMwLDIuMjA5MSwxLjc5MDgsNCw0LDRoNDZjMi4yMDksMCw0LTEuNzkwOSw0LTRWMjVjMC0yLjIwOTItMS43OTEtNC00LTRaTTM3LDU2YzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0xMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMTBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0xMCwzMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMjBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0wLTEwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMTAsMzBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0wLTEwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0yMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTEwLDMwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0xMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMTBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2WiIvPjwvc3ZnPg==">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="oauth-client-credentials-flow" target="authentication.type" />
+          <zeebe:input source="https://liferay.ngrok.dev/o/oauth2/token" target="authentication.oauthTokenEndpoint" />
+          <zeebe:input source="id-a9eb913a-71e2-89c6-cb51-b9362c5a37" target="authentication.clientId" />
+          <zeebe:input source="secret-ddfdae2d-60d8-fa1f-9b14-c31ee36c6ce" target="authentication.clientSecret" />
+          <zeebe:input source="credentialsBody" target="authentication.clientAuthentication" />
+          <zeebe:input source="other" target="type" />
+          <zeebe:input source="https://liferay.ngrok.dev/o/headless-admin-user" target="baseUrl" />
+          <zeebe:input source="=&#34;/v1.0/accounts/by-external-reference-code/&#34; + accountExternalReferenceCode" target="path" />
+          <zeebe:input source="GET" target="method" />
+          <zeebe:input source="=baseUrl + path" target="url" />
+          <zeebe:input source="=false" target="storeResponse" />
+          <zeebe:input source="=20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="=20" target="readTimeoutInSeconds" />
+          <zeebe:input source="=false" target="ignoreNullValues" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultExpression" value="={&#10;  &#34;accountStatus&#34; : response.status&#10;}" />
+          <zeebe:header key="errorExpression" value="=if error.code = &#34;404&#34; &#10;then bpmnError(&#34;404&#34;, &#34;The acount does not exist&#34;, {accountStatus: 404}) &#10;else null&#10;&#10;" />
+          <zeebe:header key="retryBackoff" value="PT0S" />
+        </zeebe:taskHeaders>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0kjkft2</bpmn:incoming>
+      <bpmn:outgoing>Flow_0fsqyma</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:startEvent id="StartEvent_1" name="Start Onboarding&#10;" zeebe:modelerTemplate="ef01719a-182d-471e-8a7b-de2317b01a01" zeebe:modelerTemplateVersion="1746526925983" zeebe:modelerTemplateIcon="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDk2IDk2Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6IzBiNWZmZjt9PC9zdHlsZT48L2RlZnM+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNzEsMjFIMjVjLTIuMjA5MiwwLTQsMS43OTA4LTQsNHY0NmMwLDIuMjA5MSwxLjc5MDgsNCw0LDRoNDZjMi4yMDksMCw0LTEuNzkwOSw0LTRWMjVjMC0yLjIwOTItMS43OTEtNC00LTRaTTM3LDU2YzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0xMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMTBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0xMCwzMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMjBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0wLTEwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMTAsMzBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0wLTEwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0yMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTEwLDMwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0xMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMTBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2WiIvPjwvc3ZnPg==">
+      <bpmn:extensionElements>
+        <zeebe:properties>
+          <zeebe:property name="inbound.type" value="io.camunda:webhook:1" />
+          <zeebe:property name="inbound.method" value="any" />
+          <zeebe:property name="inbound.context" value="ba711f44-46b6-407a-9274-84b1721eb2fe" />
+          <zeebe:property name="inbound.auth.type" value="NONE" />
+          <zeebe:property name="consumeUnmatchedEvents" value="true" />
+          <zeebe:property name="resultVariable" value="" />
+          <zeebe:property name="resultExpression" value="={&#10;  &#34;accountExternalReferenceCode&#34;: request.body.objectEntryDTODemoAccount.properties.accountNumber,&#10;    &#34;userFirstName&#34;: request.body.objectEntryDTODemoAccount.properties.firstName,&#10;      &#34;userLastName&#34;: request.body.objectEntryDTODemoAccount.properties.lastName,&#10;        &#34;userEmailAddress&#34;: request.body.objectEntryDTODemoAccount.properties.email&#10;}" />
+        </zeebe:properties>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_0kjkft2</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:boundaryEvent id="Event_1wh7lbo" attachedToRef="Activity_1lsuhzi">
+      <bpmn:extensionElements>
+        <zeebe:ioMapping>
+          <zeebe:output source="=accountStatus" target="accountStatus" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_0danqf7</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0wq4mgj" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_1lf6crf" sourceRef="Activity_084mv1m" targetRef="Activity_0629unw" />
+    <bpmn:serviceTask id="Activity_0629unw" name="Associate new User with Account &#10;in Liferay using Liferay User API" zeebe:modelerTemplate="cddb82b6-1f10-447e-a582-a18d246dd516" zeebe:modelerTemplateVersion="1746862718880" zeebe:modelerTemplateIcon="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDk2IDk2Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6IzBiNWZmZjt9PC9zdHlsZT48L2RlZnM+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNzEsMjFIMjVjLTIuMjA5MiwwLTQsMS43OTA4LTQsNHY0NmMwLDIuMjA5MSwxLjc5MDgsNCw0LDRoNDZjMi4yMDksMCw0LTEuNzkwOSw0LTRWMjVjMC0yLjIwOTItMS43OTEtNC00LTRaTTM3LDU2YzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0xMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMTBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0xMCwzMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMjBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0wLTEwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMTAsMzBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2Wm0wLTEwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0yMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTEwLDMwYzAsLjU1MjItLjQ0NzgsMS0xLDFoLTZjLS41NTIyLDAtMS0uNDQ3OC0xLTF2LTZjMC0uNTUyMiwuNDQ3OC0xLDEtMWg2Yy41NTIyLDAsMSwuNDQ3OCwxLDF2NlptMC0xMGMwLC41NTIyLS40NDc4LDEtMSwxaC02Yy0uNTUyMiwwLTEtLjQ0NzgtMS0xdi02YzAtLjU1MjIsLjQ0NzgtMSwxLTFoNmMuNTUyMiwwLDEsLjQ0NzgsMSwxdjZabTAtMTBjMCwuNTUyMi0uNDQ3OCwxLTEsMWgtNmMtLjU1MjIsMC0xLS40NDc4LTEtMXYtNmMwLS41NTIyLC40NDc4LTEsMS0xaDZjLjU1MjIsMCwxLC40NDc4LDEsMXY2WiIvPjwvc3ZnPg==">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="oauth-client-credentials-flow" target="authentication.type" />
+          <zeebe:input source="https://liferay.ngrok.dev/o/oauth2/token" target="authentication.oauthTokenEndpoint" />
+          <zeebe:input source="id-a9eb913a-71e2-89c6-cb51-b9362c5a37" target="authentication.clientId" />
+          <zeebe:input source="secret-ddfdae2d-60d8-fa1f-9b14-c31ee36c6ce" target="authentication.clientSecret" />
+          <zeebe:input source="credentialsBody" target="authentication.clientAuthentication" />
+          <zeebe:input source="other" target="type" />
+          <zeebe:input source="https://liferay.ngrok.dev/o/headless-admin-user" target="baseUrl" />
+          <zeebe:input source="=&#34;/v1.0/accounts/by-external-reference-code/&#34; + accountExternalReferenceCode + &#34;/user-accounts/by-external-reference-code/&#34; + userExternalReferenceCode" target="path" />
+          <zeebe:input source="POST" target="method" />
+          <zeebe:input source="=baseUrl + path" target="url" />
+          <zeebe:input source="=false" target="storeResponse" />
+          <zeebe:input source="=20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="=20" target="readTimeoutInSeconds" />
+          <zeebe:input source="=false" target="ignoreNullValues" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="retryBackoff" value="PT0S" />
+        </zeebe:taskHeaders>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1lf6crf</bpmn:incoming>
+      <bpmn:outgoing>Flow_0xqtj0g</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_1modaii">
+      <bpmn:incoming>Flow_0xqtj0g</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0xqtj0g" sourceRef="Activity_0629unw" targetRef="Event_1modaii" />
+    <bpmn:sequenceFlow id="Flow_0danqf7" sourceRef="Event_1wh7lbo" targetRef="Gateway_0ks178f" />
+    <bpmn:userTask id="Activity_008diyh" name="Onboarding Manager Review">
+      <bpmn:extensionElements>
+        <zeebe:formDefinition formId="Form_1anwcex" />
+        <zeebe:userTask />
+        <zeebe:assignmentDefinition candidateGroups="=[&#34;Onboarding Managers&#34;]" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0lm3jr7</bpmn:incoming>
+      <bpmn:outgoing>Flow_191j3x2</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmn:error id="Error_1ihxzu3" name="Error_3bmm5o2" errorCode="404" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0jmfn3y">
+      <bpmndi:BPMNShape id="Activity_01zpuml_di" bpmnElement="Activity_00dt63w">
+        <dc:Bounds x="580" y="78" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0d3on2u_di" bpmnElement="Activity_141oqa4">
+        <dc:Bounds x="790" y="340" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0zyoq4n_di" bpmnElement="Activity_084mv1m">
+        <dc:Bounds x="990" y="340" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0ks178f_di" bpmnElement="Gateway_0ks178f" isMarkerVisible="true">
+        <dc:Bounds x="455" y="93" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_115t5gt_di" bpmnElement="Activity_1lsuhzi">
+        <dc:Bounds x="280" y="78" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="182" y="100" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="158" y="143" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1a7vzxw_di" bpmnElement="Activity_0629unw">
+        <dc:Bounds x="1210" y="340" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1modaii_di" bpmnElement="Event_1modaii">
+        <dc:Bounds x="1392" y="362" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1bvvk7t_di" bpmnElement="Activity_008diyh">
+        <dc:Bounds x="580" y="340" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1wh7lbo_di" bpmnElement="Event_1wh7lbo">
+        <dc:Bounds x="362" y="140" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0emcdvr_di" bpmnElement="Flow_0emcdvr">
+        <di:waypoint x="505" y="118" />
+        <di:waypoint x="580" y="118" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ld7694_di" bpmnElement="Flow_1ld7694">
+        <di:waypoint x="680" y="118" />
+        <di:waypoint x="1040" y="118" />
+        <di:waypoint x="1040" y="340" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_191j3x2_di" bpmnElement="Flow_191j3x2">
+        <di:waypoint x="680" y="380" />
+        <di:waypoint x="790" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0zhpkbi_di" bpmnElement="Flow_0zhpkbi">
+        <di:waypoint x="890" y="380" />
+        <di:waypoint x="990" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1lf6crf_di" bpmnElement="Flow_1lf6crf">
+        <di:waypoint x="1090" y="380" />
+        <di:waypoint x="1210" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0fsqyma_di" bpmnElement="Flow_0fsqyma">
+        <di:waypoint x="380" y="118" />
+        <di:waypoint x="455" y="118" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0danqf7_di" bpmnElement="Flow_0danqf7">
+        <di:waypoint x="398" y="158" />
+        <di:waypoint x="480" y="158" />
+        <di:waypoint x="480" y="143" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lm3jr7_di" bpmnElement="Flow_0lm3jr7">
+        <di:waypoint x="490" y="133" />
+        <di:waypoint x="490" y="380" />
+        <di:waypoint x="580" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0kjkft2_di" bpmnElement="Flow_0kjkft2">
+        <di:waypoint x="218" y="118" />
+        <di:waypoint x="280" y="118" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0xqtj0g_di" bpmnElement="Flow_0xqtj0g">
+        <di:waypoint x="1310" y="380" />
+        <di:waypoint x="1392" y="380" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
