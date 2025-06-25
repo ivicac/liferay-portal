@@ -1,0 +1,43 @@
+{
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.7.0",
+  "exporter": {
+    "name": "Camunda Web Modeler",
+    "version": "1e1176c"
+  },
+  "schemaVersion": 18,
+  "id": "Form_1anwcex",
+  "components": [
+    {
+      "label": "Account Name",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_1qs9s9m",
+        "columns": null
+      },
+      "id": "Field_0r63f8t",
+      "key": "accountName"
+    },
+    {
+      "label": "Account Number",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_1v6xmkj",
+        "columns": null
+      },
+      "id": "Field_1t7yyps",
+      "key": "accountExternalReferenceCode"
+    },
+    {
+      "label": "Account Description",
+      "type": "textarea",
+      "layout": {
+        "row": "Row_0pcsqhi",
+        "columns": null
+      },
+      "id": "Field_1krk144",
+      "key": "accountDescription"
+    }
+  ],
+  "type": "default"
+}
