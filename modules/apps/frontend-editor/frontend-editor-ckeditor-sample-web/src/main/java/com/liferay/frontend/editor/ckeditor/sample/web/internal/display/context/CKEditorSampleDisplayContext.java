@@ -34,7 +34,6 @@ public class CKEditorSampleDisplayContext {
 		CETManager cetManager, RenderRequest renderRequest) {
 
 		_cetManager = cetManager;
-		_renderRequest = renderRequest;
 
 		_themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -65,7 +64,10 @@ public class CKEditorSampleDisplayContext {
 
 				if (StringUtil.matches(
 						editorConfigContributorCET.getEditorConfigKeys(),
-						"sampleReactClassicEditor")) {
+						"sampleReactClassicEditor") ||
+					StringUtil.matches(
+						editorConfigContributorCET.getEditorConfigKeys(),
+						"sampleReactCKEditor5ClassicEditor")) {
 
 					return editorConfigContributorCET.getURL();
 				}
@@ -75,7 +77,6 @@ public class CKEditorSampleDisplayContext {
 	}
 
 	private final CETManager _cetManager;
-	private final RenderRequest _renderRequest;
 	private final ThemeDisplay _themeDisplay;
 
 }

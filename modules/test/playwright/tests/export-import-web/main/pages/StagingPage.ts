@@ -57,7 +57,7 @@ export class StagingPage {
 		await this.page.getByRole('menuitem', {name: 'Publish'}).click();
 		await this.page.getByRole('button', {name: 'Publish to Live'}).click();
 		await expect(
-			await this.page
+			this.page
 				.locator('.list-group-item div')
 				.filter({hasText: templateName})
 				.getByTestId('processResult')
@@ -87,8 +87,8 @@ export class StagingPage {
 				.click();
 
 			await this.page
-				.getByRole('radio', {exact: true, name: 'Include If Modified'})
-				.click();
+				.locator('input[type="radio"][value="include-if-modified"]')
+				.check();
 		}
 
 		await this.page

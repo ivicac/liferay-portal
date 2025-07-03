@@ -7,7 +7,6 @@ package com.liferay.portal.util;
 
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.bean.BeanLocatorImpl;
-import com.liferay.portal.configuration.ConfigurationFactoryImpl;
 import com.liferay.portal.dao.db.DBManagerImpl;
 import com.liferay.portal.dao.init.DBInitUtil;
 import com.liferay.portal.dao.jdbc.DataSourceFactoryImpl;
@@ -16,9 +15,11 @@ import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
 import com.liferay.portal.kernel.configuration.ConfigurationFactoryUtil;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataSourceFactoryUtil;
+import com.liferay.portal.kernel.internal.configuration.ConfigurationFactoryImpl;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.log.SanitizerLogWrapper;
+import com.liferay.portal.kernel.log4j.Log4JUtil;
 import com.liferay.portal.kernel.security.xml.SecureXMLFactoryProviderUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -27,12 +28,9 @@ import com.liferay.portal.kernel.util.JavaDetector;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OSDetector;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
-import com.liferay.portal.log.Log4jLogFactoryImpl;
-import com.liferay.portal.log4j.Log4JUtil;
 import com.liferay.portal.module.framework.ModuleFrameworkUtil;
 import com.liferay.portal.security.xml.SecureXMLFactoryProviderImpl;
 import com.liferay.portal.spring.aop.AopConfigurableApplicationContextConfigurator;
@@ -112,21 +110,6 @@ public class InitUtil {
 
 		try {
 			PortalClassLoaderUtil.setClassLoader(classLoader);
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
-			}
-		}
-
-		// Properties
-
-		PropsUtil.setProps(new PropsImpl());
-
-		// Shared log
-
-		try {
-			LogFactoryUtil.setLogFactory(new Log4jLogFactoryImpl());
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {

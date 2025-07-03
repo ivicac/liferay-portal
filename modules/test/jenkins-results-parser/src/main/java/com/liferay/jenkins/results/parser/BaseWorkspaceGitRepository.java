@@ -94,6 +94,22 @@ public abstract class BaseWorkspaceGitRepository
 	}
 
 	@Override
+	public String getBaseBranchSHAShort() {
+		String baseBranchSHA = getBaseBranchSHA();
+
+		if (baseBranchSHA == null) {
+			return null;
+		}
+
+		if (baseBranchSHA.length() > _MAX_BASE_BRANCH_SHA_LENGTH) {
+			baseBranchSHA = baseBranchSHA.substring(
+				0, _MAX_BASE_BRANCH_SHA_LENGTH);
+		}
+
+		return baseBranchSHA;
+	}
+
+	@Override
 	public String getBranchName() {
 		if (_branchName != null) {
 			return _branchName;
@@ -195,11 +211,26 @@ public abstract class BaseWorkspaceGitRepository
 	}
 
 	@Override
+	public String getSenderBranchSHAShort() {
+		String senderBranchSHA = getSenderBranchSHA();
+
+		if (senderBranchSHA == null) {
+			return null;
+		}
+
+		if (senderBranchSHA.length() >= 7) {
+			senderBranchSHA = senderBranchSHA.substring(0, 7);
+		}
+
+		return senderBranchSHA;
+	}
+
+	@Override
 	public String getSenderBranchUsername() {
 		return getString("sender_branch_username");
 	}
 
-	public boolean getSnapshot() {
+	public boolean isSnapshot() {
 		return getBoolean("snapshot");
 	}
 
@@ -433,7 +464,7 @@ public abstract class BaseWorkspaceGitRepository
 	@Override
 	public void tearDown() {
 		if (_snapshot) {
-			JenkinsResultsParserUtil.delete(getDirectory());
+			_deleteGitRepository();
 
 			return;
 		}
@@ -492,7 +523,7 @@ public abstract class BaseWorkspaceGitRepository
 		validateKeys(_REQUIRED_KEYS);
 
 		if (JenkinsResultsParserUtil.isCloudCINode()) {
-			_snapshot = getSnapshot();
+			_snapshot = isSnapshot();
 		}
 	}
 
@@ -716,6 +747,24 @@ public abstract class BaseWorkspaceGitRepository
 			getBranchName(), true, getSenderBranchSHA());
 	}
 
+	private void _deleteGitRepository() {
+		if (!JenkinsResultsParserUtil.isCloudCINode()) {
+			return;
+		}
+
+		try {
+			Process process = JenkinsResultsParserUtil.executeBashCommands(
+				"rm -rf " + getDirectory());
+
+			JenkinsResultsParserUtil.readInputStream(process.getInputStream());
+
+			System.out.println("Deleting Git repository " + getDirectory());
+		}
+		catch (IOException | TimeoutException exception) {
+			exception.printStackTrace();
+		}
+	}
+
 	private void _downloadGitRepository() {
 		try {
 			File baseGitRepositoryDir =
@@ -724,8 +773,8 @@ public abstract class BaseWorkspaceGitRepository
 
 			File archiveFile = new File(baseGitRepositoryDir, fileName);
 
-			CloudBucketUtil.copyS3File(
-				archiveFile.getCanonicalPath(),
+			CloudBucketUtil.downloadS3File(
+				archiveFile,
 				JenkinsResultsParserUtil.combine(
 					CloudBucketUtil.S3_BUCKET_PATH_FILE_PROPAGATOR,
 					"/git-shallow-clone-archives/", fileName));
@@ -733,7 +782,7 @@ public abstract class BaseWorkspaceGitRepository
 			File directory = getDirectory();
 
 			if (directory.exists()) {
-				JenkinsResultsParserUtil.delete(directory);
+				_deleteGitRepository();
 			}
 
 			Process process = JenkinsResultsParserUtil.executeBashCommands(
@@ -829,14 +878,13 @@ public abstract class BaseWorkspaceGitRepository
 			File gitArchiveFile = new File(
 				baseRepositoryDir, _getGitArchiveName());
 
-			CloudBucketUtil.copyS3File(
-				gitArchiveFile.getCanonicalPath(),
-				_getGitArchiveS3BucketPath());
+			CloudBucketUtil.downloadS3File(
+				gitArchiveFile, _getGitArchiveS3BucketPath());
 
 			File directory = getDirectory();
 
 			if (directory.exists()) {
-				JenkinsResultsParserUtil.delete(directory);
+				_deleteGitRepository();
 			}
 
 			JenkinsResultsParserUtil.unzip(gitArchiveFile, directory);
@@ -848,8 +896,7 @@ public abstract class BaseWorkspaceGitRepository
 
 		File archiveFile = gitWorkingDirectory.archive(_getGitArchiveName());
 
-		CloudBucketUtil.copyS3File(
-			_getGitArchiveS3BucketPath(), archiveFile.getCanonicalPath());
+		CloudBucketUtil.uploadS3File(_getGitArchiveS3BucketPath(), archiveFile);
 
 		_setSnapshot(true);
 
@@ -860,10 +907,6 @@ public abstract class BaseWorkspaceGitRepository
 
 	private void _prepareGitWorkingDirectory() {
 		System.out.println(toString());
-
-		if (JenkinsResultsParserUtil.isCloudCINode()) {
-			JenkinsResultsParserUtil.delete(getDirectory());
-		}
 
 		File dotGitFolder = new File(getDirectory(), ".git");
 
@@ -952,6 +995,8 @@ public abstract class BaseWorkspaceGitRepository
 	private void _setSnapshot(boolean snapshot) {
 		put("snapshot", snapshot);
 	}
+
+	private static final int _MAX_BASE_BRANCH_SHA_LENGTH = 7;
 
 	private static final String[] _REQUIRED_KEYS = {
 		"base_branch_head_sha", "base_branch_sha", "base_branch_username",

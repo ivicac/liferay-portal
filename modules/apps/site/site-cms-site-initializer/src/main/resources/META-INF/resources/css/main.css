@@ -2,7 +2,6 @@
 	margin-top: 0;
 }
 
-.cms-section .space-renderer-sticker .sticker-sm {
-	height: 1rem;
-	width: 1rem;
+.cursor-pointer {
+	cursor: pointer;
 }

@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.service.VirtualHostLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -259,7 +260,7 @@ public class PortalInstances {
 
 			if (!skipCheck) {
 				try {
-					CompanyLocalServiceUtil.checkCompany(company.getWebId());
+					CompanyLocalServiceUtil.checkCompany(company, false);
 				}
 				catch (Exception exception) {
 					_log.error(exception);
@@ -494,11 +495,7 @@ public class PortalInstances {
 			virtualHostname = "localhost";
 		}
 
-		if (Objects.equals(virtualHostname, serverName)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(virtualHostname, serverName);
 	}
 
 	private static void _setAttributes(

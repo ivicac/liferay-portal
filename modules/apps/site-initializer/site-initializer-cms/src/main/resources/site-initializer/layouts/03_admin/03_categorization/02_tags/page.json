@@ -1,10 +1,17 @@
 {
-	"friendlyURL": "/categorization/view_tags",
+	"friendlyURL": "/categorization/view-tags",
 	"hidden": false,
 	"name_i18n": {
 		"en_US": "Tags"
 	},
 	"permissions": [
+		{
+			"actionIds": [
+				"VIEW"
+			],
+			"roleName": "CMS Administrator",
+			"scope": 4
+		},
 		{
 			"actionIds": [
 			],

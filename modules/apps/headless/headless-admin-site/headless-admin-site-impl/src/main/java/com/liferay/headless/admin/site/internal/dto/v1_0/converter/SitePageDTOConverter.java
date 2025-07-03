@@ -24,10 +24,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Rubén Pulido
  */
-@Component(
-	property = "dto.class.name=com.liferay.portal.kernel.model.Layout",
-	service = DTOConverter.class
-)
+@Component(service = DTOConverter.class)
 public class SitePageDTOConverter implements DTOConverter<Layout, SitePage> {
 
 	@Override
@@ -89,6 +86,7 @@ public class SitePageDTOConverter implements DTOConverter<Layout, SitePage> {
 		PageSettings pageSettings = _getPageSettings(layout);
 
 		pageSettings.setHiddenFromNavigation(layout::isHidden);
+		pageSettings.setPriority(layout::getPriority);
 
 		return pageSettings;
 	}

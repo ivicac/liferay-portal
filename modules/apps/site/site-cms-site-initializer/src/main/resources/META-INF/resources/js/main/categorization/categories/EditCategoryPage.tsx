@@ -7,12 +7,13 @@ import {openModal} from 'frontend-js-components-web';
 import {navigate, sub} from 'frontend-js-web';
 import React, {ReactElement, useEffect, useState} from 'react';
 
-import CategorizationPermissionService from '../../../services/CategorizationPermissionService';
-import CategoryService from '../../../services/CategoryService';
+import CategorizationPermissionService from '../../../common/services/CategorizationPermissionService';
+import CategoryService from '../../../common/services/CategoryService';
 import {IPermissionItem} from '../../components/forms/PermissionsTable';
 import {
 	displayCreateSuccessToast,
 	displayEditSuccessToast,
+	displayNameInUseErrorToast,
 	displaySystemErrorToast,
 } from '../../util/ToastUtil';
 import CategorizationContentContainer from '../components/CategorizationContentContainer';
@@ -24,12 +25,14 @@ import EditCategoryPropertiesTab from './components/EditCategoryPropertiesTab';
 interface Props {
 	backURL: string | URL;
 	categoryByCategoryIdAPIURL: string;
+	categoryByParentCategoryIdAPIURL: string;
 	categoryByVocabularyIdAPIURL: string;
 	categoryId: number;
 	categoryPermissionsAPIURL: string;
 	defaultLanguageId: string;
 	isCreateNew: boolean;
 	locales: any[];
+	parentCategoryId: number;
 	spritemap: string;
 	vocabularyId: number;
 }
@@ -37,11 +40,13 @@ interface Props {
 const EditCategoryPage = ({
 	backURL,
 	categoryByCategoryIdAPIURL,
+	categoryByParentCategoryIdAPIURL,
 	categoryByVocabularyIdAPIURL,
 	categoryPermissionsAPIURL,
 	defaultLanguageId,
 	isCreateNew,
 	locales,
+	parentCategoryId,
 	spritemap,
 }: Props) => {
 	const [category, setCategory] = useState<TaxonomyCategory>({
@@ -124,23 +129,44 @@ const EditCategoryPage = ({
 			return;
 		}
 
-		try {
-			if (isCreateNew) {
-				const {data, error} = await CategoryService.createCategory(
-					categoryByVocabularyIdAPIURL,
-					{
-						...category,
-						taxonomyCategoryProperties:
-							getFormattedCategoryProperties(category),
-					}
-				);
-
-				if (error) {
-					throw new Error(
-						`POST request failed to create a new Category under 'vocabularyId = ${category.taxonomyVocabularyId}' using the following provided data: ${JSON.stringify(category)}`
+		if (isCreateNew) {
+			const {data, error, status} = Number(parentCategoryId)
+				? await CategoryService.createCategory(
+						categoryByParentCategoryIdAPIURL,
+						{
+							...category,
+							taxonomyCategoryProperties:
+								getFormattedCategoryProperties(category),
+						}
+					)
+				: await CategoryService.createCategory(
+						categoryByVocabularyIdAPIURL,
+						{
+							...category,
+							taxonomyCategoryProperties:
+								getFormattedCategoryProperties(category),
+						}
 					);
+
+			if (error) {
+				if (status === 'CONFLICT') {
+					setNameInputError(
+						Liferay.Language.get(
+							'please-enter-a-unique-name.-this-one-is-already-in-use'
+						)
+					);
+
+					displayNameInUseErrorToast();
+				}
+				else {
+					displaySystemErrorToast();
 				}
 
+				throw new Error(
+					`POST request failed to create a new Category under 'vocabularyId = ${category.taxonomyVocabularyId}' using the following provided data: ${JSON.stringify(category)}`
+				);
+			}
+			else {
 				const {error: putPermissionsError} =
 					await CategorizationPermissionService.putPermissions(
 						categoryPermissionsAPIURL.replace(
@@ -151,65 +177,65 @@ const EditCategoryPage = ({
 					);
 
 				if (putPermissionsError) {
+					displaySystemErrorToast();
+
 					throw new Error(
 						`PUT request failed to update permissions at ${categoryPermissionsAPIURL} using the following provided data: ${JSON.stringify(categoryPermissions)}`
 					);
 				}
-
-				navigate(backURL);
-				displayCreateSuccessToast(category.name);
 			}
-			else {
-				openModal({
-					bodyHTML: Liferay.Language.get(
-						'edit-category-confirmation'
-					),
-					buttons: [
-						{
-							autoFocus: true,
-							displayType: 'secondary',
-							label: Liferay.Language.get('cancel'),
-							type: 'cancel',
-						},
-						{
-							displayType: 'primary',
-							label: Liferay.Language.get('save'),
-							onClick: async ({processClose}) => {
-								processClose();
 
-								const {error} =
-									await CategoryService.updateCategory(
-										categoryByCategoryIdAPIURL,
-										{
-											...category,
-											taxonomyCategoryProperties:
-												getFormattedCategoryProperties(
-													category
-												),
-										}
-									);
+			navigate(backURL);
+			displayCreateSuccessToast(category.name);
+		}
+		else {
+			openModal({
+				bodyHTML: Liferay.Language.get('edit-category-confirmation'),
+				buttons: [
+					{
+						autoFocus: true,
+						displayType: 'secondary',
+						label: Liferay.Language.get('cancel'),
+						type: 'cancel',
+					},
+					{
+						displayType: 'primary',
+						label: Liferay.Language.get('save'),
+						onClick: async ({processClose}) => {
+							processClose();
 
-								if (error) {
-									throw new Error(error);
-								}
+							const {error} =
+								await CategoryService.updateCategory(
+									categoryByCategoryIdAPIURL,
+									{
+										...category,
+										taxonomyCategoryProperties:
+											getFormattedCategoryProperties(
+												category
+											),
+									}
+								);
 
+							if (error) {
+								console.error(error);
+
+								displaySystemErrorToast();
+
+								throw new Error(error);
+							}
+							else {
 								navigate(backURL);
 								displayEditSuccessToast(category.name);
-							},
+							}
 						},
-					],
-					status: 'warning',
-					title: sub(
-						Liferay.Language.get('edit-x'),
-						'"' + category.name + '"'
-					),
-				});
-			}
-		}
-		catch (error) {
-			console.error(error);
-
-			displaySystemErrorToast();
+					},
+				],
+				status: 'warning',
+				title: sub(
+					Liferay.Language.get('edit-x'),
+					'"' + category.name + '"'
+				),
+			});
 		}
 	}
 
@@ -220,15 +246,51 @@ const EditCategoryPage = ({
 			return;
 		}
 
-		const {error} = await CategoryService.createCategory(
-			categoryByVocabularyIdAPIURL,
-			category
-		);
+		const {data, error, status} = Number(parentCategoryId)
+			? await CategoryService.createCategory(
+					categoryByParentCategoryIdAPIURL,
+					category
+				)
+			: await CategoryService.createCategory(
+					categoryByVocabularyIdAPIURL,
+					category
+				);
 
 		if (error) {
-			console.error(error);
+			if (status === 'CONFLICT') {
+				setNameInputError(
+					Liferay.Language.get(
+						'please-enter-a-unique-name.-this-one-is-already-in-use'
+					)
+				);
 
-			displaySystemErrorToast();
+				displayNameInUseErrorToast();
+			}
+			else {
+				displaySystemErrorToast();
+			}
+
+			throw new Error(
+				`POST request failed to create a new Category under 'vocabularyId = ${category.taxonomyVocabularyId}' using the following provided data: ${JSON.stringify(category)}`
+			);
+		}
+		else {
+			const {error: putPermissionsError} =
+				await CategorizationPermissionService.putPermissions(
+					categoryPermissionsAPIURL.replace(
+						'{taxonomyCategoryId}',
+						String(data?.id)
+					),
+					categoryPermissions
+				);
+
+			if (putPermissionsError) {
+				displaySystemErrorToast();
+
+				throw new Error(
+					`PUT request failed to update permissions at ${categoryPermissionsAPIURL} using the following provided data: ${JSON.stringify(categoryPermissions)}`
+				);
+			}
 		}
 
 		window.location.reload();
@@ -275,6 +337,20 @@ const EditCategoryPage = ({
 		return mainContentMap;
 	};
 
+	const getTitle = () => {
+		if (isCreateNew) {
+			if (Number(parentCategoryId) === 0) {
+				return Liferay.Language.get('new-category');
+			}
+			else {
+				return Liferay.Language.get('new-subcategory');
+			}
+		}
+		else {
+			return sub(Liferay.Language.get('edit-x'), title);
+		}
+	};
+
 	return (
 		<div className="categorization-section">
 			<div className="d-flex edit-vocabulary flex-column">
@@ -285,11 +361,7 @@ const EditCategoryPage = ({
 						isCreateNew ? handleSaveAndAddAnother : undefined
 					}
 					showSaveAndAddAnotherButton={isCreateNew}
-					title={
-						isCreateNew
-							? Liferay.Language.get('new-category')
-							: sub(Liferay.Language.get('edit-x'), title)
-					}
+					title={getTitle()}
 				/>
 
 				<CategorizationContentContainer
