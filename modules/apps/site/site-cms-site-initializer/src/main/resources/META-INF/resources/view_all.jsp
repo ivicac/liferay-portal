@@ -11,7 +11,7 @@
 ViewAllSectionDisplayContext viewAllSectionDisplayContext = (ViewAllSectionDisplayContext)request.getAttribute(ViewAllSectionDisplayContext.class.getName());
 %>
 
-<div class="cms-section custom-empty-state">
+<div class="cms-section custom-empty-state p-0">
 	<frontend-data-set:headless-display
 		additionalProps="<%= viewAllSectionDisplayContext.getAdditionalProps() %>"
 		apiURL="<%= viewAllSectionDisplayContext.getAPIURL() %>"
