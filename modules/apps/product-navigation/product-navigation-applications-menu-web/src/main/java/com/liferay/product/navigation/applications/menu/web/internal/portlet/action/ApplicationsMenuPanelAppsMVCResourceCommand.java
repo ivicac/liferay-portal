@@ -236,7 +236,16 @@ public class ApplicationsMenuPanelAppsMVCResourceCommand
 
 		Company company = themeDisplay.getCompany();
 
+		Page<AssetLibrary> page = _getAssetLibrariesPage(themeDisplay);
+
 		return cmsJSONObject.put(
+			"allSpacesCount", page.getTotalCount()
+		).put(
+			"allSpacesURL",
+			StringBundler.concat(
+				themeDisplay.getPathFriendlyURLPublic(),
+				GroupConstants.CMS_FRIENDLY_URL, "/all-spaces")
+		).put(
 			"firstTimeAccess",
 			() -> {
 				ExpandoBridge bridge = company.getExpandoBridge();
@@ -255,8 +264,6 @@ public class ApplicationsMenuPanelAppsMVCResourceCommand
 				if (!FeatureFlagManagerUtil.isEnabled("LPD-17564")) {
 					return null;
 				}
-
-				Page<AssetLibrary> page = _getAssetLibrariesPage(themeDisplay);
 
 				return JSONUtil.toJSONArray(
 					page.getItems(),
